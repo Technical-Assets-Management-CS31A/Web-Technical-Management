@@ -1,0 +1,155 @@
+.login-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background-color: rgb(46, 111, 251);
+}
+.image-container {
+  max-width: 7rem;
+  padding: 1.3rem;
+  margin-left: 3%;
+}
+.image-container img {
+  width: 106px;
+  height: 124px;
+}
+.hero-container {
+  max-width: 1000px;
+  margin: 7% 4% 4% 4%;
+}
+
+.title {
+  max-width: 650px;
+}
+.title h1 {
+  font-size: 65px;
+  color: white;
+  font-weight: bold;
+  filter: drop-shadow(000000, 25);
+  line-height: 4.2rem;
+  margin: 0 0 1rem 0;
+}
+.hero-container p {
+  color: rgba(255, 255, 255, 0.754);
+}
+.form-container {
+  position: absolute;
+  top: 0;
+  width: 40%;
+  height: 100vh;
+  background-color: rgb(71, 129, 255);
+  margin: 0 0 0 60%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.form-header {
+  margin: 1rem 0 2.5em 0;
+}
+.form-header h1 {
+  color: white;
+  font-size: 2.4rem;
+  margin: 0 0 -0.3rem 0;
+}
+.form-header p {
+  color: rgba(255, 255, 255, 0.747);
+  text-align: center;
+}
+.form-credentials {
+  display: flex;
+  flex-direction: column;
+}
+.form-credentials input[type="text"],
+.form-credentials input[type="password"] {
+  width: 400px;
+  height: 55px;
+  border-radius: 6px;
+  outline: 0;
+  border: 0;
+  margin: 0 0 1.4rem 0;
+  background-color: rgba(255, 255, 255, 0.779);
+  padding-left: 1rem;
+  font-size: 1rem;
+  transition: 0.2s ease-in-out;
+}
+.form-credentials input:hover {
+  background-color: rgba(255, 255, 255, 0.929);
+}
+.form-credentials input:focus {
+  box-shadow: 0 0 5px black;
+  background-color: rgba(255, 255, 255, 0.929);
+}
+.form-container ::placeholder {
+  padding-left: 0.5rem;
+  font-size: 1rem;
+}
+.show-password {
+  width: 10%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  float: right;
+  margin: -4rem 0 0 23.5rem;
+}
+.open-eye,
+.slash-eye {
+  font-size: 1.6rem;
+  margin: 0 1rem 0 0;
+  color: rgb(142, 142, 142);
+}
+
+.forgot-password {
+  cursor: pointer;
+  margin: 1.6rem 0 0 0;
+}
+.forgot-password p {
+  color: white;
+  font-weight: 400;
+}
+
+.submit-container {
+  margin: 5rem 0 0 0;
+}
+.submit-container button[type="submit"] {
+  width: 400px;
+  height: 55px;
+  outline: 0;
+  border: 0;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  background-color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+}
+.submit-container button[type="submit"]:hover {
+  background-color: rgba(255, 255, 255, 0.929);
+}
+.create-admin-account {
+  margin: 2rem 0 0 0;
+}
+.create-admin-account p {
+  color: white;
+  cursor: pointer;
+}
+.create-admin-account p:hover {
+  text-decoration: underline;
+}
+.loader-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.loader {
+  width: 20px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 8px solid lightblue;
+  border-right-color: rgba(0, 0, 255, 0.779);
+  animation: l2 1s infinite linear;
+}
+@keyframes l2 {
+  to {
+    transform: rotate(1turn);
+  }
+}
