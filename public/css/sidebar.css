@@ -1,0 +1,95 @@
+.sidebar-container {
+  width: 250px;
+  background-color: rgb(46, 111, 251);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+.logo-container img {
+  width: 100px;
+  height: 110px;
+}
+.category-list-container {
+  margin: -20rem 0 0 0;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  margin-left: -1rem;
+}
+.category-list {
+  list-style: none;
+  width: 70%;
+  gap: 0.8rem;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.category-list li {
+  padding: 0.6rem 0.9rem;
+  width: 100%;
+  text-align: center;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+}
+
+.category-list a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: large;
+  cursor: pointer;
+  padding: 0.6rem 0.9rem;
+}
+.category-list li:hover {
+  background-color: rgba(255, 255, 255, 0.171);
+}
+.footer-container {
+  padding: 1rem;
+  color: white;
+  text-align: center;
+}
+.logout-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.logout-container button {
+  background-color: transparent;
+  padding: 0.6rem 2rem;
+  outline: none;
+  border: none;
+  border-radius: 5px;
+  color: rgb(255, 255, 255);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+.logout-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+}
+
+.logout-icon {
+  font-size: 1.2rem;
+  margin-right: 0.5rem;
+}
+
+@media (max-width: 460px) {
+  .sidebar-container{
+    display: none;
+  }
+}
