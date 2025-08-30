@@ -67,7 +67,7 @@ export default function HistoryList({
       </div>
       <div className="history-search-container">
         <FaSearch className="search-icon" />
-        <input type="search" name="searchItem" onChange={(e) => setSearchItem(e.target.value)} placeholder="Search by Category..." />
+        <input type="search" name="searchItem" onChange={(e) => setSearchItem(e.target.value)} placeholder="Search by Teacher..." />
       </div>
       <figure className="table-card" role="group" aria-labelledby="history-caption">
         <div className="table-scroll">
