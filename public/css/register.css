@@ -8,21 +8,32 @@
 .Register-container {
   position: absolute;
   top: 0;
-  width: 600px;
-  height: 70vh;
+  width: 550px;
+  height: 75vh;
   background-color: rgba(255, 255, 255, 0.905);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin: 6rem 0 5rem 45rem;
+  margin: 6rem 0 1rem 45rem;
   border-radius: 6px;
+  animation: glowUp 0.2s ease-in;
+  opacity: 1;
 }
+
+@keyframes glowUp {
+  from {
+    opacity: 0;
+    transform: translateY(5rem);
+  }
+}
+
 .close-container {
+  position: absolute;
   width: 100%;
   display: flex;
   justify-content: end;
-  margin: -3rem 2rem 0 0;
+  margin: -38rem 2rem 0 0;
 }
 .close-logo {
   font-size: 1.5rem;
@@ -31,22 +42,22 @@
 .register-title {
   text-align: center;
   color: black;
-  margin: 1rem 0 0 0;
+  margin: 2rem 0 0 0;
 }
-.register-title p{
+.register-title p {
   color: rgba(0, 0, 0, 0.594);
 }
 .register-form {
   display: flex;
   flex-direction: column;
-  margin: 2rem 0 0 -8rem;
+  margin: 1rem 0 0 -1rem;
 }
 .register-form input[type="text"] {
   width: 400px;
   height: 50px;
-  margin: 0 0 0.8rem 0;
+  margin: 0.9rem 0 0.2rem 0;
   outline: 0;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 6px;
   padding-left: 1rem;
   font-size: 1rem;
@@ -56,9 +67,9 @@
 .register-form input[type="password"] {
   width: 400px;
   height: 50px;
-  margin: 0 0 0.8rem 0;
+  margin: 0.9rem 0 0.2rem 0;
   outline: 0;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 6px;
   padding-left: 1rem;
   font-size: 1rem;
@@ -71,11 +82,11 @@
 }
 .register-form input[type="text"]:focus,
 .register-form input[type="password"]:focus {
+  border: 1px solid rgba(0, 0, 0, 0.232);
   background-color: rgba(233, 233, 233, 0.824);
-  box-shadow: 0 0 2px black;
 }
 .register-container {
-  margin: 3rem 0 0 0;
+  margin: 1.5rem 0 0 0;
 }
 .register-container .register-button {
   width: 400px;
@@ -86,7 +97,7 @@
   background-color: blue;
   color: white;
   font-size: 1rem;
-  font-family: 600;
+  cursor: pointer;
 }
 .loader-container {
   display: flex;
@@ -97,7 +108,7 @@
   width: 20px;
   aspect-ratio: 1;
   border-radius: 50%;
-  border: 8px solid lightblue;
+  border: 2px solid lightblue;
   border-right-color: rgba(0, 0, 255, 0.779);
   animation: l2 1s infinite linear;
 }
