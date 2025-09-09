@@ -25,7 +25,7 @@
   font-size: 65px;
   color: white;
   font-weight: bold;
-  filter: drop-shadow(000000, 25);
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
   line-height: 4.2rem;
   margin: 0 0 1rem 0;
 }
@@ -141,16 +141,98 @@
   justify-content: center;
   align-items: center;
 }
-.loader {
+.login-loader {
   width: 20px;
-  aspect-ratio: 1;
+  height: 20px;
   border-radius: 50%;
-  border: 8px solid lightblue;
-  border-right-color: rgba(0, 0, 255, 0.779);
-  animation: l2 1s infinite linear;
+  border: 2px solid rgb(0, 34, 255);
+  border-top-color: white;
+  animation: spin 1s linear infinite;
 }
 @keyframes l2 {
   to {
     transform: rotate(1turn);
+  }
+}
+
+@media (max-width: 900px) {
+  .hero-container {
+    margin: 4% 2% 2% 2%;
+    max-width: 100%;
+  }
+  .form-container {
+    width: 100%;
+    margin: 0;
+    position: static;
+    height: auto;
+    min-height: 60vh;
+  }
+  .form-credentials input[type="text"],
+  .form-credentials input[type="password"],
+  .submit-container button[type="submit"] {
+    width: 90vw;
+    max-width: 98%;
+    min-width: 220px;
+  }
+  .show-password {
+    margin: -4rem 0 0 80%;
+  }
+}
+
+@media (max-width: 600px) {
+  .login-container {
+    height: auto;
+    min-height: 100vh;
+    padding: 1rem 0;
+  }
+  .image-container {
+    margin-left: 0;
+    padding: 0.5rem;
+    max-width: 100%;
+    text-align: center;
+  }
+  .image-container img {
+    width: 80px;
+    height: 94px;
+  }
+  .title {
+    max-width: 100%;
+    text-align: center;
+  }
+  .title h1 {
+    font-size: 2.2rem;
+    line-height: 2.7rem;
+  }
+  .hero-container {
+    margin: 2% 1% 1% 1%;
+    padding: 0;
+  }
+  .form-container {
+    width: 100%;
+    margin: 0;
+    position: static;
+    height: auto;
+    min-height: 60vh;
+    padding: 1rem 0.5rem;
+  }
+  .form-header h1 {
+    font-size: 1.5rem;
+  }
+  .form-credentials input[type="text"],
+  .form-credentials input[type="password"],
+  .submit-container button[type="submit"] {
+    width: 98vw;
+    max-width: 100%;
+    min-width: 120px;
+    font-size: 1rem;
+  }
+  .show-password {
+    margin: -3.5rem 0 0 80%;
+    font-size: 1.2rem;
+  }
+  .forgot-password,
+  .create-admin-account {
+    text-align: center;
+    margin: 1rem 0 0 0;
   }
 }
