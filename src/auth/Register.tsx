@@ -2,7 +2,6 @@ import React, { useState } from "react"
 import { FaPlus } from "react-icons/fa6";
 import "../../public/css/register.css"
 import type { TRegisterUser } from "../types/types";
-import { saveToken } from "../utils/token";
 
 export default function Register() {
     const register_api = import.meta.env.VITE_REGISTER_USER_API;
@@ -13,13 +12,12 @@ export default function Register() {
     const [usernameError, setUsernameError] = useState<string>("")
     const [passwordError, setPasswordError] = useState<string>("")
     const [confirmPasswordError, setConfirmPasswordError] = useState<string>("")
-
     const [submitForm, setSubmitForm] = useState<TRegisterUser>({
-        first_name: "",
-        last_name: "",
+        firstName: "",
+        lastName: "",
         username: "",
         password: "",
-        confirm_password: ""
+        confirmPassword: ""
     });
 
 
@@ -28,11 +26,12 @@ export default function Register() {
         const { name, value } = e.target
         setSubmitForm((prev) => ({ ...prev, [name]: value }))
 
-        if (name === "first_name") setFirstNameError("")
-        if (name === "last_name") setLastNameError("")
+        if (name === "firstName") setFirstNameError("")
+        if (name === "lastName") setLastNameError("")
         if (name === "username") setUsernameError("")
         if (name === "password") setPasswordError("")
-        if (name === "confirm_password") setConfirmPasswordError("")
+
+        if (name === "confirmPassword") setConfirmPasswordError("")
     }
 
     // Handle Register User
@@ -40,7 +39,7 @@ export default function Register() {
         e.preventDefault();
         setIsSubmitting(true);
 
-        if (submitForm.first_name == "" && submitForm.last_name == "" && submitForm.username == "" && submitForm.password == "" && submitForm.confirm_password == "") {
+        if (submitForm.firstName == "" && submitForm.lastName == "" && submitForm.username == "" && submitForm.password == "" && submitForm.confirmPassword == "") {
             setFirstNameError("Firstname is required");
             setLastNameError("Lastname is required");
             setUsernameError("Username is required");
@@ -50,12 +49,19 @@ export default function Register() {
             return;
         }
 
+        if (submitForm.confirmPassword !== submitForm.password) {
+            setConfirmPasswordError("Password does not match");
+            setIsSubmitting(false);
+            return;
+        }
+
         try {
             const submitUserData = {
-                first_name: submitForm.first_name,
-                last_name: submitForm.last_name,
+                firstName: submitForm.firstName,
+                lastName: submitForm.lastName,
                 username: submitForm.username,
                 password: submitForm.password,
+                confirmPassword: submitForm.confirmPassword,
             };
 
             const response = await fetch(register_api, {
@@ -66,10 +72,17 @@ export default function Register() {
                 body: JSON.stringify(submitUserData),
             });
 
+            if (!response.ok && response.status === 400) {
+                setIsSubmitting(false);
+                setUsernameError("Username already Exist");
+                return
+            }
+
             const data = await response.json();
             if (data) {
-                saveToken(data.access_token)
-                return console.log(data)
+                setIsRegisterFormOpen(false);
+                alert("Registration successful! You can now log in.");
+                window.location.reload();
             }
 
             if (!response.ok) {
@@ -90,35 +103,35 @@ export default function Register() {
             {isRegisterFormOpen ?
 
                 <div className="register-page">
-                    <form onSubmit={handleSubmitRegisterForm} className="Register-container">
-                        <div className="close-container">
-                            <FaPlus onClick={() => setIsRegisterFormOpen(false)} className="close-logo" />
-                        </div>
-                        <div className="register-title">
-                            <h1>Create account</h1>
-                            <p>Register an admin account to manage the system.</p>
-                        </div>
-                        <form className="register-form">
+                    <div className="Register-container">
+                        <form onSubmit={handleSubmitRegisterForm} className="register-form" method="post">
+                            <div className="close-container">
+                                <FaPlus onClick={() => setIsRegisterFormOpen(false)} className="close-logo" />
+                            </div>
+                            <div className="register-title">
+                                <h1>Create account</h1>
+                                <p>Register an admin account to manage the system.</p>
+                            </div>
                             <input
                                 autoFocus
                                 style={{ borderColor: firstNameError ? "red" : "" }}
                                 type="text"
-                                name="first_name"
-                                value={submitForm.first_name}
+                                name="firstName"
+                                value={submitForm.firstName}
                                 placeholder="First name"
                                 onChange={handleChange}
                             />
-                            {firstNameError && <p style={{ marginTop: "-0.1rem", color: "red", fontSize: "14px", }}>{firstNameError}</p>}
+                            {firstNameError && <p style={{ marginTop: "-1.1rem", color: "red", fontSize: "14px", }}>{firstNameError}</p>}
 
                             <input
                                 type="text"
-                                name="last_name"
+                                name="lastName"
                                 style={{ borderColor: lastNameError ? "red" : "" }}
-                                value={submitForm.last_name}
+                                value={submitForm.lastName}
                                 placeholder="Last name"
                                 onChange={handleChange}
                             />
-                            {lastNameError && <p style={{ marginTop: "-0.1rem", color: "red", fontSize: "14px", }}>{lastNameError}</p>}
+                            {lastNameError && <p style={{ marginTop: "-1.1rem", color: "red", fontSize: "14px", }}>{lastNameError}</p>}
 
                             <input
                                 type="text"
@@ -128,7 +141,7 @@ export default function Register() {
                                 placeholder="Username"
                                 onChange={handleChange}
                             />
-                            {usernameError && <p style={{ marginTop: "-0.1rem", color: "red", fontSize: "14px", }}>{usernameError}</p>}
+                            {usernameError && <p style={{ marginTop: "-1.1rem", color: "red", fontSize: "14px", }}>{usernameError}</p>}
 
                             <input
                                 type="password"
@@ -138,27 +151,28 @@ export default function Register() {
                                 placeholder="Password"
                                 onChange={handleChange}
                             />
-                            {passwordError && <p style={{ marginTop: "-0.1rem", color: "red", fontSize: "14px", }}>{passwordError}</p>}
+                            {passwordError && <p style={{ marginTop: "-1.1rem", color: "red", fontSize: "14px", }}>{passwordError}</p>}
 
                             <input
                                 type="password"
-                                name="confirm_password"
+                                name="confirmPassword"
                                 style={{ borderColor: confirmPasswordError ? "red" : "" }}
-                                value={submitForm.confirm_password}
+                                value={submitForm.confirmPassword}
                                 placeholder="Confirm password"
                                 onChange={handleChange}
                             />
-                            {confirmPasswordError && <p style={{ marginTop: "-0.1rem", color: "red", fontSize: "14px", }}>{confirmPasswordError}</p>}
+                            {confirmPasswordError && <p style={{ marginTop: "-1.1rem", color: "red", fontSize: "14px", }}>{confirmPasswordError}</p>}
 
+                            <div className="register-container">
+                                <button className="register-button" type="submit">
+                                    {isSubmitting ? (<div className="loader-container">
+                                        <div className="loader"></div>
+                                    </div>) : "Register"}
+                                </button>
+                            </div>
                         </form>
-                        <div className="register-container">
-                            <button className="register-button" type="submit">
-                                {isSubmitting ? (<div className="loader-container">
-                                    <div className="loader"></div>
-                                </div>) : "Register"}
-                            </button>
-                        </div>
-                    </form>
+                    </div>
+
                 </div>
                 : ""}
         </>
