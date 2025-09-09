@@ -1,13 +1,15 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom";
 import "../../public/css/login.css"
 import Register from "./Register"
 import { FaEye } from "react-icons/fa";
 import { FaEyeSlash } from "react-icons/fa6";
 import logo from "../assets/img/aclcLogo.webp"
 import type { TLoginUser } from "../types/types"
-import { saveToken } from "../utils/token"
+import { saveToken, getToken } from "../utils/token"
 
 export default function Login() {
+    const navigate = useNavigate();
     const login_api = import.meta.env.VITE_LOGIN_USER_API;
     const [isShowPassword, setIsShowPassword] = useState<boolean>(false)
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
@@ -18,6 +20,15 @@ export default function Login() {
         username: "",
         password: "",
     })
+
+    useEffect(() => {
+        const token = getToken();
+        if (token) {
+            navigate("/home/dashboard");
+        }
+        navigate("/");
+
+    }, [navigate]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
@@ -51,12 +62,17 @@ export default function Login() {
                 },
                 body: JSON.stringify(submitUserData),
             })
+            if (!response.ok) {
+                setUsernameError("Invalid username or password")
+                setIsSubmitting(false)
+                return
+            }
 
             const data = await response.json()
 
             if (data) {
-                saveToken(data.access_token)
-                return console.log(data)
+                saveToken(data.accessToken)
+                navigate("/home/dashboard")
             }
 
             if (!response.ok) {
@@ -65,14 +81,16 @@ export default function Login() {
 
         } catch (error: unknown) {
             if (error instanceof Error) {
-                throw error.message
+                console.log("Login error:", error.message)
+                setIsSubmitting(false)
+                return
             }
-            throw "An unknown error occurred"
         } finally {
             setIsSubmitting(false)
         }
 
     }
+
     return (
         <>
             <div className="login-container">
@@ -90,25 +108,25 @@ export default function Login() {
                         <h1>Welcome back.</h1>
                         <p>Enter your credentials to log in.</p>
                     </div>
-                    <form className="form-credentials" onSubmit={handleSubmitLoginForm}>
+                    <form className="form-credentials" onSubmit={handleSubmitLoginForm} method="post">
                         <input autoFocus type="text" name="username" placeholder="Admin" value={submitForm.username} onChange={handleChange} />
-                        {usernameError && <p className="error-message">{usernameError}</p>}
+                        {usernameError && <p style={{ marginTop: "-1.1rem", marginBottom: "1.2rem", color: "red", fontSize: "14px", }}>{usernameError}</p>}
                         <input type={isShowPassword ? "text" : "password"} name="password" placeholder="********" value={submitForm.password} onChange={handleChange} />
-                        {passwordError && <p className="error-message">{passwordError}</p>}
+                        {passwordError && <p style={{ marginTop: "-1.1rem", marginBottom: "1.2rem", color: "red", fontSize: "14px", }}>{passwordError}</p>}
                         <div className="show-password">
                             {isShowPassword ? <FaEye className="open-eye" onClick={() => setIsShowPassword((prev) => !prev)} /> : <FaEyeSlash className="slash-eye" onClick={() => setIsShowPassword((prev) => !prev)} />}
                         </div>
                         <div className="forgot-password">
                             <p>Forgot Password ?</p>
                         </div>
+                        <div className="submit-container">
+                            <button type="submit" disabled={isSubmitting}>
+                                {isSubmitting ? (<div className="loader-container">
+                                    <div className="login-loader"></div>
+                                </div>) : "Login"}
+                            </button>
+                        </div>
                     </form>
-                    <div className="submit-container">
-                        <button type="submit" disabled={isSubmitting}>
-                            {isSubmitting ? (<div className="loader-container">
-                                <div className="loader"></div>
-                            </div>) : "Login"}
-                        </button>
-                    </div>
                     <div className="create-admin-account">
                         <p onClick={() => setIsRegisterFormOpen((prev) => !prev)}>Create admin account ?</p>
                     </div>
