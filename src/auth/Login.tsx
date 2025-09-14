@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom";
-import "../../public/css/login.css"
 import Register from "./Register"
+import ForgotPassword from "./ForgotPassword"
 import { FaEye } from "react-icons/fa";
 import { FaEyeSlash } from "react-icons/fa6";
 import logo from "../assets/img/aclcLogo.webp"
@@ -14,6 +14,7 @@ export default function Login() {
     const [isShowPassword, setIsShowPassword] = useState<boolean>(false)
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
     const [isRegisterFormOpen, setIsRegisterFormOpen] = useState<boolean>(false)
+    const [isForgotPasswordFormOpen, setIsForgotPasswordFormOpen] = useState<boolean>(false)
     const [usernameError, setUsernameError] = useState<string>("")
     const [passwordError, setPasswordError] = useState<string>("")
     const [submitForm, setSubmitForm] = useState<TLoginUser>({
@@ -26,8 +27,6 @@ export default function Login() {
         if (token) {
             navigate("/home/dashboard");
         }
-        navigate("/");
-
     }, [navigate]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,6 +48,18 @@ export default function Login() {
             return
         }
 
+        else if (submitForm.username == "" && submitForm.password) {
+            setUsernameError("Username is required")
+            setIsSubmitting(false)
+            return
+        }
+
+        else if (submitForm.password == "" && submitForm.username) {
+            setPasswordError("Password is required")
+            setIsSubmitting(false)
+            return
+        }
+
         try {
             const submitUserData = {
                 username: submitForm.username,
@@ -61,6 +72,7 @@ export default function Login() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify(submitUserData),
+                credentials: "include"
             })
             if (!response.ok) {
                 setUsernameError("Invalid username or password")
@@ -93,46 +105,109 @@ export default function Login() {
 
     return (
         <>
-            <div className="login-container">
-                <div className="image-container">
-                    <img src={logo} alt="Logo" />
+            <div className="relative w-full h-screen bg-[rgb(46,111,251)] max-lg:h-auto max-lg:min-h-screen max-lg:py-4">
+                <div className="max-w-[10rem] p-5 ml-[3%] animate-fade-in max-sm:ml-0 max-sm:p-2 max-sm:max-w-full max-sm:text-center">
+                    <img src={logo} alt="Logo" className="w-[106px] h-[124px] max-sm:w-20 max-sm:h-[94px]" />
                 </div>
-                <div className="hero-container">
-                    <div className="title">
-                        <h1>Technical Assets Management</h1>
+                <div className="max-w-[1000px] mx-[4%] mt-[7%] mb-[4%] animate-fade-in max-lg:mx-[2%] max-lg:mt-[4%] max-lg:mb-[2%] max-lg:max-w-full max-sm:mx-[1%] max-sm:mt-[2%] max-sm:mb-[1%] max-sm:p-0">
+                    <div className="max-w-[650px] max-sm:max-w-full max-sm:text-center">
+                        <h1 className="text-[65px] text-white font-bold drop-shadow-[0_4px_12px_rgba(0,0,0,0.45)] leading-[4.2rem] m-0 mb-4 animate-fade-in max-sm:text-[2.2rem] max-sm:leading-[2.7rem]">
+                            Technical Assets Management
+                        </h1>
                     </div>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolor earum illum quaerat, cum, minima iusto nihil nobis molestiae id voluptate voluptatem ducimus alias aperiam, voluptatibus perferendis repellat error omnis. Asperiores!</p>
+                    <p className="text-white/75">
+                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolor earum illum quaerat, cum, minima iusto nihil nobis molestiae id voluptate voluptatem ducimus alias aperiam, voluptatibus perferendis repellat error omnis. Asperiores!
+                    </p>
                 </div>
-                <div className="form-container">
-                    <div className="form-header">
-                        <h1>Welcome back.</h1>
-                        <p>Enter your credentials to log in.</p>
+                <div className="absolute top-0 right-0 w-[35%] h-screen bg-white flex flex-col justify-center items-center animate-fade-in max-lg:w-full max-lg:ml-0 max-lg:relative max-lg:min-h-[60vh] max-sm:w-full max-sm:ml-0 max-sm:relative max-sm:min-h-[60vh] max-sm:py-4 max-sm:px-2">
+                    <div className="my-4 mb-10">
+                        <h1 className="text-black text-[2.4rem] m-0 mb-[-0.3rem] max-sm:text-[1.5rem]">
+                            Welcome back.
+                        </h1>
+                        <p className="mb-1.5 text-black/62 text-center">
+                            Enter your credentials to log in.
+                        </p>
                     </div>
-                    <form className="form-credentials" onSubmit={handleSubmitLoginForm} method="post">
-                        <input autoFocus type="text" name="username" placeholder="Admin" value={submitForm.username} onChange={handleChange} />
-                        {usernameError && <p style={{ marginTop: "-1.1rem", marginBottom: "1.2rem", color: "red", fontSize: "14px", }}>{usernameError}</p>}
-                        <input type={isShowPassword ? "text" : "password"} name="password" placeholder="********" value={submitForm.password} onChange={handleChange} />
-                        {passwordError && <p style={{ marginTop: "-1.1rem", marginBottom: "1.2rem", color: "red", fontSize: "14px", }}>{passwordError}</p>}
-                        <div className="show-password">
-                            {isShowPassword ? <FaEye className="open-eye" onClick={() => setIsShowPassword((prev) => !prev)} /> : <FaEyeSlash className="slash-eye" onClick={() => setIsShowPassword((prev) => !prev)} />}
+                    <form className="flex flex-col justify-center items-center" onSubmit={handleSubmitLoginForm} method="post">
+                        <div className="relative flex flex-col">
+                            <input
+                                className={`w-[400px] h-[55px] rounded-md outline-none border mb-8 border-black/34 bg-white/78 pl-4 text-base hover:bg-white/93 focus:bg-white/93 max-lg:w-[90vw] max-lg:max-w-[98%] max-lg:min-w-[220px] max-sm:w-[98vw] max-sm:max-w-full max-sm:min-w-[120px] max-sm:text-base ${usernameError ? 'border-2 border-red-500' : ''}`}
+                                autoFocus
+                                type="text"
+                                name="username"
+                                placeholder="Username"
+                                value={submitForm.username}
+                                onChange={handleChange}
+                            />
+                            {usernameError && (
+                                <p className="absolute mt-14 text-red-500 text-base">
+                                    {usernameError}
+                                </p>
+                            )}
                         </div>
-                        <div className="forgot-password">
-                            <p>Forgot Password ?</p>
+                        <div className="relative flex flex-col">
+                            <input
+                                className={`w-[400px] h-[55px] rounded-md outline-none border border-black/34 bg-white/78 pl-4 text-base hover:bg-white/93 focus:bg-white/93 max-lg:w-[90vw] max-lg:max-w-[98%] max-lg:min-w-[220px] max-sm:w-[98vw] max-sm:max-w-full max-sm:min-w-[120px] max-sm:text-base ${usernameError ? 'border-2 border-red-500' : ''}`}
+                                type={isShowPassword ? "text" : "password"}
+                                name="password"
+                                placeholder="********"
+                                value={submitForm.password}
+                                onChange={handleChange}
+                            />
+                            {passwordError && (
+                                <p className="relative text-red-500 text-base">
+                                    {passwordError}
+                                </p>
+                            )}
+                            <div className="absolute w-[10%] flex justify-center items-center float-right mt-3.5 ml-[22.5rem] max-lg:-mt-16 max-lg:ml-[80%] max-sm:-mt-14 max-sm:ml-[80%] max-sm:text-[1.2rem]">
+                                {isShowPassword ? (
+                                    <FaEye
+                                        className="text-[1.6rem] mr-4 text-gray-400 cursor-pointer"
+                                        onClick={() => setIsShowPassword((prev) => !prev)}
+                                    />
+                                ) : (
+                                    <FaEyeSlash
+                                        className="text-[1.6rem] mr-4 text-gray-400 cursor-pointer"
+                                        onClick={() => setIsShowPassword((prev) => !prev)}
+                                    />
+                                )}
+                            </div>
+                            <div className="absolute cursor-pointer mt-15 right-0 max-sm:justify-center max-sm:mt-4">
+                                <p
+                                    className="text-gray-400 font-normal hover:text-gray-700"
+                                    onClick={() => setIsForgotPasswordFormOpen((prev) => !prev)}
+                                >
+                                    Forgot Password ?
+                                </p>
+                            </div>
                         </div>
-                        <div className="submit-container">
-                            <button type="submit" disabled={isSubmitting}>
-                                {isSubmitting ? (<div className="loader-container">
-                                    <div className="login-loader"></div>
-                                </div>) : "Login"}
+
+                        <div className="mt-20 max-sm:mt-4">
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="w-[420px] h-[55px] outline-none border-0 rounded-md text-lg font-medium text-white bg-[rgb(46,111,251)] cursor-pointer hover:bg-[rgb(54,117,253)] disabled:opacity-50 max-lg:w-[90vw] max-lg:max-w-[98%] max-lg:min-w-[220px] max-sm:w-[98vw] max-sm:max-w-full max-sm:min-w-[120px] max-sm:text-base"
+                            >
+                                {isSubmitting ? (
+                                    <div className="flex justify-center items-center">
+                                        <div className="w-5 h-5 rounded-full border-2 border-blue-600 border-t-white animate-spin"></div>
+                                    </div>
+                                ) : "Login"}
                             </button>
                         </div>
                     </form>
-                    <div className="create-admin-account">
-                        <p onClick={() => setIsRegisterFormOpen((prev) => !prev)}>Create admin account ?</p>
+                    <div className="mt-6 max-sm:text-center max-sm:mt-4">
+                        <p
+                            className="text-black cursor-pointer text-lg hover:underline"
+                            onClick={() => setIsRegisterFormOpen((prev) => !prev)}
+                        >
+                            Create an Account ?
+                        </p>
                     </div>
                 </div>
             </div>
             {isRegisterFormOpen ? <Register /> : ""}
+            {isForgotPasswordFormOpen ? <ForgotPassword /> : ""}
         </>
     )
 }
