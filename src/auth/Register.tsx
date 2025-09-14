@@ -102,71 +102,71 @@ export default function Register() {
         <>
             {isRegisterFormOpen ?
 
-                <div className="register-page">
-                    <div className="Register-container">
-                        <form onSubmit={handleSubmitRegisterForm} className="register-form" method="post">
-                            <div className="close-container">
-                                <FaPlus onClick={() => setIsRegisterFormOpen(false)} className="close-logo" />
+                <div className="register-page fixed flex flex-row justify-center items-center p-[2rem] z-[1000] w-full h-full m-h-full top-0 left-0">
+                    <div className="Register-container relative w-full max-w-[550px] bg-white rounded-2xl shadow-gray-600 mt-[2rem] p-[2.5rem] animate-fade-in">
+                        <form onSubmit={handleSubmitRegisterForm} className="register-form flex flex-col gap-4 m-0" method="post">
+                            <div className="close-container absolute top-[1rem] right-[1rem] z-[10]">
+                                <FaPlus onClick={() => setIsRegisterFormOpen(false)} className="close-logo text-2xl text-gray-400 cursor-pointer w-[32px] h-[32px] items-center justify-center rounded-full" />
                             </div>
-                            <div className="register-title">
-                                <h1>Create account</h1>
-                                <p>Register an admin account to manage the system.</p>
+                            <div className="register-title text-center mb-[2rem]">
+                                <h1 className="text-black text-3xl font-extrabold mb-2">Create account</h1>
+                                <p className="text-gray-700 text-md font-[400]">Register an admin account to manage the system.</p>
                             </div>
                             <input
                                 autoFocus
-                                style={{ borderColor: firstNameError ? "red" : "" }}
+                                className={`w-full h-[56px] outline-0 border-[1px] border-gray-400 rounded-lg pl-4 bg-white hover:border-gray-600 hover:bg-gray-50 focus:border-blue-600 ${firstNameError ? 'border-red-700' : ''}`}
                                 type="text"
                                 name="firstName"
                                 value={submitForm.firstName}
                                 placeholder="First name"
                                 onChange={handleChange}
                             />
-                            {firstNameError && <p style={{ marginTop: "-1.1rem", color: "red", fontSize: "14px", }}>{firstNameError}</p>}
+                            {firstNameError && <p style={{ marginTop: "-0.9rem", color: "red", fontSize: "16px", }}>{firstNameError}</p>}
 
                             <input
                                 type="text"
                                 name="lastName"
-                                style={{ borderColor: lastNameError ? "red" : "" }}
+                                className={`w-full h-[56px] outline-0 border-[1px] border-gray-400 rounded-lg pl-4 bg-white hover:border-gray-600 hover:bg-gray-50 focus:border-blue-600 ${lastNameError ? 'border-red-700' : ''}`}
                                 value={submitForm.lastName}
                                 placeholder="Last name"
                                 onChange={handleChange}
                             />
-                            {lastNameError && <p style={{ marginTop: "-1.1rem", color: "red", fontSize: "14px", }}>{lastNameError}</p>}
+                            {lastNameError && <p style={{ marginTop: "-0.9rem", color: "red", fontSize: "16px", }}>{lastNameError}</p>}
 
                             <input
                                 type="text"
                                 name="username"
-                                style={{ borderColor: usernameError ? "red" : "" }}
+                                className={`w-full h-[56px] outline-0 border-[1px] border-gray-400 rounded-lg pl-4 bg-white hover:border-gray-600 hover:bg-gray-50 focus:border-blue-600 ${usernameError ? 'border-red-700' : ''}`}
                                 value={submitForm.username}
                                 placeholder="Username"
                                 onChange={handleChange}
                             />
-                            {usernameError && <p style={{ marginTop: "-1.1rem", color: "red", fontSize: "14px", }}>{usernameError}</p>}
+                            {usernameError && <p style={{ marginTop: "-0.9rem", color: "red", fontSize: "16px", }}>{usernameError}</p>}
 
                             <input
                                 type="password"
                                 name="password"
-                                style={{ borderColor: passwordError ? "red" : "" }}
+                                className={`w-full h-[56px] outline-0 border-[1px] border-gray-400 rounded-lg pl-4 bg-white hover:border-gray-600 hover:bg-gray-50 focus:border-blue-600 ${passwordError ? 'border-red-700' : ''}`}
                                 value={submitForm.password}
                                 placeholder="Password"
                                 onChange={handleChange}
                             />
-                            {passwordError && <p style={{ marginTop: "-1.1rem", color: "red", fontSize: "14px", }}>{passwordError}</p>}
+                            {passwordError && <p style={{ marginTop: "-0.9rem", color: "red", fontSize: "16px", }}>{passwordError}</p>}
 
                             <input
                                 type="password"
                                 name="confirmPassword"
-                                style={{ borderColor: confirmPasswordError ? "red" : "" }}
+                                className={`w-full h-[56px] outline-0 border-[1px] border-gray-400 rounded-lg pl-4 bg-white hover:border-gray-600 hover:bg-gray-50 focus:border-blue-600 ${confirmPasswordError ? 'border-red-700' : ''}`}
                                 value={submitForm.confirmPassword}
                                 placeholder="Confirm password"
                                 onChange={handleChange}
                             />
-                            {confirmPasswordError && <p style={{ marginTop: "-1.1rem", color: "red", fontSize: "14px", }}>{confirmPasswordError}</p>}
+                            {confirmPasswordError && <p style={{ marginTop: "-0.9rem", color: "red", fontSize: "16px", }}>{confirmPasswordError}</p>}
 
-                            <div className="register-container">
-                                <button className="register-button" type="submit">
-                                    {isSubmitting ? (<div className="loader-container">
-                                        <div className="loader"></div>
+                            <div className="register-container overflow-hidden relative w-full h-[56px] flex justify-center items-center outline-0 border-0 rounded-[12px] bg-blue-500 text-white font-semibold cursor-pointer  hover:bg-blue-400">
+                                <button className="cursor-pointer" type="submit">
+                                    {isSubmitting ? (<div className="flex justify-center items-center">
+                                        <div className="w-5 h-5 rounded-full border-2 border-blue-600 border-t-white animate-spin"></div>
                                     </div>) : "Register"}
                                 </button>
                             </div>
