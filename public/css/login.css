@@ -2,12 +2,13 @@
   position: relative;
   width: 100%;
   height: 100vh;
-  background-color: rgb(46, 111, 251);
 }
+
 .image-container {
   max-width: 7rem;
   padding: 1.3rem;
   margin-left: 3%;
+  animation: fadeIn 0.8s ease-in-out;
 }
 .image-container img {
   width: 106px;
@@ -16,6 +17,7 @@
 .hero-container {
   max-width: 1000px;
   margin: 7% 4% 4% 4%;
+  animation: fadeIn 0.5s ease-in-out;
 }
 
 .title {
@@ -28,6 +30,7 @@
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
   line-height: 4.2rem;
   margin: 0 0 1rem 0;
+  animation: fadeIn 1s ease-in-out;
 }
 .hero-container p {
   color: rgba(255, 255, 255, 0.754);
@@ -37,23 +40,36 @@
   top: 0;
   width: 35%;
   height: 100vh;
-  background-color: rgb(71, 129, 255);
+  /* background-color: rgb(71, 129, 255); */
+  background-color: white;
   margin: 0 0 0 65%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  animation: fadeIn 1s ease-in-out;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 .form-header {
   margin: 1rem 0 2.5em 0;
 }
 .form-header h1 {
-  color: white;
+  /* color: white; */
+  color: black;
   font-size: 2.4rem;
   margin: 0 0 -0.3rem 0;
 }
 .form-header p {
-  color: rgba(255, 255, 255, 0.747);
+  /* color: rgba(255, 255, 255, 0.747); */
+  margin: 0.5rem 0 0 0;
+  color: rgba(0, 0, 0, 0.616);
   text-align: center;
 }
 .form-credentials {
@@ -66,18 +82,17 @@
   height: 55px;
   border-radius: 6px;
   outline: 0;
-  border: 0;
+  border: 1px solid rgba(0, 0, 0, 0.341);
   margin: 0 0 1.4rem 0;
   background-color: rgba(255, 255, 255, 0.779);
   padding-left: 1rem;
   font-size: 1rem;
-  transition: 0.2s ease-in-out;
+  /* transition: ease-in-out; */
 }
 .form-credentials input:hover {
   background-color: rgba(255, 255, 255, 0.929);
 }
 .form-credentials input:focus {
-  box-shadow: 0 0 5px black;
   background-color: rgba(255, 255, 255, 0.929);
 }
 .form-container ::placeholder {
@@ -100,11 +115,14 @@
 }
 
 .forgot-password {
+  display: flex;
+  justify-content: flex-end;
   cursor: pointer;
   margin: 1.6rem 0 0 0;
 }
 .forgot-password p {
-  color: white;
+  /* color: white; */
+  color: black;
   font-weight: 400;
 }
 
@@ -112,24 +130,26 @@
   margin: 5rem 0 0 0;
 }
 .submit-container button[type="submit"] {
-  width: 400px;
+  width: 420px;
   height: 55px;
   outline: 0;
   border: 0;
   border-radius: 6px;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 500;
-  background-color: rgba(255, 255, 255, 0.85);
+  color: white;
+  /* background-color: rgba(255, 255, 255, 0.85); */
+  background-color: rgb(46, 111, 251);
   cursor: pointer;
 }
 .submit-container button[type="submit"]:hover {
-  background-color: rgba(255, 255, 255, 0.929);
+  background-color: rgb(54, 117, 253);
 }
 .create-admin-account {
   margin: 2rem 0 0 0;
 }
 .create-admin-account p {
-  color: white;
+  color: rgb(0, 0, 0);
   cursor: pointer;
   font-size: 1.1rem;
 }
