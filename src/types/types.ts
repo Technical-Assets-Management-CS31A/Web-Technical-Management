@@ -1,14 +1,18 @@
 export type TRegisterUser = {
-  firstName: string,
-  lastName: string,
-  username: string,
-  password: string,
-  confirmPassword: string
+  firstName: string;
+  lastName: string;
+  username: string;
+  password: string;
+  confirmPassword: string;
 };
 
 export type TLoginUser = {
   username: string;
   password: string;
+};
+
+export type TForgotPasswordUser = {
+  username: string;
 };
 
 export type TItemList = {
