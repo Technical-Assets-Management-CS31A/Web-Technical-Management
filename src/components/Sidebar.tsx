@@ -1,87 +1,92 @@
 import { NavLink } from "react-router-dom";
 import logo from "../assets/img/aclcLogo.webp";
-import "../../public/css/sidebar.css";
 import { CiLogout } from "react-icons/ci";
+import { removeToken } from "../utils/token";
+import { useNavigate } from "react-router-dom";
 
 export default function Sidebar() {
+    const navigate = useNavigate();
+
+    const logoutUser = async () => {
+        await removeToken();
+        navigate("/");
+    };
+
     return (
-        <div className="sidebar-container">
-            <div className="logo-container">
-                <img src={logo} alt="Logo" />
+        <aside className="animate-fadeIn h-screen w-[300px] bg-white border-r border-[#e5e7eb] flex flex-col justify-between shadow-xl left-0 top-0 z-30">
+            {/* Logo and Title */}
+            <div className="flex flex-col items-center py-8">
+                <img src={logo} alt="Logo" className="w-20 h-20 mb-2" />
+                <span className="text-[#2563eb] font-extrabold text-xl tracking-widest">ACLC</span>
             </div>
-            <div className="category-list-container">
-                <ul className="category-list">
-                    <li className="category-item">
+            {/* Navigation */}
+            <nav className="flex-1">
+                <ul className="flex flex-col gap-2 px-4">
+                    <li>
                         <NavLink
                             to="dashboard"
-                            style={({ isActive }) => ({
-                                color: isActive ? "white" : "rgba(255, 255, 255, 0.563)",
-                                fontWeight: isActive ? "bold" : "normal",
-                                transform: isActive ? "scale(1.2)" : "scale(1)",
-                            })}
+                            className={({ isActive }) =>
+                                `flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-base transition-all duration-150 ${isActive
+                                    ? "bg-[#2563eb] text-white shadow"
+                                    : "text-[#334155] hover:bg-[#f1f5f9] hover:text-[#2563eb]"
+                                }`
+                            }
                         >
-                            Dashboard
+                            <span>Dashboard</span>
                         </NavLink>
                     </li>
-                    <li className="category-item">
+                    <li>
                         <NavLink
                             to="inventory-list"
-                            style={({ isActive }) => ({
-                                color: isActive ? "white" : "rgba(255, 255, 255, 0.563)",
-                                fontWeight: isActive ? "bold" : "normal",
-                                transform: isActive ? "scale(1.2)" : "scale(1)",
-
-                            })}
+                            className={({ isActive }) =>
+                                `flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-base transition-all duration-150 ${isActive
+                                    ? "bg-[#2563eb] text-white shadow"
+                                    : "text-[#334155] hover:bg-[#f1f5f9] hover:text-[#2563eb]"
+                                }`
+                            }
                         >
-                            Inventory List
+                            <span>Inventory List</span>
                         </NavLink>
                     </li>
-                    <li className="category-item">
-                        <NavLink
-                            to="item-list"
-                            style={({ isActive }) => ({
-                                color: isActive ? "white" : "rgba(255, 255, 255, 0.563)",
-                                fontWeight: isActive ? "bold" : "normal",
-                                transform: isActive ? "scale(1.2)" : "scale(1)",
-                            })}
-                        >
-                            Item List
-                        </NavLink>
-                    </li>
-                    <li className="category-item">
+                    <li>
                         <NavLink
                             to="staff"
-                            style={({ isActive }) => ({
-                                color: isActive ? "white" : "rgba(255, 255, 255, 0.563)",
-                                fontWeight: isActive ? "bold" : "normal",
-                                transform: isActive ? "scale(1.2)" : "scale(1)",
-                            })}
+                            className={({ isActive }) =>
+                                `flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-base transition-all duration-150 ${isActive
+                                    ? "bg-[#2563eb] text-white shadow"
+                                    : "text-[#334155] hover:bg-[#f1f5f9] hover:text-[#2563eb]"
+                                }`
+                            }
                         >
-                            Staff
+                            <span>Your Staff</span>
                         </NavLink>
                     </li>
-                    <li className="category-item">
+                    <li>
                         <NavLink
                             to="history-list"
-                            style={({ isActive }) => ({
-                                color: isActive ? "white" : "rgba(255, 255, 255, 0.563)",
-                                fontWeight: isActive ? "bold" : "normal",
-                                transform: isActive ? "scale(1.2)" : "scale(1)",
-                            })}
+                            className={({ isActive }) =>
+                                `flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-base transition-all duration-150 ${isActive
+                                    ? "bg-[#2563eb] text-white shadow"
+                                    : "text-[#334155] hover:bg-[#f1f5f9] hover:text-[#2563eb]"
+                                }`
+                            }
                         >
-                            History
+                            <span>Your History</span>
                         </NavLink>
                     </li>
                 </ul>
-            </div>
-            <div className="footer-container">
-                <div className="logout-container">
-                    <button type="submit" className="logout-button">
-                        <CiLogout className="logout-icon" />
-                        Logout
-                    </button>
-                </div>
-            </div>
-        </div>
+            </nav>
+            {/* Logout */}
+            <footer className="px-4 py-8">
+                <button
+                    onClick={logoutUser}
+                    type="button"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#f1f5f9] text-[#ef4444] font-bold rounded-lg shadow cursor-pointer hover:bg-[#fee2e2] hover:text-[#b91c1c] transition-all duration-150"
+                >
+                    <CiLogout className="text-xl" />
+                    Logout
+                </button>
+            </footer>
+        </aside>
     );
 }
