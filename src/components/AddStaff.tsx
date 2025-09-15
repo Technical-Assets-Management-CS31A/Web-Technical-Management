@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import "../../public/css/addStaff.css"
 
 interface StaffFormData {
     firstname: string;
@@ -33,35 +32,42 @@ export const AddStaff = () => {
     return (
         <>
             {isAddStaffFormOpen &&
-                <div className="form-wrap">
-                    <div className="item-form-container">
-                        <button className="close-btn" onClick={() => setIsAddStaffFormOpen((prev) => !prev)}>
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+                    <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-2xl relative animate-fadeInUp">
+                        <button
+                            className="absolute top-4 right-4 text-2xl text-[#64748b] hover:text-[#2563eb] transition-colors"
+                            onClick={() => setIsAddStaffFormOpen((prev) => !prev)}
+                            aria-label="Close"
+                        >
                             ×
                         </button>
-                        <h2>Add New Staff</h2>
-                        <form onSubmit={handleSubmit}>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label htmlFor="firstname" className="required">First Name</label>
+                        <h2 className="text-3xl font-extrabold text-[#1e293b] mb-6 text-center tracking-tight">Add New Staff</h2>
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="flex flex-col md:flex-row gap-4">
+                                <div className="flex-1">
+                                    <label htmlFor="firstname" className="block text-[#2563eb] font-semibold mb-1">
+                                        First Name <span className="text-red-500">*</span>
+                                    </label>
                                     <input
                                         type="text"
                                         id="firstname"
                                         name="firstname"
-                                        className="item-input"
+                                        className="w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg"
                                         value={formData.firstname}
                                         onChange={handleInputChange}
                                         required
                                         placeholder="Enter first name"
                                     />
                                 </div>
-
-                                <div className="form-group">
-                                    <label htmlFor="lastname" className="required">Last Name</label>
+                                <div className="flex-1">
+                                    <label htmlFor="lastname" className="block text-[#2563eb] font-semibold mb-1">
+                                        Last Name <span className="text-red-500">*</span>
+                                    </label>
                                     <input
                                         type="text"
                                         id="lastname"
                                         name="lastname"
-                                        className="item-input"
+                                        className="w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg"
                                         value={formData.lastname}
                                         onChange={handleInputChange}
                                         required
@@ -69,14 +75,15 @@ export const AddStaff = () => {
                                     />
                                 </div>
                             </div>
-
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label htmlFor="role" className="required">Role</label>
+                            <div className="flex flex-col md:flex-row gap-4">
+                                <div className="flex-1">
+                                    <label htmlFor="role" className="block text-[#2563eb] font-semibold mb-1">
+                                        Role <span className="text-red-500">*</span>
+                                    </label>
                                     <select
                                         id="role"
                                         name="role"
-                                        className="item-input"
+                                        className="w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg"
                                         value={formData.role}
                                         onChange={handleInputChange}
                                         required
@@ -85,13 +92,14 @@ export const AddStaff = () => {
                                         <option value="regular">Regular</option>
                                     </select>
                                 </div>
-
-                                <div className="form-group">
-                                    <label htmlFor="status" className="required">Status</label>
+                                <div className="flex-1">
+                                    <label htmlFor="status" className="block text-[#2563eb] font-semibold mb-1">
+                                        Status <span className="text-red-500">*</span>
+                                    </label>
                                     <select
                                         id="status"
                                         name="status"
-                                        className="item-input"
+                                        className="w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg"
                                         value={formData.status}
                                         onChange={handleInputChange}
                                         required
@@ -101,9 +109,11 @@ export const AddStaff = () => {
                                     </select>
                                 </div>
                             </div>
-
-                            <div className="form-actions">
-                                <button type="submit">
+                            <div className="flex justify-center pt-2">
+                                <button
+                                    type="submit"
+                                    className="px-8 py-3 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white font-bold rounded-xl shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-150"
+                                >
                                     Add Staff
                                 </button>
                             </div>
@@ -114,4 +124,3 @@ export const AddStaff = () => {
         </>
     );
 };
-
