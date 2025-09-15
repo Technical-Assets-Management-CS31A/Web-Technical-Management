@@ -1,19 +1,13 @@
 import Sidebar from "../components/Sidebar"
 import { Outlet } from "react-router-dom"
-import "../../public/css/layout.css"
 
 export default function Home() {
     return (
-        <div className="layout-container">
+        <div className="layout-container relative flex h-[100vh] w-full">
             {/* Sidebar component for navigation */}
-            <section>
-                <Sidebar />
-            </section>
-
+            <Sidebar />
             {/* Main content area */}
-            <main>
-                <Outlet />
-            </main>
+            <Outlet />
         </div>
     )
 }
