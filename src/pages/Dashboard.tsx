@@ -1,9 +1,7 @@
 import { useState } from "react";
-import "../../public/css/dashboard.css";
 import { Pie } from "react-chartjs-2";
 import type { TBorrowedItems } from "../types/types";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 export default function Dashboard() {
@@ -83,60 +81,63 @@ export default function Dashboard() {
     );
 
     return (
-
-        <div className="dashboard-container">
-            <div className="badges-container">
-                <div className="total-items-container">
-                    <h2>Total Items</h2>
-                    <p>150</p>
+        <div className="animate-fadeIn min-h-screen w-full bg-gradient-to-br from-[#f8fafc] via-[#e0e7ef] to-[#c7d2fe] flex flex-col items-center py-10 px-2">
+            {/* Stat Badges */}
+            <div className="w-full max-w-7xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+                <div className="flex flex-col bg-white/90 shadow-xl rounded-2xl p-8 items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-200 border border-[#e0e7ef]">
+                    <h2 className="font-semibold text-lg text-[#64748b] mb-2">Total Items</h2>
+                    <p className="text-4xl font-bold text-[#2563eb]">150</p>
                 </div>
-                <div className="items-category-container">
-                    <h2>Items by Category</h2>
+                <div className="flex flex-col bg-white/90 shadow-xl rounded-2xl p-8 items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-200 border border-[#e0e7ef]">
+                    <h2 className="font-semibold text-lg text-[#64748b] mb-2">Items by Category</h2>
+                    <p className="text-4xl font-bold text-[#2563eb]">19</p>
                 </div>
-                <div className="active-staff-container">
-                    <h2>Active Staff</h2>
-                    <p>25</p>
+                <div className="flex flex-col bg-white/90 shadow-xl rounded-2xl p-8 items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-200 border border-[#e0e7ef]">
+                    <h2 className="font-semibold text-lg text-[#64748b] mb-2">Active Staff</h2>
+                    <p className="text-4xl font-bold text-[#22c55e]">25</p>
                 </div>
-                <div className="items-borrowed-container">
-                    <h2>Items Borrowed</h2>
-                    <p>75</p>
+                <div className="flex flex-col bg-white/90 shadow-xl rounded-2xl p-8 items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-200 border border-[#e0e7ef]">
+                    <h2 className="font-semibold text-lg text-[#64748b] mb-2">Items Borrowed</h2>
+                    <p className="text-4xl font-bold text-[#f59e42]">75</p>
                 </div>
             </div>
-            <div className="main-container">
 
+            {/* Chart & Staff Status */}
+            <div className="w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 {/* Storage Section */}
-                <div className="storage-container">
-                    <h1>Items Available by Category</h1>
-                    <div className="chart-pie-container" style={{ position: "absolute", width: "350px", height: "400px", margin: "-2rem 0 0 10rem" }}>
-                        <PieChart />
+                <div className="bg-white/90 shadow-xl rounded-2xl p-6 flex flex-col justify-center border border-[#e0e7ef]">
+                    <h1 className="font-bold text-[#1e293b] text-xl mb-4">Items Available by Category</h1>
+                    <div className="flex justify-center items-center w-full h-full">
+                        <div style={{ width: "320px", height: "260px" }}>
+                            <PieChart />
+                        </div>
                     </div>
                 </div>
-
                 {/* Staff Status Section */}
-                <div className="staff-status-container">
-                    <h1>Staff Status</h1>
-                    <ul className="staff-list-container">
+                <div className="bg-white/90 shadow-xl rounded-2xl p-6 flex flex-col border border-[#e0e7ef]">
+                    <h1 className="font-bold text-[#1e293b] text-xl mb-4">Staff Status</h1>
+                    <ul className="flex flex-col gap-3 h-[220px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300">
                         {staffStatus.map((staff) => (
-                            <li key={staff.id}>
-                                <label htmlFor="">{staff.name.charAt(0).toUpperCase() + staff.name.slice(1)}</label>
-                                <span className="active-status">
-                                    <div className={`radio-container ${staff.status == 'active' ? 'staff-active' : 'staff-inactive'}`}></div>
-                                    <p className="status-text">
+                            <li key={staff.id} className="flex justify-between items-center border-b border-[#e0e7ef] py-2">
+                                <span className="font-medium text-[#334155]">{staff.name.charAt(0).toUpperCase() + staff.name.slice(1)}</span>
+                                <span className="flex items-center gap-2">
+                                    <span className={`inline-block w-4 h-4 rounded-full ${staff.status === 'active' ? 'bg-green-300' : 'bg-red-300'}`}></span>
+                                    <span className={`text-sm font-semibold ${staff.status === 'active' ? 'text-green-700' : 'text-red-500'}`}>
                                         {staff.status.charAt(0).toUpperCase() + staff.status.slice(1)}
-                                    </p>
+                                    </span>
                                 </span>
                             </li>
                         ))}
-
                     </ul>
                 </div>
             </div>
 
             {/* Table Borrowed Section */}
-            <div className="table-borrowed-items-container">
-                <div className="header-table-borrowed-container">
-                    <h1>Recently Borrowed Items</h1>
+            <div className="w-full max-w-7xl bg-white/90 shadow-xl rounded-2xl p-8 border border-[#e0e7ef]">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+                    <h1 className="font-bold text-[#1e293b] text-2xl">Recently Borrowed Items</h1>
                     <input
+                        className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                         type="search"
                         name="search"
                         id="search"
@@ -144,27 +145,27 @@ export default function Dashboard() {
                         placeholder="Search items..."
                     />
                 </div>
-                <div className="table-container">
-                    <table className="table">
+                <div className="h-[18vh] overflow-x-auto rounded-xl shadow-inner bg-white/95">
+                    <table className="w-full border-collapse text-left">
                         <thead>
                             <tr>
-                                <th>Date & Time</th>
-                                <th>Teacher</th>
-                                <th>Room</th>
-                                <th>Item</th>
-                                <th>Occupied By</th>
-                                <th>Remarks</th>
+                                <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">Date & Time</th>
+                                <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">Teacher</th>
+                                <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">Room</th>
+                                <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">Item</th>
+                                <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">Occupied By</th>
+                                <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">Remarks</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredData.map((item) => (
-                                <tr key={item.id}>
-                                    <td>{item.datetime}</td>
-                                    <td>{item.teacher.charAt(0).toUpperCase() + item.teacher.slice(1)}</td>
-                                    <td>{item.room.charAt(0).toUpperCase() + item.room.slice(1)}</td>
-                                    <td>{item.item.charAt(0).toUpperCase() + item.item.slice(1)}</td>
-                                    <td>{item.occupied.charAt(0).toUpperCase() + item.occupied.slice(1)}</td>
-                                    <td>{item.remarks.charAt(0).toUpperCase() + item.remarks.slice(1)}</td>
+                                <tr key={item.id} className="hover:bg-[#f1f5f9] transition-colors">
+                                    <td className="py-3 px-6">{item.datetime}</td>
+                                    <td className="py-3 px-6">{item.teacher.charAt(0).toUpperCase() + item.teacher.slice(1)}</td>
+                                    <td className="py-3 px-6">{item.room.charAt(0).toUpperCase() + item.room.slice(1)}</td>
+                                    <td className="py-3 px-6">{item.item.charAt(0).toUpperCase() + item.item.slice(1)}</td>
+                                    <td className="py-3 px-6">{item.occupied.charAt(0).toUpperCase() + item.occupied.slice(1)}</td>
+                                    <td className="py-3 px-6">{item.remarks.charAt(0).toUpperCase() + item.remarks.slice(1)}</td>
                                 </tr>
                             ))}
                         </tbody>
