@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { FaPlus, FaSearch } from "react-icons/fa";
+import { FaSearch, FaEdit } from "react-icons/fa";
 import { AddStaff } from "../components/AddStaff";
+import Button from "../components/Button";
 
 const demoStaff = [
   { id: 1, firstname: "Alice", lastname: "Johnson", role: "Intern", status: "Active" },
@@ -43,13 +44,7 @@ export default function Staff() {
               Manage your staff members efficiently. Search and update staff records.
             </span>
           </div>
-          <button
-            className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white font-semibold rounded-xl shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-150"
-            type="button"
-            onClick={() => setIsAddStaffOpen((prev) => !prev)}
-          >
-            <FaPlus /> New Staff
-          </button>
+          <Button onClick={() => setIsAddStaffOpen((prev) => !prev)} />
         </div>
 
         {/* Search Bar */}
@@ -74,11 +69,12 @@ export default function Staff() {
                 <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">Lastname</th>
                 <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">Role</th>
                 <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">Status</th>
+                <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">Action</th>
               </tr>
             </thead>
             <tbody>
               {filteredStaff.map((staff) => (
-                <tr key={staff.id} className="hover:bg-[#f1f5f9] transition-colors">
+                <tr key={staff.id} className="hover:bg-[#f1f5f9] transition-colors odd:bg-white even:bg-[#f8fafc]">
                   <td className="py-3 px-6">{staff.id}</td>
                   <td className="py-3 px-6">{staff.firstname}</td>
                   <td className="py-3 px-6">{staff.lastname}</td>
@@ -92,6 +88,14 @@ export default function Staff() {
                     >
                       {staff.status}
                     </span>
+                  </td>
+                  <td className="py-3 px-6">
+                    <button
+                      className="text-[#2563eb] hover:underline"
+                    // onClick={() => handleEditStaff(staff.id)}
+                    >
+                      <FaEdit />
+                    </button>
                   </td>
                 </tr>
               ))}
