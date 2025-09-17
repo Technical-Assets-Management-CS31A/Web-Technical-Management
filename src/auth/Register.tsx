@@ -1,7 +1,6 @@
 import React, { useState } from "react"
-import { FaPlus } from "react-icons/fa6";
-import "../../public/css/register.css"
 import type { TRegisterUser } from "../types/types";
+import CloseButton from "../components/CloseButton";
 
 export default function Register() {
     const register_api = import.meta.env.VITE_REGISTER_USER_API;
@@ -102,11 +101,11 @@ export default function Register() {
         <>
             {isRegisterFormOpen ?
 
-                <div className="register-page fixed flex flex-row justify-center items-center p-[2rem] z-[1000] w-full h-full m-h-full top-0 left-0">
+                <div className="animate-fadeIn fixed flex flex-row justify-center items-center p-[2rem] bg-gray-900/60 z-[1000] w-full h-full m-h-full top-0 left-0">
                     <div className="Register-container relative w-full max-w-[550px] bg-white rounded-2xl shadow-gray-600 mt-[2rem] p-[2.5rem] animate-fade-in">
                         <form onSubmit={handleSubmitRegisterForm} className="register-form flex flex-col gap-4 m-0" method="post">
                             <div className="close-container absolute top-[1rem] right-[1rem] z-[10]">
-                                <FaPlus onClick={() => setIsRegisterFormOpen(false)} className="close-logo text-2xl text-gray-400 cursor-pointer w-[32px] h-[32px] items-center justify-center rounded-full" />
+                                <CloseButton onClick={() => setIsRegisterFormOpen(false)} />
                             </div>
                             <div className="register-title text-center mb-[2rem]">
                                 <h1 className="text-black text-3xl font-extrabold mb-2">Create account</h1>
