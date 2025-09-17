@@ -86,7 +86,7 @@ export default function HistoryList({
             </thead>
             <tbody>
               {filteredItems.map((r) => (
-                <tr key={r.id} className="hover:bg-[#f1f5f9] transition-colors">
+                <tr key={r.id} className="hover:bg-[#f1f5f9] transition-colors  odd:bg-white even:bg-[#f8fafc]">
                   <td className="py-3 px-6">{r.id}</td>
                   <td className="py-3 px-6">{r.name}</td>
                   <td className="py-3 px-6">{r.borrowedId}</td>
