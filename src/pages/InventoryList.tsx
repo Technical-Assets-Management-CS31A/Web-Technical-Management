@@ -13,22 +13,22 @@ export default function InventoryList() {
       <section className="inventory-stats-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-8 pt-12 pb-8">
         {/* Total Items Count */}
         <div className="bg-white/90 shadow-xl rounded-2xl p-8 flex flex-col items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-200 border border-[#e0e7ef]">
-          <span className="stat-title font-semibold text-lg text-[#64748b] mb-2">Count All Items</span>
+          <span className="stat-title font-semibold text-lg text-[#64748b] mb-2">Total Items</span>
           <span className="text-4xl font-bold text-[#2563eb]">100</span>
         </div>
         {/* Category Items Count */}
         <div className="bg-white/90 shadow-xl rounded-2xl p-8 flex flex-col items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-200 border border-[#e0e7ef]">
-          <span className="stat-title font-semibold text-lg text-[#64748b] mb-2">Category Items Count</span>
+          <span className="stat-title font-semibold text-lg text-[#64748b] mb-2">Categories</span>
           <span className="text-4xl font-bold text-[#2563eb]">10</span>
         </div>
         {/* Status Staff */}
         <div className="bg-white/90 shadow-xl rounded-2xl p-8 flex flex-col items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-200 border border-[#e0e7ef]">
-          <span className="stat-title font-semibold text-lg text-[#64748b] mb-2">Status Staff</span>
-          <span className="text-4xl font-bold text-[#22c55e]">Active</span>
+          <span className="stat-title font-semibold text-lg text-[#64748b] mb-2">Available</span>
+          <span className="text-4xl font-bold text-[#22c55e]">233</span>
         </div>
         {/* Items Borrow */}
         <div className="bg-white/90 shadow-xl rounded-2xl p-8 flex flex-col items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-200 border border-[#e0e7ef]">
-          <span className="stat-title font-semibold text-lg text-[#64748b] mb-2">Items Borrow</span>
+          <span className="stat-title font-semibold text-lg text-[#64748b] mb-2">In Use</span>
           <span className="text-4xl font-bold text-[#f59e42]">5</span>
         </div>
       </section>
