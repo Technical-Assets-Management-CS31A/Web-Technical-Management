@@ -89,7 +89,7 @@ export default function Dashboard() {
                     <p className="text-4xl font-bold text-[#2563eb]">150</p>
                 </div>
                 <div className="flex flex-col bg-white/90 shadow-xl rounded-2xl p-8 items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-200 border border-[#e0e7ef]">
-                    <h2 className="font-semibold text-lg text-[#64748b] mb-2">Items by Category</h2>
+                    <h2 className="font-semibold text-lg text-[#64748b] mb-2">Categories</h2>
                     <p className="text-4xl font-bold text-[#2563eb]">19</p>
                 </div>
                 <div className="flex flex-col bg-white/90 shadow-xl rounded-2xl p-8 items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-200 border border-[#e0e7ef]">
