@@ -24,7 +24,7 @@ const DeleteItem = async (id: string) => {
 };
 
 export const useDeleteItemMutation = () => {
-  return useMutation<unknown, Error, string>({
+  return useMutation({
     mutationFn: DeleteItem,
   });
 };
