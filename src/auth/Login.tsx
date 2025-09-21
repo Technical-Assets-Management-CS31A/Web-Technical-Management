@@ -101,14 +101,14 @@ export default function Login() {
   return (
     <>
       <div className="relative w-full h-screen bg-[rgb(46,111,251)] max-lg:h-auto max-lg:min-h-screen max-lg:py-4">
-        <div className="max-w-[10rem] p-5 ml-[3%] animate-fade-in max-sm:ml-0 max-sm:p-2 max-sm:max-w-full max-sm:text-center">
+        <div className="animate-fadeIn max-w-[10rem] p-5 ml-[3%] animate-fade-in max-sm:ml-0 max-sm:p-2 max-sm:max-w-full max-sm:text-center">
           <img
             src={logo}
             alt="Logo"
             className="w-[106px] h-[124px] max-sm:w-20 max-sm:h-[94px]"
           />
         </div>
-        <div className="max-w-[1000px] mx-[4%] mt-[7%] mb-[4%] animate-fade-in max-lg:mx-[2%] max-lg:mt-[4%] max-lg:mb-[2%] max-lg:max-w-full max-sm:mx-[1%] max-sm:mt-[2%] max-sm:mb-[1%] max-sm:p-0">
+        <div className="animate-fadeIn max-w-[1000px] mx-[4%] mt-[7%] mb-[4%] animate-fade-in max-lg:mx-[2%] max-lg:mt-[4%] max-lg:mb-[2%] max-lg:max-w-full max-sm:mx-[1%] max-sm:mt-[2%] max-sm:mb-[1%] max-sm:p-0">
           <div className="max-w-[650px] max-sm:max-w-full max-sm:text-center">
             <h1 className="text-[65px] text-white font-bold drop-shadow-[0_4px_12px_rgba(0,0,0,0.45)] leading-[4.2rem] m-0 mb-4 animate-fade-in max-sm:text-[2.2rem] max-sm:leading-[2.7rem]">
               Technical Assets Management
@@ -121,10 +121,10 @@ export default function Login() {
             error omnis. Asperiores!
           </p>
         </div>
-        <div className="absolute top-0 right-0 w-[35%] h-screen bg-white flex flex-col justify-center items-center animate-fade-in max-lg:w-full max-lg:ml-0 max-lg:relative max-lg:min-h-[60vh] max-sm:w-full max-sm:ml-0 max-sm:relative max-sm:min-h-[60vh] max-sm:py-4 max-sm:px-2">
+        <div className="animate-fadeIn absolute top-0 right-0 w-[35%] h-screen bg-white flex flex-col justify-center items-center animate-fade-in max-lg:w-full max-lg:ml-0 max-lg:relative max-lg:min-h-[60vh] max-sm:w-full max-sm:ml-0 max-sm:relative max-sm:min-h-[60vh] max-sm:py-4 max-sm:px-2">
           <div className="my-4 mb-10">
             <h1 className="text-black text-[2.4rem] m-0 mb-[-0.3rem] max-sm:text-[1.5rem]">
-              Welcome back.
+              Welcome Admin.
             </h1>
             <p className="mb-1.5 text-black/62 text-center">
               Enter your credentials to log in.
