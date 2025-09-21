@@ -194,6 +194,11 @@ export default function InventoryList() {
     if (data) setItems(data);
   }, [data]);
 
+  // Reset currentPage when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchItem]);
+
   if (isPending) {
     return <InventoryListSkeletonLoader />;
   }
@@ -208,17 +213,18 @@ export default function InventoryList() {
   );
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+
+  // Reset currentPage to 1 if it's beyond the available pages
+  const validCurrentPage = totalPages > 0 ? Math.min(currentPage, totalPages) : 1;
+
   const paginatedData = filteredItems.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    (validCurrentPage - 1) * itemsPerPage,
+    validCurrentPage * itemsPerPage
   );
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
-
-  const isSearching = searchItem.trim().length > 0;
-  const displayedItems = isSearching ? filteredItems : paginatedData;
 
   return (
     // Inventory List Page Container
@@ -277,15 +283,15 @@ export default function InventoryList() {
                 <div className="flex items-center gap-2 -mt-6">
                   <button
                     className="px-4 py-3 rounded bg-[#e0e7ef] text-[#2563eb] font-semibold disabled:opacity-50"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
+                    onClick={() => handlePageChange(validCurrentPage - 1)}
+                    disabled={validCurrentPage === 1}
                   >
                     Prev
                   </button>
                   {[...Array(totalPages)].map((_, idx) => (
                     <button
                       key={idx + 1}
-                      className={`px-4 py-3 rounded font-semibold ${currentPage === idx + 1
+                      className={`px-4 py-3 rounded font-semibold ${validCurrentPage === idx + 1
                         ? "bg-[#2563eb] text-white"
                         : "bg-[#e0e7ef] text-[#2563eb]"
                         }`}
@@ -296,8 +302,8 @@ export default function InventoryList() {
                   ))}
                   <button
                     className="px-4 py-3 rounded bg-[#e0e7ef] text-[#2563eb] font-semibold disabled:opacity-50"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
+                    onClick={() => handlePageChange(validCurrentPage + 1)}
+                    disabled={validCurrentPage === totalPages}
                   >
                     Next
                   </button>
@@ -334,13 +340,13 @@ export default function InventoryList() {
               </tr>
             </thead>
             <tbody>
-              {displayedItems.length === 0 ? (
+              {paginatedData.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-8 text-[#64748b] font-semibold">
                     No items found.
                   </td>
                 </tr>
-              ) : displayedItems.map((item) => (
+              ) : paginatedData.map((item) => (
                 <tr
                   key={item.SerialNumber}
                   className="hover:bg-[#f1f5f9] transition-colors odd:bg-white even:bg-[#f8fafc]"
