@@ -23,9 +23,9 @@ const DeleteStaff = async (id: number) => {
   }
 };
 
-export const useDeleteStaffMutation = (id: number) => {
+export const useDeleteStaffMutation = () => {
   return useMutation({
-    mutationKey: ["staff", id],
+    mutationKey: ["staff"],
     mutationFn: DeleteStaff,
   });
 };
