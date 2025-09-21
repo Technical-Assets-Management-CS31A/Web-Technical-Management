@@ -9,7 +9,6 @@ type RegisterProps = {
 export default function Register({ onClose }: RegisterProps) {
     const BASE_URL = import.meta.env.VITE_REGISTER_USER_API;
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
-    const [isRegisterFormOpen, setIsRegisterFormOpen] = useState<boolean>(true)
     const [firstNameError, setFirstNameError] = useState<string>("")
     const [lastNameError, setLastNameError] = useState<string>("")
     const [usernameError, setUsernameError] = useState<string>("")
@@ -83,7 +82,6 @@ export default function Register({ onClose }: RegisterProps) {
 
             const data = await response.json();
             if (data) {
-                setIsRegisterFormOpen(false);
                 alert("Registration successful! You can now log in.");
                 window.location.reload();
             }
