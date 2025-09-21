@@ -114,11 +114,8 @@ export default function Login() {
               Technical Assets Management
             </h1>
           </div>
-          <p className="text-white/75">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolor earum
-            illum quaerat, cum, minima iusto nihil nobis molestiae id voluptate
-            voluptatem ducimus alias aperiam, voluptatibus perferendis repellat
-            error omnis. Asperiores!
+          <p className="text-white/75 text-lg">
+            Managing hardware, software, and digital resources, while tracking items, borrowers, and usage. Ensures optimized performance, cost efficiency, security, and smooth lifecycle management.
           </p>
         </div>
         <div className="animate-fadeIn absolute top-0 right-0 w-[35%] h-screen bg-white flex flex-col justify-center items-center animate-fade-in max-lg:w-full max-lg:ml-0 max-lg:relative max-lg:min-h-[60vh] max-sm:w-full max-sm:ml-0 max-sm:relative max-sm:min-h-[60vh] max-sm:py-4 max-sm:px-2">
@@ -181,7 +178,7 @@ export default function Login() {
               <div className="absolute cursor-pointer mt-15 right-0 max-sm:justify-center max-sm:mt-4">
                 <p
                   className="text-gray-400 font-normal hover:text-gray-700"
-                  onClick={() => setIsForgotPasswordFormOpen((prev) => !prev)}
+                  onClick={() => setIsForgotPasswordFormOpen(true)}
                 >
                   Forgot Password ?
                 </p>
@@ -206,15 +203,15 @@ export default function Login() {
           </form>
           <div className="mt-6 max-sm:text-center max-sm:mt-4">
             <p
-              className="text-black cursor-pointer text-lg hover:underline"
-              onClick={() => setIsRegisterFormOpen((prev) => !prev)}
+              className="text-gray-400 cursor-pointer text-lg hover:underline hover:text-gray-700"
+              onClick={() => setIsRegisterFormOpen(true)}
             >
-              Create an Account ?
+              Create new account ?
             </p>
           </div>
         </div>
       </div>
-      {isRegisterFormOpen ? <Register /> : ""}
+      {isRegisterFormOpen ? <Register onClose={() => setIsRegisterFormOpen(false)} /> : ""}
       {isForgotPasswordFormOpen ? (
         <ForgotPassword onClose={() => setIsForgotPasswordFormOpen(false)} />
       ) : (
