@@ -10,6 +10,9 @@ import { useQuery } from "@tanstack/react-query";
 import { SelectStaffStatus } from "../components/SelectStaffStatus";
 import { useAllStaffsQuery } from "../query/get/useAllStaffsQuery";
 import { StaffSkeletonLoader } from "../loader/StaffSkeletonLoader";
+import { useDeleteStaffMutation } from "../query/delete/useDeleteStaffMutation";
+
+
 export const Staff = () => {
   const [isAddStaffOpen, setIsAddStaffOpen] = useState<boolean>(false);
   const [isEditStaffOpen, setIsEditStaffOpen] = useState<boolean>(false);
@@ -54,21 +57,14 @@ export const Staff = () => {
     },
   ]);
 
-  const { data, isPending, error } = useQuery(useAllStaffsQuery());
+  const { data, isPending } = useQuery(useAllStaffsQuery());
+  const { mutate } = useDeleteStaffMutation();
 
-  // useEffect(() => {
-  //   if (data && Array.isArray(data)) {
-  //     setStaffs(data);
-  //   }
-  // }, [data])
-
-  // if (error || !data) {
-  //   return (
-  //     <div className="w-full h-full flex justify-center items-center">
-  //       <span className="text-lg text-red-500 font-semibold">Failed to load staff details.</span>
-  //     </div>
-  //   );
-  // }
+  useEffect(() => {
+    if (data && Array.isArray(data)) {
+      setStaffs(data);
+    }
+  }, [data])
 
   if (isPending) {
     return <StaffSkeletonLoader />;
@@ -192,7 +188,11 @@ export const Staff = () => {
                     >
                       <FaEdit />
                     </button>
-                    <button className="px-4 py-2 cursor-pointer bg-gradient-to-r from-[#ffce72] to-[orange] text-white rounded-lg font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-150">
+                    <button onClick={() => {
+                      if (window.confirm("Are you sure you want to archive this item?")) {
+                        mutate(staff.id)
+                      }
+                    }} className="px-4 py-2 cursor-pointer bg-gradient-to-r from-[#ffce72] to-[orange] text-white rounded-lg font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-150">
                       <FaTrash />
                     </button>
                   </td>
