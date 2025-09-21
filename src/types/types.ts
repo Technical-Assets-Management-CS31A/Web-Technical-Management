@@ -6,7 +6,7 @@ export type TRegisterUser = {
   confirmPassword: string;
 };
 
-export type StaffFormData = {
+export type TStaffFormData = {
   firstName: string;
   lastName: string;
   middleName?: string;
@@ -18,6 +18,18 @@ export type StaffFormData = {
   confirmPassword: string;
 };
 
+export type TStaffs = {
+  id: number;
+  firstName: string;
+  lastName: string;
+  middleName?: string;
+  username?: string;
+  email?: string;
+  phoneNumber?: string;
+  position: string;
+  status: string;
+};
+
 export type TLoginUser = {
   username: string;
   password: string;
@@ -27,25 +39,37 @@ export type TForgotPasswordUser = {
   username: string;
 };
 
+export type TItemForm = {
+  ItemName: string;
+  SerialNumber: string;
+  Image: File | null;
+  ItemType: string;
+  ItemModel: string;
+  ItemMake: string;
+  Description: string;
+  Category: string;
+  Condition: string;
+  preview: string | null;
+};
+
 export type TItemList = {
   id: number;
   datetime: string;
-  name: string;
-  serial_number: string;
-  condition: string;
-  stock: string;
-  category: string;
-  image: File | null;
+  ItemName: string;
+  SerialNumber: string;
+  Image: File | null;
+  ItemType: string;
+  ItemModel: string;
+  ItemMake: string;
+  Description: string;
+  Category: string;
+  Condition: string;
+  image: string | null;
 };
 
-export type TItemForm = {
-  image: File | null;
-  name: string;
-  serial_number: string;
-  category: string;
-  stock: string;
-  condition: string;
-  preview: string;
+export type TEditItemForm = {
+  Id: number;
+  SerialNumber: string;
 };
 
 export type TBorrowedItems = {
@@ -56,4 +80,16 @@ export type TBorrowedItems = {
   item: string;
   occupied: string;
   remarks: string;
+};
+
+export type THistoryBorrwedItems = {
+  id: number;
+  ItemName: string;
+  Borrowed_id: string;
+  Teacher: string;
+  Room: string;
+  Occupied: string;
+  Condition: string;
+  Event_Date: string;
+  Status: string;
 };
