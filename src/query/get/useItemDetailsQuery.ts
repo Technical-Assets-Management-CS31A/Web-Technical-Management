@@ -18,7 +18,7 @@ const GetItemDetails = async (id: number) => {
 
 export const useItemDetailsQuery = (id: number) => {
   return queryOptions({
-    queryKey: ["Item"],
+    queryKey: ["Item", id],
     queryFn: () => GetItemDetails(id),
   });
 };
