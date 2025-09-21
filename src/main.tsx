@@ -6,20 +6,26 @@ import Home from "./layout/Home.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import InventoryList from "./pages/InventoryList.tsx";
 import ItemList from "./pages/ItemList.tsx";
-import Staff from "./pages/Staff.tsx";
+import { Staff } from "./pages/Staff.tsx";
 import HistoryList from "./pages/HistoryList.tsx";
+import ViewItem from "./components/ViewItem.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PublicRoute, ProtectedRoute } from "./utils/middleware/accessAuth.tsx";
+import NotFound from "./pages/NotFound.tsx";
 
 const routes = createBrowserRouter([
   {
     path: "/",
     element: (
-      <PublicRoute>
-        <App />
-      </PublicRoute>
+      // <PublicRoute>
+      <App />
+      // </PublicRoute>
     ),
+  },
+  {
+    path: "*",
+    element: <NotFound />,
   },
   {
     path: "/home",
@@ -28,44 +34,52 @@ const routes = createBrowserRouter([
       {
         path: "dashboard",
         element: (
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
+          // <ProtectedRoute>
+          <Dashboard />
+          // </ProtectedRoute>
         ),
       },
       {
         path: "inventory-list",
         element: (
-          <ProtectedRoute>
-            <InventoryList />
-          </ProtectedRoute>
+          // <ProtectedRoute>
+          <InventoryList />
+          // </ProtectedRoute>
         ),
       },
       {
         path: "item-list",
         element: (
-          <ProtectedRoute>
-            <ItemList />
-          </ProtectedRoute>
+          // <ProtectedRoute>
+          <ItemList />
+          // </ProtectedRoute>
         ),
       },
       {
         path: "staff",
         element: (
-          <ProtectedRoute>
-            <Staff />
-          </ProtectedRoute>
+          // <ProtectedRoute>
+          <Staff />
+          // </ProtectedRoute>
         ),
       },
       {
         path: "history-list",
         element: (
-          <ProtectedRoute>
-            <HistoryList />
-          </ProtectedRoute>
+          // <ProtectedRoute>
+          <HistoryList />
+          // </ProtectedRoute>
         ),
       },
     ],
+  },
+  {
+    path: "/items/:id",
+    element: (
+      // <ProtectedRoute>
+      <ViewItem />
+      // </ProtectedRoute>
+    ),
   },
 ]);
 
