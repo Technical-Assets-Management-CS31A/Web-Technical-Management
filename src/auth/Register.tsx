@@ -3,7 +3,7 @@ import type { TRegisterUser } from "../types/types";
 import CloseButton from "../components/CloseButton";
 
 export default function Register() {
-    const register_api = import.meta.env.VITE_REGISTER_USER_API;
+    const BASE_URL = import.meta.env.VITE_REGISTER_USER_API;
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
     const [isRegisterFormOpen, setIsRegisterFormOpen] = useState<boolean>(true)
     const [firstNameError, setFirstNameError] = useState<string>("")
@@ -63,7 +63,7 @@ export default function Register() {
                 confirmPassword: submitForm.confirmPassword,
             };
 
-            const response = await fetch(register_api, {
+            const response = await fetch(BASE_URL, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
