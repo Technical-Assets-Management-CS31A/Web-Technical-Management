@@ -56,14 +56,14 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
     console.log("Staff data:", formData);
 
     if (
-      formData.firstName === "" ||
-      formData.lastName === "" ||
-      formData.username === "" ||
-      formData.email === "" ||
-      formData.phoneNumber === "" ||
-      formData.position === "" ||
-      formData.password === "" ||
-      formData.confirmPassword === "" ||
+      formData.firstName === "" &&
+      formData.lastName === "" &&
+      formData.username === "" &&
+      formData.email === "" &&
+      formData.phoneNumber === "" &&
+      formData.position === "" &&
+      formData.password === "" &&
+      formData.confirmPassword === "" &&
       formData.position === ""
     ) {
       setFirstnameError("First name is required");
@@ -319,7 +319,7 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
             <div className="flex justify-center pt-2">
               <button
                 type="submit"
-                className="px-8 py-3 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white font-bold rounded-xl shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-150"
+                className="px-8 py-3 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white font-bold rounded-xl shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-150 cursor-pointer"
               >
                 Save Staff
               </button>
