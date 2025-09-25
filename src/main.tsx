@@ -13,6 +13,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PublicRoute, ProtectedRoute } from "./utils/middleware/accessAuth.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import Login from "./auth/Login.tsx";
 
 const routes = createBrowserRouter([
   {
@@ -22,6 +23,12 @@ const routes = createBrowserRouter([
       <App />
       // </PublicRoute>
     ),
+    children: [
+      {
+        index: true,
+        element: <Login />,
+      },
+    ],
   },
   {
     path: "*",
