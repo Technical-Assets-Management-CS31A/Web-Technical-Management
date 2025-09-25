@@ -7,6 +7,15 @@ type AddItemFormProps = {
 };
 
 const AddItemForm = ({ onClose }: AddItemFormProps) => {
+  const [itemNameError, setItemNameError] = useState<string>("");
+  const [itemTypeError, setItemTypeError] = useState<string>("");
+  const [itemModelError, setItemModelError] = useState<string>("");
+  const [serialNumberError, setSerialNumberError] = useState<string>("");
+  const [itemMakeError, setItemMakeError] = useState<string>("");
+  const [categoryError, setCategoryError] = useState<string>("");
+  const [conditionError, setConditionError] = useState<string>("");
+  const [descriptionError, setDescriptionError] = useState<string>("");
+  const [imageError, setImageError] = useState<string | null>(null);
   const [formData, setFormData] = useState<TItemForm>({
     ItemName: "",
     SerialNumber: "",
@@ -21,7 +30,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value, files } = e.target as HTMLInputElement;
     if (files && files[0]) {
@@ -35,6 +44,16 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
         ...prev,
         [name]: value,
       }));
+
+      if (name === "ItemName") setItemNameError("");
+      if (name === "SerialNumber") setSerialNumberError("");
+      if (name === "Image") setImageError("");
+      if (name === "ItemType") setItemTypeError("");
+      if (name === "ItemMake") setItemMakeError("");
+      if (name === "ItemModel") setItemModelError("");
+      if (name === "Category") setCategoryError("");
+      if (name === "Condition") setConditionError("");
+      if (name === "Description") setDescriptionError("");
     }
   };
 
@@ -42,7 +61,47 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Item Data" , formData)
+
+    if (
+      formData.ItemName === "" &&
+      formData.SerialNumber === "" &&
+      formData.Category === "" &&
+      formData.Condition === "" &&
+      formData.ItemType === "" &&
+      formData.ItemModel === "" &&
+      formData.ItemMake === "" &&
+      formData.Description === "" &&
+      formData.Image === null
+    ) {
+      setItemNameError("Item Name is required");
+      setSerialNumberError("Serial Num is required");
+      setImageError("Image is required");
+      setItemTypeError("Item Type is required");
+      setItemMakeError("Item Make is required");
+      setItemModelError("Item Model is required");
+      setCategoryError("Category is required");
+      setConditionError("Condition is required");
+      setDescriptionError("Description is required");
+      return;
+    }
+
     mutate(formData);
+
+    setFormData({
+      ItemName: "",
+      SerialNumber: "",
+      Category: "",
+      Condition: "",
+      ItemType: "",
+      ItemModel: "",
+      ItemMake: "",
+      Description: "",
+      Image: null,
+      preview: ""
+    })
+
+
   };
 
   return (
@@ -69,15 +128,17 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Item Name <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className="w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg"
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.ItemName === "" && itemNameError ? "border-red-500" : itemNameError ? "border-red-500" : ""}`}
                   type="text"
                   id="ItemName"
                   name="ItemName"
                   placeholder="Enter item name"
                   value={formData.ItemName}
                   onChange={handleChange}
-                  required
                 />
+                {itemNameError && (
+                  <p className="text-red-500 text-sm mt-1">{itemNameError}</p>
+                )}
               </div>
               <div className="flex-1">
                 <label
@@ -87,15 +148,19 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Serial Number <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className="w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg"
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg" ${formData.SerialNumber === "" && serialNumberError ? "border-red-500" : serialNumberError ? "border-red-500" : ""}`}
                   type="text"
                   id="SerialNumber"
                   name="SerialNumber"
                   placeholder="Enter serial number"
                   value={formData.SerialNumber}
                   onChange={handleChange}
-                  required
                 />
+                {serialNumberError && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {serialNumberError}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -108,18 +173,22 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Category <span className="text-red-500">*</span>
                 </label>
                 <select
-                  className="w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg"
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg" ${formData.Category === "" && categoryError ? "border-red-500" : categoryError ? "border-red-500" : ""}`}
                   id="Category"
                   name="Category"
                   value={formData.Category}
                   onChange={handleChange}
-                  required
                 >
                   <option value="">Select Category</option>
                   <option value="electronics">Electronics</option>
                   <option value="furniture">Furniture</option>
                   <option value="tools">Tools</option>
                 </select>
+                {categoryError && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {categoryError}
+                  </p>
+                )}
               </div>
               <div className="flex-1">
                 <label
@@ -129,18 +198,22 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Condition <span className="text-red-500">*</span>
                 </label>
                 <select
-                  className="w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg"
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.Condition === "" && conditionError ? "border-red-500" : conditionError ? "border-red-500" : ""}`}
                   id="Condition"
                   name="Condition"
                   value={formData.Condition}
                   onChange={handleChange}
-                  required
                 >
                   <option value="">Select Condition</option>
                   <option value="new">New</option>
                   <option value="used">Used</option>
                   <option value="refurbished">Refurbished</option>
                 </select>
+                {conditionError && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {conditionError}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -153,15 +226,19 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Item Type <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className="w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg"
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.ItemType === "" && itemTypeError ? "border-red-500": itemTypeError ? "border-red-500":""}`}
                   type="text"
                   id="ItemType"
                   name="ItemType"
                   placeholder="Enter item type"
                   value={formData.ItemType}
                   onChange={handleChange}
-                  required
                 />
+                 {itemTypeError && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {itemTypeError}
+                  </p>
+                )}
               </div>
               <div className="flex-1">
                 <label
@@ -171,15 +248,19 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Item Model <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className="w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg"
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.ItemModel === "" && itemModelError ? "border-red-500" : itemModelError ? "border-red-500": ""}`}
                   type="text"
                   id="ItemModel"
                   name="ItemModel"
                   placeholder="Enter item model"
                   value={formData.ItemModel}
                   onChange={handleChange}
-                  required
                 />
+                {itemModelError && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {itemModelError}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -192,15 +273,19 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Item Make <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className="w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg"
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.ItemMake === "" && itemMakeError ? "border-red-500" : itemMakeError ? "border-red-500": ""}`}
                   type="text"
                   id="ItemMake"
                   name="ItemMake"
                   placeholder="Enter item make"
                   value={formData.ItemMake}
                   onChange={handleChange}
-                  required
                 />
+                {itemMakeError && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {itemMakeError}
+                  </p>
+                )}
               </div>
               <div className="flex-1">
                 <label
@@ -210,15 +295,19 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Description <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className="w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg"
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.Description === "" && descriptionError ? "border-red-500" : descriptionError ? "border-red-500": ""}`}
                   type="text"
                   id="Description"
                   name="Description"
                   placeholder="Enter description"
                   value={formData.Description}
                   onChange={handleChange}
-                  required
                 />
+                {descriptionError && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {descriptionError}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -231,13 +320,18 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Item Image
                 </label>
                 <input
-                  className="w-full px-4 py-2 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-base"
+                  className={`w-full px-4 py-2 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-base ${formData.Image === null && imageError ? "border-red-500" : imageError ? "border-red-500": ""}`}
                   type="file"
                   id="Image"
                   name="Image"
                   accept="image/*"
                   onChange={handleChange}
                 />
+                {imageError && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {imageError}
+                  </p>
+                )}
                 {formData.preview && (
                   <div className="mt-2 flex justify-center">
                     <img
@@ -247,13 +341,14 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                     />
                   </div>
                 )}
+                
               </div>
             </div>
 
             <div className="flex justify-center pt-2">
               <button
                 type="submit"
-                className="px-8 py-3 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white font-bold rounded-xl shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-150 flex items-center gap-2"
+                className="px-8 py-3 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white font-bold rounded-xl shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-150 flex items-center gap-2 cursor-pointer"
               >
                 Save Item
               </button>
