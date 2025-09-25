@@ -16,8 +16,6 @@ const PostItem = async (formData: TItemForm) => {
   if (!res.ok) throw new Error("Submission failed");
   return res.json();
 };
-
-// Custom hook for posting an item
 export const usePostItemMutation = () => {
   return useMutation({
     mutationFn: PostItem,
