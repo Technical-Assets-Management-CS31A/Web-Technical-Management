@@ -153,7 +153,7 @@ export default function Login() {
                 className={`w-[400px] h-[55px] rounded-md outline-none border border-black/34 bg-white/78 pl-4 text-base hover:bg-white/93 focus:bg-white/93 max-lg:w-[90vw] max-lg:max-w-[98%] max-lg:min-w-[220px] max-sm:w-[98vw] max-sm:max-w-full max-sm:min-w-[120px] max-sm:text-base ${usernameError ? "border-2 border-red-500" : ""}`}
                 type={isShowPassword ? "text" : "password"}
                 name="password"
-                placeholder="********"
+                placeholder="Password"
                 value={submitForm.password}
                 onChange={handleChange}
               />
@@ -203,7 +203,7 @@ export default function Login() {
           </form>
           <div className="mt-6 max-sm:text-center max-sm:mt-4">
             <p
-              className="text-gray-400 cursor-pointer text-lg hover:underline hover:text-gray-700"
+              className="text-gray-400 cursor-pointer text-lg hover:text-gray-700"
               onClick={() => setIsRegisterFormOpen(true)}
             >
               Create new account ?
