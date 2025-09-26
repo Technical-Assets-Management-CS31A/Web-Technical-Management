@@ -135,6 +135,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   placeholder="Enter item name"
                   value={formData.ItemName}
                   onChange={handleChange}
+                  data-testid="ItemName"
                 />
                 {itemNameError && (
                   <p className="text-red-500 text-sm mt-1">{itemNameError}</p>
@@ -155,6 +156,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   placeholder="Enter serial number"
                   value={formData.SerialNumber}
                   onChange={handleChange}
+                  data-testid="SerialNumber"
                 />
                 {serialNumberError && (
                   <p className="text-red-500 text-sm mt-1">
@@ -178,6 +180,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   name="Category"
                   value={formData.Category}
                   onChange={handleChange}
+                  data-testid="Category"
                 >
                   <option value="">Select Category</option>
                   <option value="electronics">Electronics</option>
@@ -203,6 +206,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   name="Condition"
                   value={formData.Condition}
                   onChange={handleChange}
+                  data-testid="Condition"
                 >
                   <option value="">Select Condition</option>
                   <option value="new">New</option>
@@ -233,6 +237,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   placeholder="Enter item type"
                   value={formData.ItemType}
                   onChange={handleChange}
+                  data-testid="ItemType"
                 />
                  {itemTypeError && (
                   <p className="text-red-500 text-sm mt-1">
@@ -255,6 +260,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   placeholder="Enter item model"
                   value={formData.ItemModel}
                   onChange={handleChange}
+                  data-testid="ItemModel"
                 />
                 {itemModelError && (
                   <p className="text-red-500 text-sm mt-1">
@@ -280,6 +286,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   placeholder="Enter item make"
                   value={formData.ItemMake}
                   onChange={handleChange}
+                  data-testid="ItemMake"
                 />
                 {itemMakeError && (
                   <p className="text-red-500 text-sm mt-1">
@@ -302,6 +309,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   placeholder="Enter description"
                   value={formData.Description}
                   onChange={handleChange}
+                  data-testid="Description"
                 />
                 {descriptionError && (
                   <p className="text-red-500 text-sm mt-1">
@@ -326,6 +334,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   name="Image"
                   accept="image/*"
                   onChange={handleChange}
+                  data-testid="Image"
                 />
                 {imageError && (
                   <p className="text-red-500 text-sm mt-1">
