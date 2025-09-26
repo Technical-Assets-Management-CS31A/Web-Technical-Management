@@ -119,6 +119,7 @@ export default function Register({ onClose }: RegisterProps) {
                             value={submitForm.firstName}
                             placeholder="First name"
                             onChange={handleChange}
+                            data-testid="firstName"
                         />
                         {firstNameError && <p style={{ marginTop: "-0.9rem", color: "red", fontSize: "16px", }}>{firstNameError}</p>}
 
@@ -129,6 +130,7 @@ export default function Register({ onClose }: RegisterProps) {
                             value={submitForm.lastName}
                             placeholder="Last name"
                             onChange={handleChange}
+                            data-testid="lastName"
                         />
                         {lastNameError && <p style={{ marginTop: "-0.9rem", color: "red", fontSize: "16px", }}>{lastNameError}</p>}
 
@@ -139,6 +141,7 @@ export default function Register({ onClose }: RegisterProps) {
                             value={submitForm.username}
                             placeholder="Username"
                             onChange={handleChange}
+                            data-testid="username"
                         />
                         {usernameError && <p style={{ marginTop: "-0.9rem", color: "red", fontSize: "16px", }}>{usernameError}</p>}
 
@@ -149,6 +152,7 @@ export default function Register({ onClose }: RegisterProps) {
                             value={submitForm.password}
                             placeholder="Password"
                             onChange={handleChange}
+                            data-testid="password"
                         />
                         {passwordError && <p style={{ marginTop: "-0.9rem", color: "red", fontSize: "16px", }}>{passwordError}</p>}
 
@@ -159,6 +163,7 @@ export default function Register({ onClose }: RegisterProps) {
                             value={submitForm.confirmPassword}
                             placeholder="Confirm password"
                             onChange={handleChange}
+                            data-testid="confirmPassword"
                         />
                         {confirmPasswordError && <p style={{ marginTop: "-0.9rem", color: "red", fontSize: "16px", }}>{confirmPasswordError}</p>}
 
