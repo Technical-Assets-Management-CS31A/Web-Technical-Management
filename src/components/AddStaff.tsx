@@ -30,7 +30,7 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
   });
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -49,7 +49,7 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
     if (name === "position") return setPositionError("");
   };
 
-  const { mutate } = usePostStaffMutation()
+  const { mutate } = usePostStaffMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +86,7 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
       return;
     }
 
-    mutate(formData)
+    mutate(formData);
 
     setFormData({
       firstName: "",
@@ -130,10 +130,17 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
                   type="text"
                   id="firstName"
                   name="firstName"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.firstName === "" && firstnameError ? "border-red-500" : firstnameError ? "border-red-500" : ""}`}
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
+                    formData.firstName === "" && firstnameError
+                      ? "border-red-500"
+                      : firstnameError
+                      ? "border-red-500"
+                      : ""
+                  }`}
                   value={formData.firstName}
                   onChange={handleInputChange}
                   placeholder="Enter first name"
+                  data-testid="firstName"
                 />
                 {firstnameError && (
                   <p className="text-red-500 text-sm mt-1">{firstnameError}</p>
@@ -150,10 +157,17 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
                   type="text"
                   id="lastName"
                   name="lastName"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.lastName === "" && lastnameError ? "border-red-500" : lastnameError ? "border-red-500" : ""}`}
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
+                    formData.lastName === "" && lastnameError
+                      ? "border-red-500"
+                      : lastnameError
+                      ? "border-red-500"
+                      : ""
+                  }`}
                   value={formData.lastName}
                   onChange={handleInputChange}
                   placeholder="Enter last name"
+                  data-testid="lastName"
                 />
                 {lastnameError && (
                   <p className="text-red-500 text-sm mt-1">{lastnameError}</p>
@@ -172,10 +186,17 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
                   type="text"
                   id="middleName"
                   name="middleName"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.middleName === "" && middlenameError ? "border-red-500" : middlenameError ? "border-red-500" : ""}`}
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
+                    formData.middleName === "" && middlenameError
+                      ? "border-red-500"
+                      : middlenameError
+                      ? "border-red-500"
+                      : ""
+                  }`}
                   value={formData.middleName}
                   onChange={handleInputChange}
                   placeholder="Enter middle name"
+                  data-testid="middleName"
                 />
                 {middlenameError && (
                   <p className="text-red-500 text-sm mt-1">{middlenameError}</p>
@@ -194,10 +215,17 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
                   type="text"
                   id="username"
                   name="username"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.username === "" && usernameError ? "border-red-500" : usernameError ? "border-red-500" : ""}`}
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
+                    formData.username === "" && usernameError
+                      ? "border-red-500"
+                      : usernameError
+                      ? "border-red-500"
+                      : ""
+                  }`}
                   value={formData.username}
                   onChange={handleInputChange}
                   placeholder="Enter username"
+                  data-testid="username"
                 />
                 {usernameError && (
                   <p className="text-red-500 text-sm mt-1">{usernameError}</p>
@@ -214,10 +242,17 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
                   type="text"
                   id="email"
                   name="email"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.email === "" && emailError ? "border-red-500" : emailError ? "border-red-500" : ""}`}
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
+                    formData.email === "" && emailError
+                      ? "border-red-500"
+                      : emailError
+                      ? "border-red-500"
+                      : ""
+                  }`}
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="example@example.com"
+                  data-testid="email"
                 />
                 {emailError && (
                   <p className="text-red-500 text-sm mt-1">{emailError}</p>
@@ -234,11 +269,18 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
                   type="tel"
                   id="phoneNumber"
                   name="phoneNumber"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.phoneNumber === "" && phoneNumberError ? "border-red-500" : phoneNumberError ? "border-red-500" : ""}`}
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
+                    formData.phoneNumber === "" && phoneNumberError
+                      ? "border-red-500"
+                      : phoneNumberError
+                      ? "border-red-500"
+                      : ""
+                  }`}
                   value={formData.phoneNumber}
                   maxLength={11}
                   onChange={handleInputChange}
                   placeholder="09XXXXXXXXX"
+                  data-testid="phoneNumber"
                 />
                 {phoneNumberError && (
                   <p className="text-red-500 text-sm mt-1">
@@ -259,10 +301,17 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
                   type="password"
                   id="password"
                   name="password"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.password === "" && passwordError ? "border-red-500" : passwordError ? "border-red-500" : ""}`}
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
+                    formData.password === "" && passwordError
+                      ? "border-red-500"
+                      : passwordError
+                      ? "border-red-500"
+                      : ""
+                  }`}
                   value={formData.password}
                   onChange={handleInputChange}
-                  placeholder="********"
+                  placeholder="Enter password"
+                  data-testid="password"
                 />
                 {passwordError && (
                   <p className="text-red-500 text-sm mt-1">{passwordError}</p>
@@ -279,10 +328,17 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
                   type="password"
                   id="confirmPassword"
                   name="confirmPassword"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.confirmPassword === "" && confirmPasswordError ? "border-red-500" : confirmPasswordError ? "border-red-500" : ""}`}
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
+                    formData.confirmPassword === "" && confirmPasswordError
+                      ? "border-red-500"
+                      : confirmPasswordError
+                      ? "border-red-500"
+                      : ""
+                  }`}
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   placeholder="********"
+                  data-testid="confirmPassword"
                 />
                 {confirmPasswordError && (
                   <p className="text-red-500 text-sm mt-1">
@@ -302,9 +358,16 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
                 <select
                   id="position"
                   name="position"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.position === "" && positionError ? "border-red-500" : positionError ? "border-red-500" : ""}`}
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
+                    formData.position === "" && positionError
+                      ? "border-red-500"
+                      : positionError
+                      ? "border-red-500"
+                      : ""
+                  }`}
                   value={formData.position}
                   onChange={handleInputChange}
+                  data-testid="position"
                 >
                   <option value="">Select Position</option>
                   <option value="Technical">Technical</option>
