@@ -141,6 +141,7 @@ export default function Login() {
                 placeholder="Username"
                 value={submitForm.username}
                 onChange={handleChange}
+                data-testid="username"
               />
               {usernameError && (
                 <p className="absolute mt-14 text-red-500 text-base">
@@ -156,6 +157,7 @@ export default function Login() {
                 placeholder="Password"
                 value={submitForm.password}
                 onChange={handleChange}
+                data-testid="password"
               />
               {passwordError && (
                 <p className="relative text-red-500 text-base">
