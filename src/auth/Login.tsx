@@ -6,11 +6,11 @@ import { FaEye } from "react-icons/fa";
 import { FaEyeSlash } from "react-icons/fa6";
 import logo from "../assets/img/aclcLogo.webp";
 import type { TLoginUser } from "../types/types";
-import { saveToken, getToken } from "../utils/token";
+import { usePostLoginMutation } from "../query/post/userPostLoginMutation";
+import { getToken } from "../utils/token";
 
 export default function Login() {
   const navigate = useNavigate();
-  const BASE_URL = import.meta.env.VITE_LOGIN_USER_API;
   const [isShowPassword, setIsShowPassword] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isRegisterFormOpen, setIsRegisterFormOpen] = useState<boolean>(false);
@@ -22,6 +22,8 @@ export default function Login() {
     username: "",
     password: "",
   });
+
+  const { mutate, error } = usePostLoginMutation();
 
   useEffect(() => {
     const token = getToken();
@@ -58,38 +60,10 @@ export default function Login() {
     }
 
     try {
-      const submitUserData = {
-        username: submitForm.username,
-        password: submitForm.password,
-      };
-
-      const response = await fetch(BASE_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(submitUserData),
-        credentials: "include",
-      });
-      if (!response.ok) {
-        setUsernameError("Invalid username or password");
-        setIsSubmitting(false);
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data) {
-        saveToken(data.accessToken);
-        navigate("/home/dashboard");
-      }
-
-      if (!response.ok) {
-        throw data.errors || { general: "Login failed" };
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.log("Login error:", error.message);
+      mutate(submitForm);
+    } catch {
+      if (error) {
+        console.log("Login error:", error);
         setIsSubmitting(false);
         return;
       }
@@ -115,7 +89,9 @@ export default function Login() {
             </h1>
           </div>
           <p className="text-white/75 text-lg">
-            Managing hardware, software, and digital resources, while tracking items, borrowers, and usage. Ensures optimized performance, cost efficiency, security, and smooth lifecycle management.
+            Managing hardware, software, and digital resources, while tracking
+            items, borrowers, and usage. Ensures optimized performance, cost
+            efficiency, security, and smooth lifecycle management.
           </p>
         </div>
         <div className="animate-fadeIn absolute top-0 right-0 w-[35%] h-screen bg-white flex flex-col justify-center items-center animate-fade-in max-lg:w-full max-lg:ml-0 max-lg:relative max-lg:min-h-[60vh] max-sm:w-full max-sm:ml-0 max-sm:relative max-sm:min-h-[60vh] max-sm:py-4 max-sm:px-2">
@@ -131,10 +107,13 @@ export default function Login() {
             className="flex flex-col justify-center items-center"
             onSubmit={handleSubmitLoginForm}
             method="post"
+            data-testid="login-form"
           >
             <div className="relative flex flex-col">
               <input
-                className={`w-[400px] h-[55px] rounded-md outline-none border mb-8 border-black/34 bg-white/78 pl-4 text-base hover:bg-white/93 focus:bg-white/93 max-lg:w-[90vw] max-lg:max-w-[98%] max-lg:min-w-[220px] max-sm:w-[98vw] max-sm:max-w-full max-sm:min-w-[120px] max-sm:text-base ${usernameError ? "border-2 border-red-500" : ""}`}
+                className={`w-[400px] h-[55px] rounded-md outline-none border mb-8 border-black/34 bg-white/78 pl-4 text-base hover:bg-white/93 focus:bg-white/93 max-lg:w-[90vw] max-lg:max-w-[98%] max-lg:min-w-[220px] max-sm:w-[98vw] max-sm:max-w-full max-sm:min-w-[120px] max-sm:text-base ${
+                  usernameError ? "border-2 border-red-500" : ""
+                }`}
                 autoFocus
                 type="text"
                 name="username"
@@ -151,7 +130,9 @@ export default function Login() {
             </div>
             <div className="relative flex flex-col">
               <input
-                className={`w-[400px] h-[55px] rounded-md outline-none border border-black/34 bg-white/78 pl-4 text-base hover:bg-white/93 focus:bg-white/93 max-lg:w-[90vw] max-lg:max-w-[98%] max-lg:min-w-[220px] max-sm:w-[98vw] max-sm:max-w-full max-sm:min-w-[120px] max-sm:text-base ${usernameError ? "border-2 border-red-500" : ""}`}
+                className={`w-[400px] h-[55px] rounded-md outline-none border border-black/34 bg-white/78 pl-4 text-base hover:bg-white/93 focus:bg-white/93 max-lg:w-[90vw] max-lg:max-w-[98%] max-lg:min-w-[220px] max-sm:w-[98vw] max-sm:max-w-full max-sm:min-w-[120px] max-sm:text-base ${
+                  passwordError ? "border-2 border-red-500" : ""
+                }`}
                 type={isShowPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"
@@ -213,7 +194,11 @@ export default function Login() {
           </div>
         </div>
       </div>
-      {isRegisterFormOpen ? <Register onClose={() => setIsRegisterFormOpen(false)} /> : ""}
+      {isRegisterFormOpen ? (
+        <Register onClose={() => setIsRegisterFormOpen(false)} />
+      ) : (
+        ""
+      )}
       {isForgotPasswordFormOpen ? (
         <ForgotPassword onClose={() => setIsForgotPasswordFormOpen(false)} />
       ) : (
