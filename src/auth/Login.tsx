@@ -44,16 +44,20 @@ export default function Login() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (submitForm.username == "" && submitForm.password == "") {
+    if (!submitForm.username && !submitForm.password) {
       setUsernameError("Username is required");
       setPasswordError("Password is required");
       setIsSubmitting(false);
       return;
-    } else if (submitForm.username == "" && submitForm.password) {
+    }
+
+    if (!submitForm.username) {
       setUsernameError("Username is required");
       setIsSubmitting(false);
       return;
-    } else if (submitForm.password == "" && submitForm.username) {
+    }
+
+    if (!submitForm.password) {
       setPasswordError("Password is required");
       setIsSubmitting(false);
       return;
@@ -173,6 +177,7 @@ export default function Login() {
                 type="submit"
                 disabled={isSubmitting}
                 className="w-[420px] h-[55px] outline-none border-0 rounded-md text-lg font-medium text-white bg-[rgb(46,111,251)] cursor-pointer hover:bg-[rgb(54,117,253)] disabled:opacity-50 max-lg:w-[90vw] max-lg:max-w-[98%] max-lg:min-w-[220px] max-sm:w-[98vw] max-sm:max-w-full max-sm:min-w-[120px] max-sm:text-base"
+                data-testid="login-button"
               >
                 {isSubmitting ? (
                   <div className="flex justify-center items-center">
