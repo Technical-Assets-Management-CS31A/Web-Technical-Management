@@ -55,16 +55,17 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
     e.preventDefault();
     console.log("Staff data:", formData);
 
+    let hasError = false;
+
     if (
-      formData.firstName === "" &&
-      formData.lastName === "" &&
-      formData.username === "" &&
-      formData.email === "" &&
-      formData.phoneNumber === "" &&
-      formData.position === "" &&
-      formData.password === "" &&
-      formData.confirmPassword === "" &&
-      formData.position === ""
+      !formData.firstName &&
+      !formData.lastName &&
+      !formData.username &&
+      !formData.email &&
+      !formData.phoneNumber &&
+      !formData.position &&
+      !formData.password &&
+      !formData.confirmPassword
     ) {
       setFirstnameError("First name is required");
       setLastnameError("Last name is required");
@@ -74,17 +75,50 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
       setPositionError("Position is required");
       setPasswordError("Password is required");
       setConfirmPasswordError("Confirm password is required");
-      return;
+      hasError = true
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setEmailError("Email requires a valid format");
-      return;
+
+    if (!formData.firstName) {
+      setFirstnameError("First name is required");
+      hasError = true;
     }
-    if (formData.password !== formData.confirmPassword) {
-      setConfirmPasswordError("Password does not match");
-      return;
+
+    if (!formData.lastName) {
+      setLastnameError("Last name is required");
+      hasError = true;
     }
+
+    if (!formData.username) {
+      setUsernameError("Username is required");
+      hasError = true;
+    }
+
+    if (!formData.email) {
+      setEmailError("Email is required");
+      hasError = true;
+    }
+
+    if (!formData.phoneNumber) {
+      setPhoneNumberError("Phone number is required");
+      hasError = true;
+    }
+
+    if (!formData.position) {
+      setPositionError("Position is required");
+      hasError = true;
+    }
+
+    if (!formData.password) {
+      setPasswordError("Password is required");
+      hasError = true;
+    }
+
+    if (!formData.confirmPassword) {
+      setConfirmPasswordError("Confirm password is required");
+      hasError = true;
+    }
+
+    if (hasError) return;
 
     mutate(formData);
 
@@ -383,6 +417,7 @@ export const AddStaff = ({ onClose }: AddStaffProps) => {
               <button
                 type="submit"
                 className="px-8 py-3 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white font-bold rounded-xl shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-150 cursor-pointer"
+                data-testid="button-staff"
               >
                 Save Staff
               </button>
