@@ -21,7 +21,7 @@ export default function Register({ onClose }: RegisterProps) {
     password: "",
     confirmPassword: "",
   });
-  const { mutate, error } = usePostRegisterMutation();
+  const { mutate } = usePostRegisterMutation();
 
   // Handle input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,55 +40,64 @@ export default function Register({ onClose }: RegisterProps) {
   const handleSubmitRegisterForm = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     let hasError = false;
 
-    if (!submitForm.firstName) {
+    if (
+      !submitForm.firstName &&
+      !submitForm.lastName &&
+      !submitForm.username &&
+      !submitForm.password &&
+      !submitForm.confirmPassword
+    ) {
       setFirstNameError("Firstname is required");
-      hasError = true;
-    }
-    if (!submitForm.lastName) {
       setLastNameError("Lastname is required");
-      hasError = true;
-    }
-    if (!submitForm.username) {
       setUsernameError("Username is required");
-      hasError = true;
-    }
-    if (!submitForm.password) {
       setPasswordError("Password is required");
-      hasError = true;
-    }
-    if (!submitForm.confirmPassword) {
       setConfirmPasswordError("Confirm password is required");
       hasError = true;
     }
 
-    if (
-      submitForm.password &&
-      submitForm.confirmPassword &&
-      submitForm.confirmPassword !== submitForm.password
-    ) {
-      setConfirmPasswordError("Password does not match");
+    if (!submitForm.firstName) {
+      setFirstNameError("Firstname is required");
+      setIsSubmitting(false);
       hasError = true;
     }
 
-    if (hasError) {
+    if (!submitForm.lastName) {
+      setLastNameError("Lastname is required");
       setIsSubmitting(false);
-      return;
+      hasError = true;
     }
 
-    try {
-      mutate(submitForm);
-    } catch {
-      if (error) {
-        console.log("Error Register User", error);
-        setIsSubmitting(false);
-      }
-    } finally {
+    if (!submitForm.username) {
+      setUsernameError("Username is required");
       setIsSubmitting(false);
+      hasError = true;
     }
+
+    if (!submitForm.password) {
+      setPasswordError("Password is required");
+      setIsSubmitting(false);
+      hasError = true;
+    }
+
+    if (!submitForm.confirmPassword) {
+      setConfirmPasswordError("Confirm password is required");
+      setIsSubmitting(false);
+      hasError = true;
+    }
+
+    if (submitForm.password !== submitForm.confirmPassword) {
+      setConfirmPasswordError("Password does not match");
+      setIsSubmitting(false);
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    mutate(submitForm);
   };
+
   return (
     <>
       <div className="animate-fadeIn fixed flex flex-row justify-center items-center p-[2rem] bg-gray-900/60 z-[1000] w-full h-full m-h-full top-0 left-0">
@@ -207,7 +216,11 @@ export default function Register({ onClose }: RegisterProps) {
             )}
 
             <div className="register-container overflow-hidden relative w-full h-[56px] flex justify-center items-center outline-0 border-0 rounded-[12px] bg-blue-500 text-white font-semibold cursor-pointer  hover:bg-blue-400">
-              <button className="cursor-pointer" type="submit">
+              <button
+                className="cursor-pointer"
+                type="submit"
+                data-testid="register-button"
+              >
                 {isSubmitting ? (
                   <div className="flex justify-center items-center">
                     <div className="w-5 h-5 rounded-full border-2 border-blue-600 border-t-white animate-spin"></div>
