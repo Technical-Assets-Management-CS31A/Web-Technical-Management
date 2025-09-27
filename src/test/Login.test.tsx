@@ -5,15 +5,19 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import Login from "../auth/Login";
 import { BrowserRouter } from "react-router-dom";
 
-const queryClient = new QueryClient();
-
-vi.mock("../query/post/usePostItemMutation", () => ({
-  usePostItemMutation: () => ({
-    mutate: vi.fn(),
-  }),
-}));
+const mockMutate = vi.fn();
+vi.mock("../query/post/userPostLoginMutation.ts", () => {
+  return {
+    usePostLoginMutation: vi.fn(() => ({
+      mutate: mockMutate,
+      error: null,
+    })),
+  };
+});
 
 describe("Login Component", () => {
+  const queryClient = new QueryClient();
+
   test("renders all required input fields", () => {
     render(
       <QueryClientProvider client={queryClient}>
@@ -37,7 +41,22 @@ describe("Login Component", () => {
       </QueryClientProvider>
     );
 
-    fireEvent.submit(screen.getByTestId("login-form"));
+    fireEvent.submit(screen.getByTestId("login-button"));
+
+    expect(screen.getByText(/Username is required/)).toBeInTheDocument();
+    expect(screen.getByText(/Password is required/)).toBeInTheDocument();
+  });
+
+  test("shows validation errors when submitting empty credential form", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <Login />
+        </BrowserRouter>
+      </QueryClientProvider>
+    );
+
+    fireEvent.submit(screen.getByTestId("login-button"));
 
     expect(screen.getByText(/username is required/i)).toBeInTheDocument();
     expect(screen.getByText(/password is required/i)).toBeInTheDocument();
@@ -52,13 +71,30 @@ describe("Login Component", () => {
       </QueryClientProvider>
     );
 
-    const username = screen.getByTestId("username") as HTMLInputElement;
-    const password = screen.getByTestId("password") as HTMLInputElement;
+    const data = {
+      username: "christian12345",
+      password: "alicaba12345",
+    };
 
-    fireEvent.change(username, { target: { value: "christian12345" } });
-    fireEvent.change(password, { target: { value: "alicaba12345" } });
+    fireEvent.change(screen.getByTestId("username"), {
+      target: { value: data.username },
+    });
+    fireEvent.change(screen.getByTestId("password"), {
+      target: { value: data.password },
+    });
 
-    expect(username.value).toBe("christian12345");
-    expect(password.value).toBe("alicaba12345");
+    expect((screen.getByTestId("username") as HTMLInputElement).value).toBe(
+      data.username
+    );
+    expect((screen.getByTestId("password") as HTMLInputElement).value).toBe(
+      data.password
+    );
+
+    fireEvent.submit(screen.getByTestId("login-button"));
+    expect(mockMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ...data,
+      })
+    );
   });
 });
