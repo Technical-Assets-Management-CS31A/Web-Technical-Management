@@ -42,7 +42,7 @@ export default function EditStaff({ onClose, id }: EditItemProps) {
                 <h2 className="text-3xl font-extrabold text-[#1e293b] mb-6 text-center tracking-tight">
                     Edit Staff
                 </h2>
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} data-testid="form" className="space-y-6">
                     <div className="flex flex-col md:flex-row gap-4">
                         <div className="flex-1">
                             <label htmlFor="id" className="block text-[#2563eb] font-semibold mb-1">
@@ -56,6 +56,7 @@ export default function EditStaff({ onClose, id }: EditItemProps) {
                                 value={formData.id}
                                 onChange={handleChange}
                                 disabled
+                                data-testid="id"
                             />
                         </div>
                         <div className="flex-1">
@@ -71,6 +72,7 @@ export default function EditStaff({ onClose, id }: EditItemProps) {
                                 onChange={handleChange}
                                 required
                                 placeholder="Enter first name"
+                                data-testid="firstName"
                             />
                         </div>
                     </div>
@@ -88,6 +90,7 @@ export default function EditStaff({ onClose, id }: EditItemProps) {
                                 onChange={handleChange}
                                 required
                                 placeholder="Enter last name"
+                                data-testid="lastName"
                             />
                         </div>
                         <div className="flex-1">
@@ -101,6 +104,7 @@ export default function EditStaff({ onClose, id }: EditItemProps) {
                                 value={formData.role}
                                 onChange={handleChange}
                                 required
+                                data-testid="role"
                             >
                                 <option value="intern">Intern</option>
                                 <option value="regular">Regular</option>
@@ -119,6 +123,7 @@ export default function EditStaff({ onClose, id }: EditItemProps) {
                                 value={formData.status}
                                 onChange={handleChange}
                                 required
+                                data-testid="status"
                             >
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
