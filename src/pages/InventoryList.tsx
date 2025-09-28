@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import AddItemForm from "../components/AddItem";
 import Button from "../components/Button";
@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useDeleteItemMutation } from "../query/delete/useDeleteItemMutation";
 import type { TItemList } from "../types/types";
 import { useAllItemsQuery } from "../query/get/useAllItemsQuery";
+
 export default function InventoryList() {
   const [isAddItemFormOpen, setIsAddItemFormOpen] = useState(false);
   const [searchItem, setSearchItem] = useState<string>("");
@@ -187,44 +188,52 @@ export default function InventoryList() {
     },
   ]);
 
-  const { data, isPending } = useQuery(useAllItemsQuery())
+  // Filter items based on search input
+  const filteredItems = useMemo(
+    () =>
+      items.filter(
+        (item) =>
+          item.ItemName.toLowerCase().includes(searchItem.toLowerCase()) ||
+          item.SerialNumber.toLowerCase().includes(searchItem.toLowerCase()) ||
+          item.Category.toLowerCase().includes(searchItem.toLowerCase()) ||
+          item.ItemType.toLowerCase().includes(searchItem.toLowerCase()) ||
+          item.Condition.toLowerCase().includes(searchItem.toLowerCase())
+      ),
+    [items, searchItem]
+  );
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+
+  const validCurrentPage =
+    totalPages > 0 ? Math.min(currentPage, totalPages) : 1;
+
+  const paginatedData = useMemo(
+    () =>
+      filteredItems.slice(
+        (validCurrentPage - 1) * itemsPerPage,
+        validCurrentPage * itemsPerPage
+      ),
+    [filteredItems]
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchItem]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const { data, isPending } = useQuery(useAllItemsQuery());
   const { mutate } = useDeleteItemMutation();
 
   useEffect(() => {
     if (data) setItems(data);
   }, [data]);
 
-  // Reset currentPage when search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchItem]);
-
   if (isPending) {
     return <InventoryListSkeletonLoader />;
   }
-
-  // Filter items based on search input
-  const filteredItems = items.filter((item) =>
-    item.ItemName.toLowerCase().includes(searchItem.toLowerCase()) ||
-    item.SerialNumber.toLowerCase().includes(searchItem.toLowerCase()) ||
-    item.Category.toLowerCase().includes(searchItem.toLowerCase()) ||
-    item.ItemType.toLowerCase().includes(searchItem.toLowerCase()) ||
-    item.Condition.toLowerCase().includes(searchItem.toLowerCase())
-  );
-
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-
-  // Reset currentPage to 1 if it's beyond the available pages
-  const validCurrentPage = totalPages > 0 ? Math.min(currentPage, totalPages) : 1;
-
-  const paginatedData = filteredItems.slice(
-    (validCurrentPage - 1) * itemsPerPage,
-    validCurrentPage * itemsPerPage
-  );
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
 
   return (
     // Inventory List Page Container
@@ -246,7 +255,9 @@ export default function InventoryList() {
           <span className="stat-title font-semibold text-lg text-[#64748b] mb-2">
             Total Items
           </span>
-          <span className="text-4xl font-bold text-[#2563eb]">{items.length}</span>
+          <span className="text-4xl font-bold text-[#2563eb]">
+            {items.length}
+          </span>
         </div>
         {/* Category Items Count */}
         <div className="bg-white/90 shadow-xl rounded-2xl p-8 flex flex-col items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-200 border border-[#e0e7ef]">
@@ -291,10 +302,11 @@ export default function InventoryList() {
                   {[...Array(totalPages)].map((_, idx) => (
                     <button
                       key={idx + 1}
-                      className={`px-4 py-3 rounded font-semibold ${validCurrentPage === idx + 1
-                        ? "bg-[#2563eb] text-white"
-                        : "bg-[#e0e7ef] text-[#2563eb]"
-                        }`}
+                      className={`px-4 py-3 rounded font-semibold ${
+                        validCurrentPage === idx + 1
+                          ? "bg-[#2563eb] text-white"
+                          : "bg-[#e0e7ef] text-[#2563eb]"
+                      }`}
                       onClick={() => handlePageChange(idx + 1)}
                     >
                       {idx + 1}
@@ -309,9 +321,12 @@ export default function InventoryList() {
                   </button>
                 </div>
               )}
-              <SearchBar onChangeValue={(value) => setSearchItem(value)} name={"search"} placeholder={"Search your items..."} />
+              <SearchBar
+                onChangeValue={(value) => setSearchItem(value)}
+                name={"search"}
+                placeholder={"Search your items..."}
+              />
             </div>
-
           </section>
           <table className="w-full border-collapse text-left">
             <thead>
@@ -342,62 +357,76 @@ export default function InventoryList() {
             <tbody>
               {paginatedData.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-8 text-[#64748b] font-semibold">
+                  <td
+                    colSpan={7}
+                    className="text-center py-8 text-[#64748b] font-semibold"
+                  >
                     No items found.
                   </td>
                 </tr>
-              ) : paginatedData.map((item) => (
-                <tr
-                  key={item.SerialNumber}
-                  className="hover:bg-[#f1f5f9] transition-colors odd:bg-white even:bg-[#f8fafc]"
-                >
-                  <td className="py-3 px-4 font-semibold">{item.SerialNumber}</td>
-                  <td className="py-3 px-4">
-                    <img
-                      src={typeof item.image === "string" ? item.image : logo}
-                      alt={item.ItemName}
-                      className="w-10 h-10 rounded-xl"
-                    />
-                  </td>
-                  <td className="py-3 px-4">{item.ItemName}</td>
-                  <td className="py-3 px-4">{item.ItemType}</td>
-                  <td className="py-3 px-4">{item.Category}</td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm font-semibold ${item.Condition === "New"
-                        ? "bg-green-100 text-green-700"
-                        : item.Condition === "Used"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : item.Condition === "Refurbished"
+              ) : (
+                paginatedData.map((item) => (
+                  <tr
+                    key={item.SerialNumber}
+                    className="hover:bg-[#f1f5f9] transition-colors odd:bg-white even:bg-[#f8fafc]"
+                  >
+                    <td className="py-3 px-4 font-semibold">
+                      {item.SerialNumber}
+                    </td>
+                    <td className="py-3 px-4">
+                      <img
+                        src={typeof item.image === "string" ? item.image : logo}
+                        alt={item.ItemName}
+                        className="w-10 h-10 rounded-xl"
+                      />
+                    </td>
+                    <td className="py-3 px-4">{item.ItemName}</td>
+                    <td className="py-3 px-4">{item.ItemType}</td>
+                    <td className="py-3 px-4">{item.Category}</td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                          item.Condition === "New"
+                            ? "bg-green-100 text-green-700"
+                            : item.Condition === "Used"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : item.Condition === "Refurbished"
                             ? "bg-blue-100 text-blue-700"
                             : "bg-gray-200 text-gray-600"
                         }`}
-                    >
-                      {item.Condition}
-                    </span>
-                  </td>
-                  <td className="py-3 pr-6 flex flex-row gap-4">
-                    <Link to={`/items/${item.SerialNumber}`} className="px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white rounded-xl font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-150">
-                      View
-                    </Link>
-                    {/* <button className="px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white rounded-xl font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-150">
+                      >
+                        {item.Condition}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-6 flex flex-row gap-4">
+                      <Link
+                        to={`/items/${item.SerialNumber}`}
+                        className="px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white rounded-xl font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-150"
+                      >
+                        View
+                      </Link>
+                      {/* <button className="px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white rounded-xl font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-150">
                       <FaEdit />
                     </button> */}
-                    <button
-                      onClick={() => {
-                        if (window.confirm("Are you sure you want to delete this item?")) {
-                          mutate(item.SerialNumber);
-                          console.log("Delete item:", item.SerialNumber);
-                        }
-                      }}
-                      className="px-4 py-2 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-150"
-                    >
-                      <FaTrash />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-
+                      <button
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              "Are you sure you want to delete this item?"
+                            )
+                          ) {
+                            mutate(item.SerialNumber);
+                            console.log("Delete item:", item.SerialNumber);
+                          }
+                        }}
+                        className="px-4 py-2 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-150"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
