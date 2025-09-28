@@ -8,6 +8,7 @@ import InventoryList from "./pages/InventoryList.tsx";
 import ItemList from "./pages/ItemList.tsx";
 import { Staff } from "./pages/Staff.tsx";
 import HistoryList from "./pages/HistoryList.tsx";
+import Settings from "./pages/Settings.tsx";
 import ViewItem from "./components/ViewItem.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -19,9 +20,9 @@ const routes = createBrowserRouter([
   {
     path: "/",
     element: (
-      // <PublicRoute>
-      <App />
-      // </PublicRoute>
+      <PublicRoute>
+        <App />
+      </PublicRoute>
     ),
     children: [
       {
@@ -41,41 +42,49 @@ const routes = createBrowserRouter([
       {
         path: "dashboard",
         element: (
-          // <ProtectedRoute>
-          <Dashboard />
-          // </ProtectedRoute>
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
         ),
       },
       {
         path: "inventory-list",
         element: (
-          // <ProtectedRoute>
-          <InventoryList />
-          // </ProtectedRoute>
+          <ProtectedRoute>
+            <InventoryList />
+          </ProtectedRoute>
         ),
       },
       {
         path: "item-list",
         element: (
-          // <ProtectedRoute>
-          <ItemList />
-          // </ProtectedRoute>
+          <ProtectedRoute>
+            <ItemList />
+          </ProtectedRoute>
         ),
       },
       {
         path: "staff",
         element: (
-          // <ProtectedRoute>
-          <Staff />
-          // </ProtectedRoute>
+          <ProtectedRoute>
+            <Staff />
+          </ProtectedRoute>
         ),
       },
       {
         path: "history-list",
         element: (
-          // <ProtectedRoute>
-          <HistoryList />
-          // </ProtectedRoute>
+          <ProtectedRoute>
+            <HistoryList />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "settings",
+        element: (
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
         ),
       },
     ],
@@ -83,9 +92,9 @@ const routes = createBrowserRouter([
   {
     path: "/items/:id",
     element: (
-      // <ProtectedRoute>
-      <ViewItem />
-      // </ProtectedRoute>
+      <ProtectedRoute>
+        <ViewItem />
+      </ProtectedRoute>
     ),
   },
 ]);
