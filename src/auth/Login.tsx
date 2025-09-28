@@ -12,18 +12,17 @@ import { getToken } from "../utils/token";
 export default function Login() {
   const navigate = useNavigate();
   const [isShowPassword, setIsShowPassword] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isRegisterFormOpen, setIsRegisterFormOpen] = useState<boolean>(false);
   const [isForgotPasswordFormOpen, setIsForgotPasswordFormOpen] =
     useState<boolean>(false);
   const [usernameError, setUsernameError] = useState<string>("");
   const [passwordError, setPasswordError] = useState<string>("");
   const [submitForm, setSubmitForm] = useState<TLoginUser>({
-    username: "",
+    identifier: "",
     password: "",
   });
 
-  const { mutate, error } = usePostLoginMutation();
+  const { mutate, isPending, error, isError } = usePostLoginMutation();
 
   useEffect(() => {
     const token = getToken();
@@ -36,44 +35,41 @@ export default function Login() {
     const { name, value } = e.target;
     setSubmitForm((prev) => ({ ...prev, [name]: value }));
 
-    if (name === "username") setUsernameError("");
+    if (name === "identifier") setUsernameError("");
     if (name === "password") setPasswordError("");
   };
 
   const handleSubmitLoginForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    if (!submitForm.username && !submitForm.password) {
+    let hasError = false;
+
+    if (!submitForm.identifier && !submitForm.password) {
       setUsernameError("Username is required");
       setPasswordError("Password is required");
-      setIsSubmitting(false);
-      return;
+      hasError = true;
     }
 
-    if (!submitForm.username) {
+    if (!submitForm.identifier) {
       setUsernameError("Username is required");
-      setIsSubmitting(false);
-      return;
+      hasError = true;
     }
 
     if (!submitForm.password) {
       setPasswordError("Password is required");
-      setIsSubmitting(false);
-      return;
+      hasError = true;
     }
 
-    try {
-      mutate(submitForm);
-    } catch {
-      if (error) {
-        console.log("Login error:", error);
-        setIsSubmitting(false);
-        return;
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+    if (hasError) return;
+
+    mutate(submitForm, {
+      onSuccess: () => {
+        navigate("/home/dashboard");
+      },
+      onError: (err: any) => {
+        console.error("Registration failed:", err.message);
+      },
+    });
   };
 
   return (
@@ -99,13 +95,16 @@ export default function Login() {
           </p>
         </div>
         <div className="animate-fadeIn absolute top-0 right-0 w-[35%] h-screen bg-white flex flex-col justify-center items-center animate-fade-in max-lg:w-full max-lg:ml-0 max-lg:relative max-lg:min-h-[60vh] max-sm:w-full max-sm:ml-0 max-sm:relative max-sm:min-h-[60vh] max-sm:py-4 max-sm:px-2">
-          <div className="my-4 mb-10">
+          <div className="my-4 mb-10 text-center">
             <h1 className="text-black text-[2.4rem] m-0 mb-[-0.3rem] max-sm:text-[1.5rem]">
               Welcome Admin.
             </h1>
             <p className="mb-1.5 text-black/62 text-center">
               Enter your credentials to log in.
             </p>
+            {isError && error instanceof Error && (
+              <div className="text-red-500 text-md mt-2">{error.message}</div>
+            )}
           </div>
           <form
             className="flex flex-col justify-center items-center"
@@ -120,11 +119,11 @@ export default function Login() {
                 }`}
                 autoFocus
                 type="text"
-                name="username"
+                name="identifier"
                 placeholder="Username"
-                value={submitForm.username}
+                value={submitForm.identifier}
                 onChange={handleChange}
-                data-testid="username"
+                data-testid="identifier"
               />
               {usernameError && (
                 <p className="absolute mt-14 text-red-500 text-base">
@@ -175,11 +174,11 @@ export default function Login() {
             <div className="mt-20 max-sm:mt-4">
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isPending}
                 className="w-[420px] h-[55px] outline-none border-0 rounded-md text-lg font-medium text-white bg-[rgb(46,111,251)] cursor-pointer hover:bg-[rgb(54,117,253)] disabled:opacity-50 max-lg:w-[90vw] max-lg:max-w-[98%] max-lg:min-w-[220px] max-sm:w-[98vw] max-sm:max-w-full max-sm:min-w-[120px] max-sm:text-base"
                 data-testid="login-button"
               >
-                {isSubmitting ? (
+                {isPending ? (
                   <div className="flex justify-center items-center">
                     <div className="w-5 h-5 rounded-full border-2 border-blue-600 border-t-white animate-spin"></div>
                   </div>
