@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Register from "../auth/Register";
 
 const mockMutate = vi.fn();
+
 vi.mock("../query/post/usePostRegisterMutation.ts", () => {
   return {
     usePostRegisterMutation: vi.fn(() => ({
@@ -25,15 +26,11 @@ describe("Register Component", () => {
       </QueryClientProvider>
     );
 
-    [
-      "firstName",
-      "lastName",
-      "username",
-      "password",
-      "confirmPassword",
-    ].forEach((field) => {
-      expect(screen.getByTestId(field)).toBeInTheDocument();
-    });
+    ["username", "email", "phoneNumber", "password", "confirmPassword"].forEach(
+      (field) => {
+        expect(screen.getByTestId(field)).toBeInTheDocument();
+      }
+    );
   });
 
   test("shows validation errors when submitting empty credential form", () => {
@@ -45,16 +42,19 @@ describe("Register Component", () => {
 
     fireEvent.submit(screen.getByTestId("register-button"));
 
-    expect(screen.getByText(/Firstname is required/i)).toBeInTheDocument();
-    expect(screen.getByText(/Lastname is required/i)).toBeInTheDocument();
     expect(screen.getByText(/Username is required/i)).toBeInTheDocument();
+    expect(screen.getByText(/Email is required/i)).toBeInTheDocument();
+    expect(screen.getByText(/Phone number is required/i)).toBeInTheDocument();
     expect(screen.getByText(/Password is required/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Confirm password is required/)
+    ).toBeInTheDocument();
     expect(
       screen.getByText(/Confirm password is required/i)
     ).toBeInTheDocument();
   });
 
-  test("accepts text input values", () => {
+  test("accepts text input values and submit", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <Register onClose={mockClose} />
@@ -62,21 +62,22 @@ describe("Register Component", () => {
     );
 
     const data = {
-      firstName: "christian",
-      lastName: "alicaba",
-      username: "christian12345",
+      username: "christian",
+      email: "alicaba",
+      phoneNumber: "09565376522",
+      role: "Admin",
       password: "alicaba12345",
       confirmPassword: "alicaba12345",
     };
 
-    fireEvent.change(screen.getByTestId("firstName"), {
-      target: { value: data.firstName },
-    });
-    fireEvent.change(screen.getByTestId("lastName"), {
-      target: { value: data.lastName },
-    });
     fireEvent.change(screen.getByTestId("username"), {
       target: { value: data.username },
+    });
+    fireEvent.change(screen.getByTestId("email"), {
+      target: { value: data.email },
+    });
+    fireEvent.change(screen.getByTestId("phoneNumber"), {
+      target: { value: data.phoneNumber },
     });
     fireEvent.change(screen.getByTestId("password"), {
       target: { value: data.password },
@@ -85,14 +86,14 @@ describe("Register Component", () => {
       target: { value: data.confirmPassword },
     });
 
-    expect((screen.getByTestId("firstName") as HTMLInputElement).value).toBe(
-      data.firstName
-    );
-    expect((screen.getByTestId("lastName") as HTMLInputElement).value).toBe(
-      data.lastName
-    );
     expect((screen.getByTestId("username") as HTMLInputElement).value).toBe(
       data.username
+    );
+    expect((screen.getByTestId("email") as HTMLInputElement).value).toBe(
+      data.email
+    );
+    expect((screen.getByTestId("phoneNumber") as HTMLInputElement).value).toBe(
+      data.phoneNumber
     );
     expect((screen.getByTestId("password") as HTMLInputElement).value).toBe(
       data.password
@@ -102,10 +103,14 @@ describe("Register Component", () => {
     ).toBe(data.confirmPassword);
 
     fireEvent.submit(screen.getByTestId("register-button"));
+
     expect(mockMutate).toHaveBeenCalledWith(
       expect.objectContaining({
         ...data,
-      })
+        role: data.role,
+      }),
+      expect.anything()
     );
   });
+  
 });
