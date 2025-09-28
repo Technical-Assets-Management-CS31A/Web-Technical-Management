@@ -27,7 +27,7 @@ describe("Login Component", () => {
       </QueryClientProvider>
     );
 
-    ["username", "password"].forEach((field) => {
+    ["identifier", "password"].forEach((field) => {
       expect(screen.getByTestId(field)).toBeInTheDocument();
     });
   });
@@ -72,19 +72,19 @@ describe("Login Component", () => {
     );
 
     const data = {
-      username: "christian12345",
+      identifier: "christian12345",
       password: "alicaba12345",
     };
 
-    fireEvent.change(screen.getByTestId("username"), {
-      target: { value: data.username },
+    fireEvent.change(screen.getByTestId("identifier"), {
+      target: { value: data.identifier },
     });
     fireEvent.change(screen.getByTestId("password"), {
       target: { value: data.password },
     });
 
-    expect((screen.getByTestId("username") as HTMLInputElement).value).toBe(
-      data.username
+    expect((screen.getByTestId("identifier") as HTMLInputElement).value).toBe(
+      data.identifier
     );
     expect((screen.getByTestId("password") as HTMLInputElement).value).toBe(
       data.password
@@ -94,7 +94,8 @@ describe("Login Component", () => {
     expect(mockMutate).toHaveBeenCalledWith(
       expect.objectContaining({
         ...data,
-      })
+      }),
+      expect.anything()
     );
   });
 });
