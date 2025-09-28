@@ -13,6 +13,7 @@ export default function Register({ onClose }: RegisterProps) {
   const [PhoneNumberError, setPhoneNumberError] = useState<string>("");
   const [passwordError, setPasswordError] = useState<string>("");
   const [confirmPasswordError, setConfirmPasswordError] = useState<string>("");
+  const [showAlert, setShowAlert] = useState<boolean>(false);
   const [submitForm, setSubmitForm] = useState<TRegisterUser>({
     username: "",
     email: "",
@@ -22,10 +23,12 @@ export default function Register({ onClose }: RegisterProps) {
     confirmPassword: "",
   });
 
-  const { mutate, isPending } = usePostRegisterMutation();
+  const { mutate, isPending, error, isError } = usePostRegisterMutation();
 
   // Handle input change
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setSubmitForm((prev) => ({ ...prev, [name]: value }));
 
@@ -71,6 +74,11 @@ export default function Register({ onClose }: RegisterProps) {
       hasError = true;
     }
 
+    if (submitForm.password.length < 8) {
+      setPasswordError("Password must be at least 8 characters");
+      hasError = true;
+    }
+
     if (!submitForm.password) {
       setPasswordError("Password is required");
       hasError = true;
@@ -92,7 +100,14 @@ export default function Register({ onClose }: RegisterProps) {
       { ...submitForm, role: "Admin" },
       {
         onSuccess: () => {
-          onClose();
+          setShowAlert(true);
+          setTimeout(() => {
+            setShowAlert(false);
+            onClose();
+          }, 2500);
+        },
+        onError: (err: any) => {
+          console.error("Registration failed:", err.message);
         },
       }
     );
@@ -100,7 +115,36 @@ export default function Register({ onClose }: RegisterProps) {
 
   return (
     <div className="animate-fadeIn fixed flex flex-row justify-center items-center p-[2rem] bg-gray-900/60 z-[1000] w-full h-full m-h-full top-0 left-0">
-      <div className="Register-container relative w-full max-w-[550px] bg-white rounded-2xl shadow-gray-600 mt-[2rem] p-[2.5rem] animate-fade-in">
+      {showAlert && (
+        <div className="absolute top-8 right-4">
+          <div
+            className={
+              "bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 transition-all duration-500 ease-in-out"
+            }
+          >
+            <div className="flex-shrink-0">
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            <div className="font-semibold text-lg">
+              Admin Register Successfully
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="Register-container relative w-full max-w-2xl bg-white rounded-2xl shadow-gray-600 mt-[2rem] p-[2.5rem] animate-fade-in">
         <form
           onSubmit={handleSubmitRegisterForm}
           className="register-form flex flex-col gap-4 m-0"
@@ -117,75 +161,122 @@ export default function Register({ onClose }: RegisterProps) {
             <p className="text-gray-700 text-md font-[400]">
               Register an admin account to manage the system.
             </p>
+            {isError && error instanceof Error && (
+              <div className="text-red-500 text-md mt-2">{error.message}</div>
+            )}
           </div>
-          <input
-            autoFocus
-            className={`w-full h-[56px] outline-0 border-[1px] border-gray-400 rounded-lg pl-4 bg-white hover:border-gray-600 hover:bg-gray-50 focus:border-blue-600 ${
-              UsernameError ? "border-red-700" : ""
-            }`}
-            type="text"
-            name="username"
-            value={submitForm.username}
-            placeholder="Your Username"
-            onChange={handleChange}
-            data-testid="username"
-          />
-          {UsernameError && (
-            <p style={{ marginTop: "-0.9rem", color: "red", fontSize: "16px" }}>
-              {UsernameError}
-            </p>
-          )}
 
-          <input
-            type="email"
-            name="email"
-            className={`w-full h-[56px] outline-0 border-[1px] border-gray-400 rounded-lg pl-4 bg-white hover:border-gray-600 hover:bg-gray-50 focus:border-blue-600 ${
-              EmailError ? "border-red-700" : ""
-            }`}
-            value={submitForm.email}
-            placeholder="Your Email"
-            onChange={handleChange}
-            data-testid="email"
-          />
-          {EmailError && (
-            <p style={{ marginTop: "-0.9rem", color: "red", fontSize: "16px" }}>
-              {EmailError}
-            </p>
-          )}
+          <div className="flex flex-row gap-2">
+            <div className="flex flex-col w-full">
+              <input
+                autoFocus
+                className={`w-full h-[56px] outline-0 border-[1px] border-gray-400 rounded-lg pl-4 bg-white hover:border-gray-600 hover:bg-gray-50 focus:border-blue-600 ${
+                  UsernameError ? "border-red-700" : ""
+                }`}
+                type="text"
+                name="username"
+                value={submitForm.username}
+                placeholder="Your Username"
+                onChange={handleChange}
+                data-testid="username"
+              />
+              {UsernameError && (
+                <p
+                  style={{
+                    marginTop: "0.2rem",
+                    color: "red",
+                    fontSize: "16px",
+                  }}
+                >
+                  {UsernameError}
+                </p>
+              )}
+            </div>
 
-          <input
-            type="text"
-            name="phoneNumber"
-            className={`w-full h-[56px] outline-0 border-[1px] border-gray-400 rounded-lg pl-4 bg-white hover:border-gray-600 hover:bg-gray-50 focus:border-blue-600 ${
-              PhoneNumberError ? "border-red-700" : ""
-            }`}
-            value={submitForm.phoneNumber}
-            placeholder="Phone Number"
-            onChange={handleChange}
-            data-testid="phoneNumber"
-          />
-          {PhoneNumberError && (
-            <p style={{ marginTop: "-0.9rem", color: "red", fontSize: "16px" }}>
-              {PhoneNumberError}
-            </p>
-          )}
+            <div className="flex flex-col w-full">
+              <input
+                type="email"
+                name="email"
+                className={`w-full h-[56px] outline-0 border-[1px] border-gray-400 rounded-lg pl-4 bg-white hover:border-gray-600 hover:bg-gray-50 focus:border-blue-600 ${
+                  EmailError ? "border-red-700" : ""
+                }`}
+                value={submitForm.email}
+                placeholder="Your Email"
+                onChange={handleChange}
+                data-testid="email"
+              />
+              {EmailError && (
+                <p
+                  style={{
+                    marginTop: "0.2rem",
+                    color: "red",
+                    fontSize: "16px",
+                  }}
+                >
+                  {EmailError}
+                </p>
+              )}
+            </div>
+          </div>
 
-          <input
-            type="password"
-            name="password"
-            className={`w-full h-[56px] outline-0 border-[1px] border-gray-400 rounded-lg pl-4 bg-white hover:border-gray-600 hover:bg-gray-50 focus:border-blue-600 ${
-              passwordError ? "border-red-700" : ""
-            }`}
-            value={submitForm.password}
-            placeholder="Password"
-            onChange={handleChange}
-            data-testid="password"
-          />
-          {passwordError && (
-            <p style={{ marginTop: "-0.9rem", color: "red", fontSize: "16px" }}>
-              {passwordError}
-            </p>
-          )}
+          <div className="flex flex-row gap-1.5">
+            <div className="flex flex-col w-full">
+              <div className="flex w-full">
+                <span className="flex items-center justify-center px-3 border border-gray-400 border-r-0 rounded-l-lg bg-gray-50 text-gray-600">
+                  +63
+                </span>
+                <input
+                  type="text"
+                  name="phoneNumber"
+                  className={`flex-1 h-[56px] outline-0 border border-gray-400 rounded-r-lg pl-4 bg-white hover:border-gray-600 hover:bg-gray-50 focus:border-blue-600 ${
+                    PhoneNumberError ? "border-red-700" : ""
+                  }`}
+                  value={submitForm.phoneNumber}
+                  placeholder="9XX XXX XXX"
+                  onChange={handleChange}
+                  maxLength={10}
+                  data-testid="phoneNumber"
+                />
+              </div>
+
+              {PhoneNumberError && (
+                <p
+                  style={{
+                    marginTop: "0.2rem",
+                    color: "red",
+                    fontSize: "16px",
+                  }}
+                >
+                  {PhoneNumberError}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col w-full">
+              <input
+                type="password"
+                name="password"
+                className={`w-full h-[56px] outline-0 border-[1px] border-gray-400 rounded-lg pl-4 bg-white hover:border-gray-600 hover:bg-gray-50 focus:border-blue-600 ${
+                  passwordError ? "border-red-700" : ""
+                }`}
+                value={submitForm.password}
+                placeholder="Password"
+                onChange={handleChange}
+                data-testid="password"
+              />
+              {passwordError && (
+                <p
+                  style={{
+                    marginTop: "0.2rem",
+                    color: "red",
+                    fontSize: "16px",
+                  }}
+                >
+                  {passwordError}
+                </p>
+              )}
+            </div>
+          </div>
 
           <input
             type="password"
@@ -203,12 +294,25 @@ export default function Register({ onClose }: RegisterProps) {
               {confirmPasswordError}
             </p>
           )}
+          {/* <select
+            name="role"
+            id="role"
+            className="w-full h-[56px] outline-0 border-[1px] border-gray-400 rounded-lg pl-4 bg-white hover:border-gray-600 hover:bg-gray-50 focus:border-blue-600"
+            value={submitForm.role}
+            onChange={handleChange}
+            data-testid="role"
+          >
+            <option value="Admin">Admin</option>
+            <option value="Technical">Technical</option>
+            <option value="Intern">Intern</option>
+          </select> */}
 
           <div className="register-container overflow-hidden relative w-full h-[56px] flex justify-center items-center outline-0 border-0 rounded-[12px] bg-blue-500 text-white font-semibold cursor-pointer  hover:bg-blue-400">
             <button
               className="cursor-pointer"
               type="submit"
               data-testid="register-button"
+              disabled={isPending}
             >
               {isPending ? (
                 <div className="flex justify-center items-center">
