@@ -1,9 +1,15 @@
 export type TRegisterUser = {
-  firstName: string;
-  lastName: string;
   username: string;
+  email: string;
+  phoneNumber: string;
+  role: string;
   password: string;
   confirmPassword: string;
+};
+
+export type TLoginUser = {
+  identifier: string;
+  password: string;
 };
 
 export type TStaffFormData = {
@@ -28,11 +34,6 @@ export type TStaffs = {
   phoneNumber?: string;
   position: string;
   status: string;
-};
-
-export type TLoginUser = {
-  username: string;
-  password: string;
 };
 
 export type TForgotPasswordUser = {
@@ -92,4 +93,15 @@ export type THistoryBorrwedItems = {
   Condition: string;
   Event_Date: string;
   Status: string;
+};
+
+export type TUserProfile = {
+  id: number;
+  firstName?: string;
+  lastName?: string;
+  username: string;
+  email: string;
+  userRole: string;
+  phoneNumber: string;
+  middleName?: string;
 };
