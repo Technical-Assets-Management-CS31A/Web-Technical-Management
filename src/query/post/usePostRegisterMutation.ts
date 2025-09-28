@@ -10,8 +10,14 @@ const RegisterUser = async (formData: TRegisterUser) => {
     },
     body: JSON.stringify(formData),
   });
-  if (!res.ok) throw new Error("Submission failed");
-  return res.json();
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to register user");
+  }
+
+  return data;
 };
 
 export const usePostRegisterMutation = () => {
