@@ -12,9 +12,14 @@ const LoginUser = async (formData: TLoginUser) => {
     body: JSON.stringify(formData),
     credentials: "include",
   });
-  if (!res.ok) throw new Error("Submission failed");
   const data = await res.json();
-  if (data) saveToken(data.accessToken);
+
+  if (!res.ok) {
+    throw new Error(data.message || "Failed to login user");
+  }
+
+  saveToken(data.accessToken);
+
   return data;
 };
 
