@@ -13,198 +13,28 @@ import Pagination from "../components/Pagination";
 import InventoryTable from "../components/InventoryTable";
 import ErrorTable from "../components/ErrorTables";
 
+const badges = [
+  { name: "Total Items", total: 123 },
+  { name: "Categories", total: 192 },
+  { name: "Available", total: 123 },
+  { name: "In Use", total: 442 },
+];
+
 export default function InventoryList() {
   const [isAddItemFormOpen, setIsAddItemFormOpen] = useState(false);
   const [searchItem, setSearchItem] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 5;
-
-  const badges = [
-    { name: "Total Items", total: 123 },
-    { name: "Categories", total: 192 },
-    { name: "Available", total: 123 },
-    { name: "In Use", total: 442 },
-  ];
-
-  const [items, setItems] = useState<TItemList[]>([
-    // {
-    //   id: 1,
-    //   datetime: "2025-09-19T09:00:00",
-    //   SerialNumber: "PRJ-001",
-    //   image: logo,
-    //   ItemName: "Projector",
-    //   Image: null,
-    //   ItemType: "Electronics",
-    //   ItemModel: "X100",
-    //   ItemMake: "Epson",
-    //   Description: "High quality projector",
-    //   Category: "Electronics",
-    //   Condition: "New",
-    // },
-    // {
-    //   id: 2,
-    //   datetime: "2025-09-18T10:30:00",
-    //   SerialNumber: "LTP-002",
-    //   image: logo,
-    //   ItemName: "Laptop",
-    //   Image: null,
-    //   ItemType: "Computers",
-    //   ItemModel: "Latitude",
-    //   ItemMake: "Dell",
-    //   Description: "Business laptop",
-    //   Category: "Computers",
-    //   Condition: "Used",
-    // },
-    // {
-    //   id: 3,
-    //   datetime: "2025-09-17T14:15:00",
-    //   SerialNumber: "HDMI-003",
-    //   image: logo,
-    //   ItemName: "HDMI Cable",
-    //   Image: null,
-    //   ItemType: "Accessories",
-    //   ItemModel: "UltraHD",
-    //   ItemMake: "Sony",
-    //   Description: "High speed HDMI cable",
-    //   Category: "Accessories",
-    //   Condition: "Refurbished",
-    // },
-    // {
-    //   id: 4,
-    //   datetime: "2025-09-16T08:45:00",
-    //   SerialNumber: "MSE-004",
-    //   image: logo,
-    //   ItemName: "Mouse",
-    //   Image: null,
-    //   ItemType: "Accessories",
-    //   ItemModel: "Wireless",
-    //   ItemMake: "Logitech",
-    //   Description: "Wireless mouse",
-    //   Category: "Accessories",
-    //   Condition: "New",
-    // },
-    // {
-    //   id: 5,
-    //   datetime: "2025-09-15T11:20:00",
-    //   SerialNumber: "MON-005",
-    //   Category: "Electronics",
-    //   image: logo,
-    //   ItemName: "Monitor",
-    //   Image: null,
-    //   ItemType: "Electronics",
-    //   ItemModel: "UltraWide",
-    //   ItemMake: "Samsung",
-    //   Description: "UltraWide monitor",
-    //   Condition: "Used",
-    // },
-    // {
-    //   id: 6,
-    //   datetime: "2025-09-15T11:20:00",
-    //   SerialNumber: "MON-005",
-    //   Category: "Electronics",
-    //   image: logo,
-    //   ItemName: "Monitor",
-    //   Image: null,
-    //   ItemType: "Electronics",
-    //   ItemModel: "UltraWide",
-    //   ItemMake: "Samsung",
-    //   Description: "UltraWide monitor",
-    //   Condition: "Used",
-    // },
-    // {
-    //   id: 7,
-    //   datetime: "2025-09-15T11:20:00",
-    //   SerialNumber: "MON-005",
-    //   Category: "Electronics",
-    //   image: logo,
-    //   ItemName: "Monitor",
-    //   Image: null,
-    //   ItemType: "Electronics",
-    //   ItemModel: "UltraWide",
-    //   ItemMake: "Samsung",
-    //   Description: "UltraWide monitor",
-    //   Condition: "Used",
-    // },
-    // {
-    //   id: 8,
-    //   datetime: "2025-09-15T11:20:00",
-    //   SerialNumber: "MON-005",
-    //   Category: "Electronics",
-    //   image: logo,
-    //   ItemName: "Monitor",
-    //   Image: null,
-    //   ItemType: "Electronics",
-    //   ItemModel: "UltraWide",
-    //   ItemMake: "Samsung",
-    //   Description: "UltraWide monitor",
-    //   Condition: "Used",
-    // },
-    // {
-    //   id: 9,
-    //   datetime: "2025-09-15T11:20:00",
-    //   SerialNumber: "MON-005",
-    //   Category: "Electronics",
-    //   image: logo,
-    //   ItemName: "Monitor",
-    //   Image: null,
-    //   ItemType: "Electronics",
-    //   ItemModel: "UltraWide",
-    //   ItemMake: "Samsung",
-    //   Description: "UltraWide monitor",
-    //   Condition: "Used",
-    // },
-    // {
-    //   id: 10,
-    //   datetime: "2025-09-15T11:20:00",
-    //   SerialNumber: "MON-005",
-    //   Category: "Electronics",
-    //   image: logo,
-    //   ItemName: "Monitor",
-    //   Image: null,
-    //   ItemType: "Electronics",
-    //   ItemModel: "UltraWide",
-    //   ItemMake: "Samsung",
-    //   Description: "UltraWide monitor",
-    //   Condition: "Used",
-    // },
-    // {
-    //   id: 11,
-    //   datetime: "2025-09-15T11:20:00",
-    //   SerialNumber: "MON-005",
-    //   Category: "Electronics",
-    //   image: logo,
-    //   ItemName: "Monitor",
-    //   Image: null,
-    //   ItemType: "Electronics",
-    //   ItemModel: "UltraWide",
-    //   ItemMake: "Samsung",
-    //   Description: "UltraWide monitor",
-    //   Condition: "Used",
-    // },
-    // {
-    //   id: 12,
-    //   datetime: "2025-09-15T11:20:00",
-    //   SerialNumber: "MON-005",
-    //   Category: "Electronics",
-    //   image: logo,
-    //   ItemName: "Monitor",
-    //   Image: null,
-    //   ItemType: "Electronics",
-    //   ItemModel: "UltraWide",
-    //   ItemMake: "Samsung",
-    //   Description: "UltraWide monitor",
-    //   Condition: "Used",
-    // },
-  ]);
+  const [items, setItems] = useState<TItemList[]>([]);
 
   const filteredItems = useMemo(
     () =>
       items.filter(
         (item) =>
-          item.ItemName.toLowerCase().includes(searchItem.toLowerCase()) ||
-          item.Category.toLowerCase().includes(searchItem.toLowerCase())
+          item.itemName.toLowerCase().includes(searchItem.toLowerCase()) ||
+          item.category.toLowerCase().includes(searchItem.toLowerCase()),
       ),
-    [items, searchItem]
+    [items, searchItem],
   );
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
@@ -216,9 +46,9 @@ export default function InventoryList() {
     () =>
       filteredItems.slice(
         (validCurrentPage - 1) * itemsPerPage,
-        validCurrentPage * itemsPerPage
+        validCurrentPage * itemsPerPage,
       ),
-    [filteredItems, itemsPerPage, validCurrentPage]
+    [filteredItems, itemsPerPage, validCurrentPage],
   );
 
   const handlePageChange = (page: number) => {
@@ -229,7 +59,8 @@ export default function InventoryList() {
   const { mutate } = useDeleteItemMutation();
 
   useEffect(() => {
-    if (data) setItems(data);
+    if (!data) return;
+    setItems(data);
   }, [data]);
 
   if (isPending) {
@@ -251,7 +82,12 @@ export default function InventoryList() {
       {/* Inventory Stats */}
       <section className="inventory-stats-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-8 pt-6 pb-8">
         {badges.map((item) => (
-          <InventoryBadges name={item.name} total={isError ? 0 : item.total} />
+          <div key={item.name}>
+            <InventoryBadges
+              name={item.name}
+              total={isError ? 0 : item.total}
+            />
+          </div>
         ))}
       </section>
 
@@ -325,17 +161,17 @@ export default function InventoryList() {
                   ) : (
                     paginatedData.map((item) => (
                       <tr
-                        key={item.SerialNumber}
+                        key={item.serialNumber}
                         className="hover:bg-[#f1f5f9] transition-colors odd:bg-white even:bg-[#f8fafc]"
                       >
                         <InventoryTable
-                          datetime={item.datetime}
-                          ItemName={item.ItemName}
-                          SerialNumber={item.SerialNumber}
+                          createdAt={item.createdAt}
+                          ItemName={item.itemName}
+                          SerialNumber={item.serialNumber}
                           Image={item.image || logo}
-                          ItemType={item.ItemType}
-                          Category={item.Category}
-                          Condition={item.Condition}
+                          ItemType={item.itemType}
+                          Category={item.category}
+                          Condition={item.condition}
                           onMutate={(Id) => mutate(Id)}
                         />
                       </tr>
