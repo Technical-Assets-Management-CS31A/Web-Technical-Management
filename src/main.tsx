@@ -6,7 +6,7 @@ import Home from "./layout/Home.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import InventoryList from "./pages/InventoryList.tsx";
 import ItemList from "./pages/ItemList.tsx";
-import { Staff } from "./pages/Staff.tsx";
+import { UserManagement } from "./pages/UserManagement.tsx";
 import HistoryList from "./pages/HistoryList.tsx";
 import Settings from "./pages/Settings.tsx";
 import ViewItem from "./components/ViewItem.tsx";
@@ -64,10 +64,10 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: "staff",
+        path: "user-management",
         element: (
           <ProtectedRoute>
-            <Staff />
+            <UserManagement />
           </ProtectedRoute>
         ),
       },
