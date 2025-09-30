@@ -53,31 +53,30 @@ export type TForgotPasswordUser = {
 };
 
 export type TItemForm = {
-  ItemName: string;
-  SerialNumber: string;
-  Image: File | null;
-  ItemType: string;
-  ItemModel: string;
-  ItemMake: string;
-  Description: string;
-  Category: string;
-  Condition: string;
+  serialNumber: string;
+  image: File | null;
+  itemName: string;
+  itemType: string;
+  itemModel: string;
+  itemMake: string;
+  description: string;
+  category: string;
+  condition: string;
   preview: string | null;
 };
 
 export type TItemList = {
-  id: number;
-  datetime: string;
-  ItemName: string;
-  SerialNumber: string;
-  Image: File | null;
-  ItemType: string;
-  ItemModel: string;
-  ItemMake: string;
-  Description: string;
-  Category: string;
-  Condition: string;
-  image: string | null;
+  serialNumber: string;
+  image: string;
+  itemName: string;
+  itemType: string;
+  itemModel: string;
+  itemMake: string;
+  description: string;
+  category: string;
+  condition: string;
+  createdAt: string;
+  updatedAt?: string;
 };
 
 export type TEditItemForm = {
