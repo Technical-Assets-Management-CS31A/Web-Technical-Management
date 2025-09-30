@@ -48,7 +48,7 @@ export default function ItemList() {
           </p>
         </div>
         <div className="add-item-container">
-          <button type="button" onClick={() => setIsAddItemOpen((prev) => !prev)}><FaPlus /> Add Item</button>
+          <button type="button" onClick={() => setIsAddItemOpen((prev) => !prev)}><FaPlus /> New Item</button>
         </div>
         <div className="search-contanier">
           <FaSearch className="search-icon" />
