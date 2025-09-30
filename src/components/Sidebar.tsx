@@ -13,7 +13,7 @@ export default function Sidebar() {
   const sideBarList = [
     { label: "Dashboard", link: "dashboard" },
     { label: "Inventory List", link: "inventory-list" },
-    { label: "Your Staff", link: "staff" },
+    { label: "User Management", link: "user-management" },
     { label: "Your History", link: "history-list" },
     { label: "Settings", link: "settings" },
   ];
