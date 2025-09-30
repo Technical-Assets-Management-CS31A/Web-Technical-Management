@@ -8,8 +8,6 @@ type SelectStatusProps = {
 const defaultOptions = [
     { value: "all", label: "All" },
     { value: "returned", label: "Returned" },
-    // { value: "borrowed", label: "Borrowed" },
-    // { value: "overdue", label: "Overdue" },
     { value: "lost", label: "Lost" },
 ];
 
