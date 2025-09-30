@@ -13,7 +13,7 @@ export default function NotFound() {
                 to="/home/dashboard"
                 className="flex flex-row justify-center items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white font-bold rounded-xl shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-150"
             >
-                <FaArrowCircleLeft className="text-xl" />Go Back to Dashboard
+                <FaArrowCircleLeft className="text-xl" />Go Back to Continue
             </Link>
         </div>
     );
