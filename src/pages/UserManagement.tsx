@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { SelectUserStatus } from "../components/SelectUserStatus";
 import { useAllStaffsQuery } from "../query/get/useAllStaffsQuery";
 import { StaffSkeletonLoader } from "../loader/StaffSkeletonLoader";
-import { useDeleteStaffMutation } from "../query/delete/useDeleteStaffMutation";
+import { useDeleteUserMutation } from "../query/delete/useDeleteUserMutation";
 import UserTable from "../components/UserTable";
 import ErrorTable from "../components/ErrorTables";
 
@@ -107,7 +107,7 @@ export const UserManagement = () => {
   );
 
   const { data, isPending, isError } = useQuery(useAllStaffsQuery());
-  const { mutate } = useDeleteStaffMutation();
+  const { mutate } = useDeleteUserMutation();
 
   useEffect(() => {
     if (data && Array.isArray(data)) {
