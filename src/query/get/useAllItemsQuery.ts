@@ -8,16 +8,17 @@ const allItems = async () => {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${getToken}`,
+      Authorization: `Bearer ${getToken()}`,
     },
-    credentials: "include",
   });
+  const data = await res.json();
   if (!res.ok) throw new Error("Failed to fetch item details");
-  return res.json();
+  if (data) console.log(data);
+  return data;
 };
 export const useAllItemsQuery = () => {
-    return queryOptions({
-        queryKey: ["Item"],
-        queryFn: allItems
-    });
-}
+  return queryOptions({
+    queryKey: ["Item"],
+    queryFn: allItems,
+  });
+};
