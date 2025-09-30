@@ -5,7 +5,6 @@ import App from "./App.tsx";
 import Home from "./layout/Home.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import InventoryList from "./pages/InventoryList.tsx";
-import ItemList from "./pages/ItemList.tsx";
 import { UserManagement } from "./pages/UserManagement.tsx";
 import HistoryList from "./pages/HistoryList.tsx";
 import Settings from "./pages/Settings.tsx";
@@ -56,14 +55,6 @@ const routes = createBrowserRouter([
         ),
       },
       {
-        path: "item-list",
-        element: (
-          <ProtectedRoute>
-            <ItemList />
-          </ProtectedRoute>
-        ),
-      },
-      {
         path: "user-management",
         element: (
           <ProtectedRoute>
@@ -106,5 +97,5 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={routes} />
     </QueryClientProvider>
-  </StrictMode>
+  </StrictMode>,
 );
