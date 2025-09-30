@@ -15,7 +15,6 @@ const fetchUserData = async () => {
   if (!res.ok) {
     throw new Error(data.message || "User not found");
   }
-  console.log(data)
   return data;
 };
 
@@ -23,6 +22,5 @@ export const useUserQuery = () => {
   return queryOptions({
     queryKey: ["me"],
     queryFn: fetchUserData,
-    retry: 1,
   });
 };
