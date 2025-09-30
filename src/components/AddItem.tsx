@@ -7,6 +7,7 @@ type AddItemFormProps = {
 };
 
 const AddItemForm = ({ onClose }: AddItemFormProps) => {
+  const [showAlert, setShowAlert] = useState<boolean>(false);
   const [itemNameError, setItemNameError] = useState<string>("");
   const [itemTypeError, setItemTypeError] = useState<string>("");
   const [itemModelError, setItemModelError] = useState<string>("");
@@ -17,28 +18,28 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
   const [descriptionError, setDescriptionError] = useState<string>("");
   const [imageError, setImageError] = useState<string | null>(null);
   const [formData, setFormData] = useState<TItemForm>({
-    ItemName: "",
-    SerialNumber: "",
-    Image: null,
-    ItemType: "",
-    ItemModel: "",
-    ItemMake: "",
-    Description: "",
-    Category: "",
-    Condition: "",
+    serialNumber: "",
+    image: null,
+    itemName: "",
+    itemType: "",
+    itemModel: "",
+    itemMake: "",
+    description: "",
+    category: "Electronics",
+    condition: "New",
     preview: "",
   });
 
   const { mutate } = usePostItemMutation();
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value, files } = e.target as HTMLInputElement;
     if (files && files[0]) {
       setFormData((prev) => ({
         ...prev,
-        Image: files[0],
+        image: files[0],
         preview: URL.createObjectURL(files[0]),
       }));
     } else {
@@ -47,33 +48,31 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
         [name]: value,
       }));
 
-      if (name === "ItemName") setItemNameError("");
-      if (name === "SerialNumber") setSerialNumberError("");
+      if (name === "itemName") setItemNameError("");
+      if (name === "serialNumber") setSerialNumberError("");
       if (name === "Image") setImageError("");
-      if (name === "ItemType") setItemTypeError("");
-      if (name === "ItemMake") setItemMakeError("");
-      if (name === "ItemModel") setItemModelError("");
-      if (name === "Category") setCategoryError("");
-      if (name === "Condition") setConditionError("");
-      if (name === "Description") setDescriptionError("");
-      if (name === "Image") setImageError("");
+      if (name === "itemType") setItemTypeError("");
+      if (name === "itemMake") setItemMakeError("");
+      if (name === "itemModel") setItemModelError("");
+      if (name === "category") setCategoryError("");
+      if (name === "condition") setConditionError("");
+      if (name === "description") setDescriptionError("");
+      if (name === "image") setImageError("");
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Item Data", formData);
-
     if (
-      formData.ItemName === "" &&
-      formData.SerialNumber === "" &&
-      formData.Category === "" &&
-      formData.Condition === "" &&
-      formData.ItemType === "" &&
-      formData.ItemModel === "" &&
-      formData.ItemMake === "" &&
-      formData.Description === "" &&
-      formData.Image === null
+      formData.itemName === "" &&
+      formData.serialNumber === "" &&
+      formData.category === "" &&
+      formData.condition === "" &&
+      formData.itemType === "" &&
+      formData.itemModel === "" &&
+      formData.itemMake === "" &&
+      formData.description === "" &&
+      formData.image === null
     ) {
       setItemNameError("Item Name is required");
       setSerialNumberError("Serial Num is required");
@@ -87,70 +86,120 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
       return;
     }
 
-    if (!formData.ItemName) {
+    if (!formData.itemName) {
       setItemNameError("Item Name is required");
       return;
     }
 
-    if (!formData.SerialNumber) {
+    if (!formData.serialNumber) {
       setSerialNumberError("Serial Num is required");
       return;
     }
 
-    if (!formData.Image) {
+    if (!formData.image) {
       setImageError("Image is required");
       return;
     }
 
-    if (!formData.ItemType) {
+    if (!formData.itemType) {
       setItemTypeError("Item Type is required");
       return;
     }
 
-    if (!formData.ItemMake) {
+    if (!formData.itemMake) {
       setItemMakeError("Item Make is required");
       return;
     }
 
-    if (!formData.ItemModel) {
+    if (!formData.itemModel) {
       setItemModelError("Item Model is required");
       return;
     }
 
-    if (!formData.Category) {
+    if (!formData.category) {
       setCategoryError("Category is required");
       return;
     }
 
-    if (!formData.Condition) {
+    if (!formData.condition) {
       setConditionError("Condition is required");
       return;
     }
 
-    if (!formData.Description) {
+    if (!formData.description) {
       setDescriptionError("Description is required");
       return;
     }
 
-    mutate(formData);
+    const newItem = {
+      serialNumber: formData.serialNumber,
+      image: formData.image,
+      itemName: formData.itemName,
+      itemType: formData.itemType,
+      itemModel: formData.itemModel,
+      itemMake: formData.itemMake,
+      description: formData.description,
+      category: formData.category,
+      condition: formData.condition,
+    };
 
-    setFormData({
-      ItemName: "",
-      SerialNumber: "",
-      Category: "",
-      Condition: "",
-      ItemType: "",
-      ItemModel: "",
-      ItemMake: "",
-      Description: "",
-      Image: null,
-      preview: "",
+    mutate(newItem, {
+      onSuccess: () => {
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+          onClose();
+        }, 2500);
+        setFormData({
+          serialNumber: "",
+          image: null,
+          itemName: "",
+          itemType: "",
+          itemModel: "",
+          itemMake: "",
+          description: "",
+          category: "",
+          condition: "",
+          preview: null,
+        });
+      },
+      onError: (error: Error) => {
+        console.error("Error adding item", error);
+      },
     });
   };
 
   return (
     <>
       <div className="animate-fadeIn fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+        {showAlert && (
+          <div className="absolute top-8 right-4">
+            <div
+              className={
+                "bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 transition-all duration-500 ease-in-out"
+              }
+            >
+              <div className="flex-shrink-0">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <div className="font-semibold text-lg">
+                Item Created Successfully
+              </div>
+            </div>
+          </div>
+        )}
         <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-2xl relative animate-fadeInUp">
           <button
             className="absolute top-4 right-4 text-2xl text-[#64748b] hover:text-[#2563eb] transition-colors"
@@ -162,30 +211,35 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
           <h2 className="text-3xl font-extrabold text-[#1e293b] mb-6 text-center tracking-tight">
             New Item
           </h2>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+            encType="multipart-data"
+          >
+            {" "}
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <label
-                  htmlFor="ItemName"
+                  htmlFor="itemName"
                   className="block text-[#2563eb] font-semibold mb-1"
                 >
                   Item Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.ItemName === "" && itemNameError
+                    formData.itemName === "" && itemNameError
                       ? "border-red-500"
                       : itemNameError
-                      ? "border-red-500"
-                      : ""
+                        ? "border-red-500"
+                        : ""
                   }`}
                   type="text"
-                  id="ItemName"
-                  name="ItemName"
+                  id="itemName"
+                  name="itemName"
                   placeholder="Enter item name"
-                  value={formData.ItemName}
+                  value={formData.itemName}
                   onChange={handleChange}
-                  data-testid="ItemName"
+                  data-testid="itemName"
                 />
                 {itemNameError && (
                   <p className="text-red-500 text-sm mt-1">{itemNameError}</p>
@@ -193,26 +247,26 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
               </div>
               <div className="flex-1">
                 <label
-                  htmlFor="SerialNumber"
+                  htmlFor="serialNumber"
                   className="block text-[#2563eb] font-semibold mb-1"
                 >
                   Serial Number <span className="text-red-500">*</span>
                 </label>
                 <input
                   className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg" ${
-                    formData.SerialNumber === "" && serialNumberError
+                    formData.serialNumber === "" && serialNumberError
                       ? "border-red-500"
                       : serialNumberError
-                      ? "border-red-500"
-                      : ""
+                        ? "border-red-500"
+                        : ""
                   }`}
                   type="text"
-                  id="SerialNumber"
-                  name="SerialNumber"
+                  id="serialNumber"
+                  name="serialNumber"
                   placeholder="Enter serial number"
-                  value={formData.SerialNumber}
+                  value={formData.serialNumber}
                   onChange={handleChange}
-                  data-testid="SerialNumber"
+                  data-testid="serialNumber"
                 />
                 {serialNumberError && (
                   <p className="text-red-500 text-sm mt-1">
@@ -221,32 +275,33 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                 )}
               </div>
             </div>
-
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <label
-                  htmlFor="Category"
+                  htmlFor="category"
                   className="block text-[#2563eb] font-semibold mb-1"
                 >
                   Category <span className="text-red-500">*</span>
                 </label>
                 <select
                   className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg" ${
-                    formData.Category === "" && categoryError
+                    formData.category === "" && categoryError
                       ? "border-red-500"
                       : categoryError
-                      ? "border-red-500"
-                      : ""
+                        ? "border-red-500"
+                        : ""
                   }`}
-                  id="Category"
-                  name="Category"
-                  value={formData.Category}
+                  id="category"
+                  name="category"
+                  value={formData.category}
                   onChange={handleChange}
-                  data-testid="Category"
+                  data-testid="category"
                 >
-                  <option value="electronics">Electronics</option>
-                  <option value="furniture">Furniture</option>
-                  <option value="tools">Tools</option>
+                  <option value="Electronics">Electronics</option>
+                  <option value="Keys">Keys</option>
+                  <option value="MediaEquipment">Media Equipment</option>
+                  <option value="Tools">Tools</option>
+                  <option value="Miscellaneous">Miscellaneous</option>
                 </select>
                 {categoryError && (
                   <p className="text-red-500 text-sm mt-1">{categoryError}</p>
@@ -254,58 +309,59 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
               </div>
               <div className="flex-1">
                 <label
-                  htmlFor="Condition"
+                  htmlFor="condition"
                   className="block text-[#2563eb] font-semibold mb-1"
                 >
                   Condition <span className="text-red-500">*</span>
                 </label>
                 <select
                   className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.Condition === "" && conditionError
+                    formData.condition === "" && conditionError
                       ? "border-red-500"
                       : conditionError
-                      ? "border-red-500"
-                      : ""
+                        ? "border-red-500"
+                        : ""
                   }`}
-                  id="Condition"
-                  name="Condition"
-                  value={formData.Condition}
+                  id="condition"
+                  name="condition"
+                  value={formData.condition}
                   onChange={handleChange}
-                  data-testid="Condition"
+                  data-testid="condition"
                 >
-                  <option value="new">New</option>
-                  <option value="used">Used</option>
-                  <option value="refurbished">Refurbished</option>
+                  <option value="New">New</option>
+                  <option value="Good">Good</option>
+                  <option value="Defective">Defective</option>
+                  <option value="Refurbished">Refurbished</option>
+                  <option value="NeedRepair">Need Repair</option>
                 </select>
                 {conditionError && (
                   <p className="text-red-500 text-sm mt-1">{conditionError}</p>
                 )}
               </div>
             </div>
-
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <label
-                  htmlFor="ItemType"
+                  htmlFor="itemType"
                   className="block text-[#2563eb] font-semibold mb-1"
                 >
                   Item Type <span className="text-red-500">*</span>
                 </label>
                 <input
                   className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.ItemType === "" && itemTypeError
+                    formData.itemType === "" && itemTypeError
                       ? "border-red-500"
                       : itemTypeError
-                      ? "border-red-500"
-                      : ""
+                        ? "border-red-500"
+                        : ""
                   }`}
                   type="text"
-                  id="ItemType"
-                  name="ItemType"
+                  id="itemType"
+                  name="itemType"
                   placeholder="Enter item type"
-                  value={formData.ItemType}
+                  value={formData.itemType}
                   onChange={handleChange}
-                  data-testid="ItemType"
+                  data-testid="itemType"
                 />
                 {itemTypeError && (
                   <p className="text-red-500 text-sm mt-1">{itemTypeError}</p>
@@ -313,56 +369,55 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
               </div>
               <div className="flex-1">
                 <label
-                  htmlFor="ItemModel"
+                  htmlFor="itemModel"
                   className="block text-[#2563eb] font-semibold mb-1"
                 >
                   Item Model <span className="text-red-500">*</span>
                 </label>
                 <input
                   className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.ItemModel === "" && itemModelError
+                    formData.itemModel === "" && itemModelError
                       ? "border-red-500"
                       : itemModelError
-                      ? "border-red-500"
-                      : ""
+                        ? "border-red-500"
+                        : ""
                   }`}
                   type="text"
-                  id="ItemModel"
-                  name="ItemModel"
+                  id="itemModel"
+                  name="itemModel"
                   placeholder="Enter item model"
-                  value={formData.ItemModel}
+                  value={formData.itemModel}
                   onChange={handleChange}
-                  data-testid="ItemModel"
+                  data-testid="itemModel"
                 />
                 {itemModelError && (
                   <p className="text-red-500 text-sm mt-1">{itemModelError}</p>
                 )}
               </div>
             </div>
-
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <label
-                  htmlFor="ItemMake"
+                  htmlFor="itemMake"
                   className="block text-[#2563eb] font-semibold mb-1"
                 >
                   Item Make <span className="text-red-500">*</span>
                 </label>
                 <input
                   className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.ItemMake === "" && itemMakeError
+                    formData.itemMake === "" && itemMakeError
                       ? "border-red-500"
                       : itemMakeError
-                      ? "border-red-500"
-                      : ""
+                        ? "border-red-500"
+                        : ""
                   }`}
                   type="text"
-                  id="ItemMake"
-                  name="ItemMake"
+                  id="itemMake"
+                  name="itemMake"
                   placeholder="Enter item make"
-                  value={formData.ItemMake}
+                  value={formData.itemMake}
                   onChange={handleChange}
-                  data-testid="ItemMake"
+                  data-testid="itemMake"
                 />
                 {itemMakeError && (
                   <p className="text-red-500 text-sm mt-1">{itemMakeError}</p>
@@ -370,26 +425,26 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
               </div>
               <div className="flex-1">
                 <label
-                  htmlFor="Description"
+                  htmlFor="description"
                   className="block text-[#2563eb] font-semibold mb-1"
                 >
                   Description <span className="text-red-500">*</span>
                 </label>
                 <input
                   className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.Description === "" && descriptionError
+                    formData.description === "" && descriptionError
                       ? "border-red-500"
                       : descriptionError
-                      ? "border-red-500"
-                      : ""
+                        ? "border-red-500"
+                        : ""
                   }`}
                   type="text"
-                  id="Description"
-                  name="Description"
+                  id="description"
+                  name="description"
                   placeholder="Enter description"
-                  value={formData.Description}
+                  value={formData.description}
                   onChange={handleChange}
-                  data-testid="Description"
+                  data-testid="description"
                 />
                 {descriptionError && (
                   <p className="text-red-500 text-sm mt-1">
@@ -398,29 +453,28 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                 )}
               </div>
             </div>
-
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 flex flex-col">
                 <label
-                  htmlFor="Image"
+                  htmlFor="image"
                   className="block text-[#2563eb] font-semibold mb-1"
                 >
                   Item Image
                 </label>
                 <input
                   className={`w-full px-4 py-2 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-base ${
-                    formData.Image === null && imageError
+                    formData.image === null && imageError
                       ? "border-red-500"
                       : imageError
-                      ? "border-red-500"
-                      : ""
+                        ? "border-red-500"
+                        : ""
                   }`}
                   type="file"
-                  id="Image"
-                  name="Image"
+                  id="image"
+                  name="image"
                   accept="image/*"
                   onChange={handleChange}
-                  data-testid="Image"
+                  data-testid="image"
                 />
                 {imageError && (
                   <p className="text-red-500 text-sm mt-1">{imageError}</p>
@@ -436,7 +490,6 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                 )}
               </div>
             </div>
-
             <div className="flex justify-center pt-2">
               <button
                 type="submit"
