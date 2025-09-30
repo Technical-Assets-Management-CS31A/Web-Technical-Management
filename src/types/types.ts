@@ -12,27 +12,39 @@ export type TLoginUser = {
   password: string;
 };
 
-export type TStaffFormData = {
-  firstName: string;
-  lastName: string;
-  middleName?: string;
+export type TUserFormData = {
   username: string;
+  lastName: string;
+  middleName: string;
+  firstName: string;
   email: string;
   phoneNumber: string;
-  position: string;
+  role: string;
   password: string;
   confirmPassword: string;
 };
 
-export type TStaffs = {
-  id: number;
-  firstName: string;
+export type TUsers = {
+  Id: string;
+  username: string;
   lastName: string;
-  middleName?: string;
-  username?: string;
-  email?: string;
-  phoneNumber?: string;
-  position: string;
+  middleName: string;
+  firstName: string;
+  email: string;
+  phoneNumber: string;
+  userRole: string;
+  status: string;
+};
+
+export type TUpdatedUsers = {
+  Id: string;
+  username: string;
+  lastName: string;
+  middleName: string;
+  firstName: string;
+  email: string;
+  phoneNumber: string;
+  role: string;
   status: string;
 };
 
@@ -93,15 +105,4 @@ export type THistoryBorrwedItems = {
   Condition: string;
   Event_Date: string;
   Status: string;
-};
-
-export type TUserProfile = {
-  id: number;
-  firstName?: string;
-  lastName?: string;
-  username: string;
-  email: string;
-  userRole: string;
-  phoneNumber: string;
-  middleName?: string;
 };
