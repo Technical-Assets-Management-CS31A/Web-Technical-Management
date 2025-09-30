@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Register from "./Register";
 import ForgotPassword from "./ForgotPassword";
 import { FaEye } from "react-icons/fa";
 import { FaEyeSlash } from "react-icons/fa6";
@@ -12,7 +11,6 @@ import { getToken } from "../utils/token";
 export default function Login() {
   const navigate = useNavigate();
   const [isShowPassword, setIsShowPassword] = useState<boolean>(false);
-  const [isRegisterFormOpen, setIsRegisterFormOpen] = useState<boolean>(false);
   const [isForgotPasswordFormOpen, setIsForgotPasswordFormOpen] =
     useState<boolean>(false);
   const [usernameError, setUsernameError] = useState<string>("");
@@ -188,21 +186,9 @@ export default function Login() {
               </button>
             </div>
           </form>
-          <div className="mt-6 max-sm:text-center max-sm:mt-4">
-            <p
-              className="text-gray-400 cursor-pointer text-lg hover:text-gray-700"
-              onClick={() => setIsRegisterFormOpen(true)}
-            >
-              Create new account ?
-            </p>
-          </div>
         </div>
       </div>
-      {isRegisterFormOpen ? (
-        <Register onClose={() => setIsRegisterFormOpen(false)} />
-      ) : (
-        ""
-      )}
+
       {isForgotPasswordFormOpen ? (
         <ForgotPassword onClose={() => setIsForgotPasswordFormOpen(false)} />
       ) : (
