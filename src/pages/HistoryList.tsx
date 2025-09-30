@@ -5,30 +5,17 @@ import HistoryListSkeletonLoader from "../loader/HistoryListSkeletonLoader";
 import { useQuery } from "@tanstack/react-query";
 import { useBorrowedItemsQuery } from "../query/get/useBorrwedItemsQuery";
 import type { THistoryBorrwedItems } from "../types/types";
+import HistoryTable from "../components/HistoryTable";
+import ErrorTable from "../components/ErrorTables";
 
-function formatDate(d: string | Date) {
-  try {
-    const date = d instanceof Date ? d : new Date(d);
-    return date.toLocaleString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return String(d);
-  }
-}
-
-function toStatusSlug(status: string) {
+const toStatusSlug = (status: string) => {
   const s = String(status || "").toLowerCase();
   if (s.includes("return")) return "returned";
   if (s.includes("overdue")) return "overdue";
   if (s.includes("lost")) return "lost";
   if (s.includes("borrow")) return "borrowed";
   return "default";
-}
+};
 
 export default function HistoryList({
   title = "Borrowing History",
@@ -146,27 +133,13 @@ export default function HistoryList({
       Condition: "Damaged port",
       Status: "Lost",
     },
-  ])
+  ]);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
-
-  const { data, isPending } = useQuery(useBorrowedItemsQuery())
-
-  useEffect(() => {
-    if (data) setBorrowedItem(data)
-  }, [data])
-
-  if (isPending) {
-    return <HistoryListSkeletonLoader />;
-  }
-
   const filteredItems = borrowedItem.filter((item) => {
-    const matchesSearch =
-      item.Teacher.toLowerCase().includes(searchItem.toLowerCase()) ||
-      item.ItemName.toLowerCase().includes(searchItem.toLowerCase()) ||
-      item.Borrowed_id.toLowerCase().includes(searchItem.toLowerCase()) ||
-      item.Room.toLowerCase().includes(searchItem.toLowerCase()) ||
-      item.Occupied.toLowerCase().includes(searchItem.toLowerCase());
+    const matchesSearch = item.ItemName.toLowerCase().includes(
+      searchItem.toLowerCase()
+    );
 
     const matchesStatus =
       selectedStatus === "all" || toStatusSlug(item.Status) === selectedStatus;
@@ -174,8 +147,17 @@ export default function HistoryList({
     return matchesSearch && matchesStatus;
   });
 
+  const { data, isPending, isError } = useQuery(useBorrowedItemsQuery());
+
+  useEffect(() => {
+    if (data) setBorrowedItem(data);
+  }, [data]);
+
+  if (isPending) {
+    return <HistoryListSkeletonLoader />;
+  }
+
   return (
-    // Main Container
     <div className="animate-fadeIn min-h-screen w-full bg-gradient-to-br from-[#f8fafc] via-[#e0e7ef] to-[#c7d2fe] flex flex-col items-center py-10 px-2">
       <div className="w-full max-w-[90%] bg-white/90 shadow-2xl rounded-3xl p-8 relative">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
@@ -195,78 +177,70 @@ export default function HistoryList({
           <SearchBar
             onChangeValue={(value) => setSearchItem(value)}
             name={"Search History"}
-            placeholder={"Search by Teacher"}
+            placeholder={"Search by Borrowed Item"}
           />
         </div>
 
         <div className="h-[60vh] overflow-x-auto rounded-2xl shadow-lg bg-white/95">
           {/* Table Container */}
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr>
-                <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
-                  ID
-                </th>
-                <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
-                  Item Name
-                </th>
-                <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
-                  Borrowed ID
-                </th>
-                <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
-                  Teacher
-                </th>
-                <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
-                  Room
-                </th>
-                <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
-                  Occupied By
-                </th>
-                <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
-                  Condition
-                </th>
-                <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
-                  Event Date
-                </th>
-                <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredItems.map((r) => (
-                <tr
-                  key={r.id}
-                  className="hover:bg-[#f1f5f9] transition-colors  odd:bg-white even:bg-[#f8fafc]"
-                >
-                  <td className="py-3 px-6">{r.id}</td>
-                  <td className="py-3 px-6">{r.ItemName}</td>
-                  <td className="py-3 px-6">{r.Borrowed_id}</td>
-                  <td className="py-3 px-6">{r.Teacher}</td>
-                  <td className="py-3 px-6">{r.Room}</td>
-                  <td className="py-3 px-6">{r.Occupied}</td>
-                  <td className="py-3 px-6">{r.Condition}</td>
-                  <td className="py-3 px-6">{formatDate(r.Event_Date)}</td>
-                  <td className="py-3 px-6">
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${toStatusSlug(r.Status) === "returned"
-                        ? "bg-green-100 text-green-700"
-                        : toStatusSlug(r.Status) === "borrowed"
-                          ? "bg-blue-100 text-blue-700"
-                          : toStatusSlug(r.Status) === "overdue"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : toStatusSlug(r.Status) === "lost"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-gray-200 text-gray-600"
-                        }`}
-                    >
-                      {r.Status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {isError ? (
+            <ErrorTable />
+          ) : (
+            <table className="w-full border-collapse text-left">
+              <>
+                <thead>
+                  <tr>
+                    <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
+                      ID
+                    </th>
+                    <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
+                      Item Name
+                    </th>
+                    <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
+                      Borrowed ID
+                    </th>
+                    <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
+                      Teacher
+                    </th>
+                    <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
+                      Room
+                    </th>
+                    <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
+                      Occupied By
+                    </th>
+                    <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
+                      Condition
+                    </th>
+                    <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
+                      Event Date
+                    </th>
+                    <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredItems.map((item: THistoryBorrwedItems) => (
+                    <>
+                      {/* History Table Component */}
+                      <HistoryTable
+                        id={item.id}
+                        ItemName={item.ItemName}
+                        Borrowed_id={item.Borrowed_id}
+                        Teacher={item.Teacher}
+                        Room={item.Room}
+                        Occupied={item.Occupied}
+                        Condition={item.Condition}
+                        Event_Date={item.Event_Date}
+                        Status={toStatusSlug(item.Status)}
+                        filteredItems={filteredItems}
+                      />
+                    </>
+                  ))}
+                </tbody>
+              </>
+            </table>
+          )}
         </div>
 
         {/* Description */}
