@@ -64,7 +64,7 @@ export default function Login() {
       onSuccess: () => {
         navigate("/home/dashboard");
       },
-      onError: (err: any) => {
+      onError: (err: Error) => {
         console.error("Registration failed:", err.message);
       },
     });
@@ -122,6 +122,7 @@ export default function Login() {
                 value={submitForm.identifier}
                 onChange={handleChange}
                 data-testid="identifier"
+                disabled={isPending}
               />
               {usernameError && (
                 <p className="absolute mt-14 text-red-500 text-base">
@@ -140,6 +141,7 @@ export default function Login() {
                 value={submitForm.password}
                 onChange={handleChange}
                 data-testid="password"
+                disabled={isPending}
               />
               {passwordError && (
                 <p className="relative text-red-500 text-base">
