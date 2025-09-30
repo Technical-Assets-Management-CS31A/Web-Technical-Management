@@ -13,7 +13,7 @@ export default function SidebarSkeletonLoader() {
             <nav className="flex-1">
                 <ul className="flex flex-col gap-2 px-4">
                     {/* Navigation items skeleton */}
-                    {[...Array(4)].map((_, index) => (
+                    {[...Array(5)].map((_, index) => (
                         <li key={index}>
                             <div className="flex items-center gap-3 px-4 py-3 rounded-lg">
                                 <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
