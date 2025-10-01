@@ -11,16 +11,13 @@ import { BsCalendar2Date } from "react-icons/bs";
 import { MdOutlineDescription } from "react-icons/md";
 import { useState } from "react";
 import { EditItemForm } from "./EditItemForm";
+import { FormattedDateTime } from "./FormatedDateTime";
 
 export default function ViewItem() {
   const { id } = useParams<{ id: string }>();
   const itemId = String(id);
   const [isEditItemFormOpen, setIsEditItemFormOpen] = useState(false);
   const { data, isLoading, error } = useQuery(useItemDetailsQuery(itemId));
-
-  if (data) {
-    // setItem(data);
-  }
 
   if (isLoading) {
     return <ViewItemSkeletonLoader />;
@@ -170,7 +167,7 @@ export default function ViewItem() {
                 Date Added
               </h3>
             </div>
-            <p className="text-gray-600">{itemDetails.createdAt}</p>
+            <p className="text-gray-600">{FormattedDateTime(itemDetails.createdAt)}</p>
           </div>
         </div>
 
