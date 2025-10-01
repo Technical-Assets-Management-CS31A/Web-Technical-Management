@@ -92,7 +92,17 @@ export type TBorrowedItems = {
   room: string;
   item: string;
   occupied: string;
-  remarks: string;
+  status: string;
+};
+
+export type TRecentBorrowedItemsTableProps = {
+  id: number;
+  datetime: string;
+  teacher: string;
+  room: string;
+  item: string;
+  occupied: string;
+  status: string;
 };
 
 export type THistoryBorrwedItems = {
