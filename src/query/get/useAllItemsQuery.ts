@@ -13,12 +13,12 @@ const allItems = async () => {
   });
   const data = await res.json();
   if (!res.ok) throw new Error("Failed to fetch item details");
-  if (data) console.log(data);
   return data;
 };
 export const useAllItemsQuery = () => {
   return queryOptions({
     queryKey: ["Item"],
     queryFn: allItems,
+    staleTime: 1000,
   });
 };
