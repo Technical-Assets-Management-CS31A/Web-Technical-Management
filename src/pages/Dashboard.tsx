@@ -4,7 +4,7 @@ import type { TBorrowedItems } from "../types/types";
 import { useQueries } from "@tanstack/react-query";
 import { useBorrowedItemsQuery } from "../query/get/useBorrwedItemsQuery";
 import { DashboardSkeletonLoader } from "../loader/DashboardSkeletonLoader";
-import { useUserQuery } from "../query/get/useUserQuery";
+// import { useUserQuery } from "../query/get/useUserQuery";
 import DashboardBadges from "../components/DashboardBadges";
 import ErrorTable from "../components/ErrorTables";
 import Pagination from "../components/Pagination";
@@ -141,7 +141,7 @@ export default function Dashboard() {
                       room={item.room}
                       item={item.item}
                       occupied={item.occupied}
-                      remarks={item.remarks}
+                      status={item.status}
                     />
                   </tr>
                 ))}
