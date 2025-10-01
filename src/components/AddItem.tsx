@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import type { TItemForm } from "../types/types";
 import CloseButton from "./CloseButton";
 import { usePostItemMutation } from "../query/post/usePostItemMutation";
+import { SuccessAlert } from "./SuccessAlert";
 type AddItemFormProps = {
   onClose: () => void;
 };
@@ -149,7 +150,8 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
         setTimeout(() => {
           setShowAlert(false);
           onClose();
-        }, 2500);
+          window.location.reload()
+        }, 1000);
         setFormData({
           serialNumber: "",
           image: null,
@@ -173,32 +175,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
     <>
       <div className="animate-fadeIn fixed inset-0 z-50 flex items-center justify-center bg-black/60">
         {showAlert && (
-          <div className="absolute top-8 right-4">
-            <div
-              className={
-                "bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 transition-all duration-500 ease-in-out"
-              }
-            >
-              <div className="flex-shrink-0">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-              <div className="font-semibold text-lg">
-                Item Created Successfully
-              </div>
-            </div>
-          </div>
+          <SuccessAlert message={"Item Created Successfully"} />
         )}
         <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-2xl relative animate-fadeInUp">
           <button
@@ -214,7 +191,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
           <form
             onSubmit={handleSubmit}
             className="space-y-6"
-            encType="multipart-data"
+            encType="multipart/form-data"
           >
             {" "}
             <div className="flex flex-col md:flex-row gap-4">
@@ -226,13 +203,12 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Item Name <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.itemName === "" && itemNameError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.itemName === "" && itemNameError
+                    ? "border-red-500"
+                    : itemNameError
                       ? "border-red-500"
-                      : itemNameError
-                        ? "border-red-500"
-                        : ""
-                  }`}
+                      : ""
+                    }`}
                   type="text"
                   id="itemName"
                   name="itemName"
@@ -253,13 +229,12 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Serial Number <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg" ${
-                    formData.serialNumber === "" && serialNumberError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg" ${formData.serialNumber === "" && serialNumberError
+                    ? "border-red-500"
+                    : serialNumberError
                       ? "border-red-500"
-                      : serialNumberError
-                        ? "border-red-500"
-                        : ""
-                  }`}
+                      : ""
+                    }`}
                   type="text"
                   id="serialNumber"
                   name="serialNumber"
@@ -284,13 +259,12 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Category <span className="text-red-500">*</span>
                 </label>
                 <select
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg" ${
-                    formData.category === "" && categoryError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg" ${formData.category === "" && categoryError
+                    ? "border-red-500"
+                    : categoryError
                       ? "border-red-500"
-                      : categoryError
-                        ? "border-red-500"
-                        : ""
-                  }`}
+                      : ""
+                    }`}
                   id="category"
                   name="category"
                   value={formData.category}
@@ -315,13 +289,12 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Condition <span className="text-red-500">*</span>
                 </label>
                 <select
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.condition === "" && conditionError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.condition === "" && conditionError
+                    ? "border-red-500"
+                    : conditionError
                       ? "border-red-500"
-                      : conditionError
-                        ? "border-red-500"
-                        : ""
-                  }`}
+                      : ""
+                    }`}
                   id="condition"
                   name="condition"
                   value={formData.condition}
@@ -348,13 +321,12 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Item Type <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.itemType === "" && itemTypeError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.itemType === "" && itemTypeError
+                    ? "border-red-500"
+                    : itemTypeError
                       ? "border-red-500"
-                      : itemTypeError
-                        ? "border-red-500"
-                        : ""
-                  }`}
+                      : ""
+                    }`}
                   type="text"
                   id="itemType"
                   name="itemType"
@@ -375,13 +347,12 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Item Model <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.itemModel === "" && itemModelError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.itemModel === "" && itemModelError
+                    ? "border-red-500"
+                    : itemModelError
                       ? "border-red-500"
-                      : itemModelError
-                        ? "border-red-500"
-                        : ""
-                  }`}
+                      : ""
+                    }`}
                   type="text"
                   id="itemModel"
                   name="itemModel"
@@ -404,13 +375,12 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Item Make <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.itemMake === "" && itemMakeError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.itemMake === "" && itemMakeError
+                    ? "border-red-500"
+                    : itemMakeError
                       ? "border-red-500"
-                      : itemMakeError
-                        ? "border-red-500"
-                        : ""
-                  }`}
+                      : ""
+                    }`}
                   type="text"
                   id="itemMake"
                   name="itemMake"
@@ -431,13 +401,12 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Description <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.description === "" && descriptionError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.description === "" && descriptionError
+                    ? "border-red-500"
+                    : descriptionError
                       ? "border-red-500"
-                      : descriptionError
-                        ? "border-red-500"
-                        : ""
-                  }`}
+                      : ""
+                    }`}
                   type="text"
                   id="description"
                   name="description"
@@ -462,13 +431,12 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Item Image
                 </label>
                 <input
-                  className={`w-full px-4 py-2 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-base ${
-                    formData.image === null && imageError
+                  className={`w-full px-4 py-2 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-base ${formData.image === null && imageError
+                    ? "border-red-500"
+                    : imageError
                       ? "border-red-500"
-                      : imageError
-                        ? "border-red-500"
-                        : ""
-                  }`}
+                      : ""
+                    }`}
                   type="file"
                   id="image"
                   name="image"
