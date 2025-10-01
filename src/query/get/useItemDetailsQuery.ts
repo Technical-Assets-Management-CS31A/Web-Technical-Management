@@ -12,7 +12,6 @@ const GetItemDetails = async (id: string) => {
   });
   const data = await res.json();
   if (!res.ok) throw new Error("Failed to fetch item details");
-  console.log(data);
   return data;
 };
 
