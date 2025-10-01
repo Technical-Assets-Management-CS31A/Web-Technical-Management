@@ -16,7 +16,7 @@ describe("Item Component", () => {
     render(
       <QueryClientProvider client={queryClient}>
         <AddItemForm onClose={mockClose} />
-      </QueryClientProvider>
+      </QueryClientProvider>,
     );
 
     const data = {
@@ -31,57 +31,57 @@ describe("Item Component", () => {
       Image: new File(["dummy"], "test.png", { type: "image/png" }),
     };
 
-    fireEvent.change(screen.getByTestId("ItemName"), {
+    fireEvent.change(screen.getByTestId("itemName"), {
       target: { value: data.ItemName },
     });
-    fireEvent.change(screen.getByTestId("SerialNumber"), {
+    fireEvent.change(screen.getByTestId("serialNumber"), {
       target: { value: data.SerialNumber },
     });
-    fireEvent.change(screen.getByTestId("ItemType"), {
+    fireEvent.change(screen.getByTestId("itemType"), {
       target: { value: data.ItemType },
     });
-    fireEvent.change(screen.getByTestId("ItemModel"), {
+    fireEvent.change(screen.getByTestId("itemModel"), {
       target: { value: data.ItemModel },
     });
-    fireEvent.change(screen.getByTestId("ItemMake"), {
+    fireEvent.change(screen.getByTestId("itemMake"), {
       target: { value: data.ItemMake },
     });
-    fireEvent.change(screen.getByTestId("Description"), {
+    fireEvent.change(screen.getByTestId("description"), {
       target: { value: data.Description },
     });
-    fireEvent.change(screen.getByTestId("Category"), {
+    fireEvent.change(screen.getByTestId("category"), {
       target: { value: data.Category },
     });
-    fireEvent.change(screen.getByTestId("Condition"), {
+    fireEvent.change(screen.getByTestId("condition"), {
       target: { value: data.Condition },
     });
-    fireEvent.change(screen.getByTestId("Image"), {
+    fireEvent.change(screen.getByTestId("image"), {
       target: { files: [data.Image] },
     });
 
-    expect((screen.getByTestId("ItemName") as HTMLInputElement).value).toBe(
-      data.ItemName
+    expect((screen.getByTestId("itemName") as HTMLInputElement).value).toBe(
+      data.ItemName,
     );
-    expect((screen.getByTestId("SerialNumber") as HTMLInputElement).value).toBe(
-      data.SerialNumber
+    expect((screen.getByTestId("serialNumber") as HTMLInputElement).value).toBe(
+      data.SerialNumber,
     );
-    expect((screen.getByTestId("ItemType") as HTMLInputElement).value).toBe(
-      data.ItemType
+    expect((screen.getByTestId("itemType") as HTMLInputElement).value).toBe(
+      data.ItemType,
     );
-    expect((screen.getByTestId("ItemModel") as HTMLInputElement).value).toBe(
-      data.ItemModel
+    expect((screen.getByTestId("itemModel") as HTMLInputElement).value).toBe(
+      data.ItemModel,
     );
-    expect((screen.getByTestId("ItemMake") as HTMLInputElement).value).toBe(
-      data.ItemMake
+    expect((screen.getByTestId("itemMake") as HTMLInputElement).value).toBe(
+      data.ItemMake,
     );
-    expect((screen.getByTestId("Description") as HTMLInputElement).value).toBe(
-      data.Description
+    expect((screen.getByTestId("description") as HTMLInputElement).value).toBe(
+      data.Description,
     );
-    expect((screen.getByTestId("Category") as HTMLSelectElement).value).toBe(
-      data.Category
+    expect((screen.getByTestId("category") as HTMLSelectElement).value).toBe(
+      data.Category,
     );
-    expect((screen.getByTestId("Condition") as HTMLSelectElement).value).toBe(
-      data.Condition
+    expect((screen.getByTestId("condition") as HTMLSelectElement).value).toBe(
+      data.Condition,
     );
 
     fireEvent.submit(screen.getByTestId("addItem-button"));
@@ -89,7 +89,7 @@ describe("Item Component", () => {
       expect.objectContaining({
         ...data,
         preview: expect.any(String),
-      })
+      }),
     );
   });
 });
