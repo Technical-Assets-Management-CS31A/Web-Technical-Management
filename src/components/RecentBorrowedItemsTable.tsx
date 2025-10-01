@@ -1,12 +1,5 @@
-type RecentBorrowedItemsTableProps = {
-  id: number;
-  datetime: string;
-  teacher: string;
-  room: string;
-  item: string;
-  occupied: string;
-  remarks: string;
-};
+import { SlugStatus } from "./SlugStatus";
+import type { TRecentBorrowedItemsTableProps } from "../types/types";
 export default function RecentBorrowedItemsTable({
   id,
   datetime,
@@ -14,8 +7,8 @@ export default function RecentBorrowedItemsTable({
   room,
   item,
   occupied,
-  remarks,
-}: RecentBorrowedItemsTableProps) {
+  status,
+}: TRecentBorrowedItemsTableProps) {
   return (
     <>
       <td hidden>{id}</td>
@@ -33,7 +26,7 @@ export default function RecentBorrowedItemsTable({
         {occupied.charAt(0).toUpperCase() + occupied.slice(1)}
       </td>
       <td className="py-3 px-6">
-        {remarks.charAt(0).toUpperCase() + remarks.slice(1)}
+        {SlugStatus(status.charAt(0).toUpperCase() + status.slice(1))}
       </td>
     </>
   );
