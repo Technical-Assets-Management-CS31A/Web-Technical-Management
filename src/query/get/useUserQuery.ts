@@ -22,5 +22,6 @@ export const useUserQuery = () => {
   return queryOptions({
     queryKey: ["me"],
     queryFn: fetchUserData,
+    staleTime: Infinity,
   });
 };
