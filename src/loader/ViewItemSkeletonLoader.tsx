@@ -3,6 +3,10 @@ export default function ViewItemSkeletonLoader() {
         <>
             <div className="min-h-screen bg-gray-50 py-12 px-4">
                 <div className="max-w-6xl mx-auto">
+                    <div className="absolute top-0 left-0 flex flex-row justify-between w-full gap-2">
+                        <div className="h-8 bg-gray-200 rounded-lg w-80 mx-auto mb-2 animate-pulse"></div>
+                        <div className="h-6 bg-gray-200 rounded-lg w-32 mx-auto animate-pulse"></div>
+                    </div>
                     {/* Header Skeleton */}
                     <div className="text-center mb-8">
                         <div className="h-8 bg-gray-200 rounded-lg w-80 mx-auto mb-2 animate-pulse"></div>
