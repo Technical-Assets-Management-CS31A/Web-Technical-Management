@@ -9,127 +9,25 @@ import DashboardBadges from "../components/DashboardBadges";
 import ErrorTable from "../components/ErrorTables";
 import Pagination from "../components/Pagination";
 import RecentBorrowedItemsTable from "../components/RecentBorrowedItemsTable";
+import { useAllItemsQuery } from "../query/get/useAllItemsQuery";
+
+const badges = [
+  { name: "Total Items", data: 123, link: "/home/inventory-list" },
+  { name: "Categories", data: 123, link: "/home/inventory-list" },
+  { name: "Active Staff", data: 123, link: "/home/user-management" },
+  { name: "Total Borrowed", data: 212, link: "/home/history-list" },
+];
 
 export default function Dashboard() {
-  // const [borrowItems, setBorrowItems] = useState<TBorrowedItems[]>([
-  //   {
-  //     id: 1,
-  //     datetime: "2025-01-01 10:00 AM",
-  //     teacher: "donald",
-  //     room: "slab4",
-  //     item: "projector",
-  //     occupied: "Alicaba",
-  //     remarks: "N/A",
-  //   },
-  //   {
-  //     id: 2,
-  //     datetime: "2025-01-01 11:00 AM",
-  //     teacher: "noel",
-  //     room: "slab2",
-  //     item: "hdmi",
-  //     occupied: "Villa",
-  //     remarks: "N/A",
-  //   },
-  //   {
-  //     id: 3,
-  //     datetime: "2025-01-01 12:00 AM",
-  //     teacher: "jovelyn",
-  //     room: "205",
-  //     item: "extension wire",
-  //     occupied: "Casupanan",
-  //     remarks: "N/A",
-  //   },
-  //   {
-  //     id: 4,
-  //     datetime: "2025-01-01 12:00 AM",
-  //     teacher: "panfilo",
-  //     room: "205",
-  //     item: "RG45",
-  //     occupied: "Sedilio",
-  //     remarks: "N/A",
-  //   },
-  //   {
-  //     id: 5,
-  //     datetime: "2025-01-01 12:00 AM",
-  //     teacher: "amoin",
-  //     room: "205",
-  //     item: "computer",
-  //     occupied: "Cortes",
-  //     remarks: "N/A",
-  //   },
-  //   {
-  //     id: 6,
-  //     datetime: "2025-01-01 12:00 AM",
-  //     teacher: "dada",
-  //     room: "205",
-  //     item: "mouse",
-  //     occupied: "Morales",
-  //     remarks: "N/A",
-  //   },
-  //   {
-  //     id: 7,
-  //     datetime: "2025-01-01 12:00 AM",
-  //     teacher: "dada",
-  //     room: "205",
-  //     item: "mouse",
-  //     occupied: "Morales",
-  //     remarks: "N/A",
-  //   },
-  //   {
-  //     id: 8,
-  //     datetime: "2025-01-01 12:00 AM",
-  //     teacher: "dada",
-  //     room: "205",
-  //     item: "mouse",
-  //     occupied: "Morales",
-  //     remarks: "N/A",
-  //   },
-  //   {
-  //     id: 9,
-  //     datetime: "2025-01-01 12:00 AM",
-  //     teacher: "dada",
-  //     room: "205",
-  //     item: "mouse",
-  //     occupied: "Morales",
-  //     remarks: "N/A",
-  //   },
-  //   {
-  //     id: 10,
-  //     datetime: "2025-01-01 12:00 AM",
-  //     teacher: "dada",
-  //     room: "205",
-  //     item: "mouse",
-  //     occupied: "Morales",
-  //     remarks: "N/A",
-  //   },
-  //   {
-  //     id: 11,
-  //     datetime: "2025-01-01 12:00 AM",
-  //     teacher: "dada",
-  //     room: "205",
-  //     item: "mouse",
-  //     occupied: "Morales",
-  //     remarks: "N/A",
-  //   },
-  // ]);
-
-  const badges = [
-    { name: "Total Items", data: 123, link: "/home/inventory-list" },
-    { name: "Categories", data: 123, link: "/home/inventory-list" },
-    { name: "Active Staff", data: 123, link: "/home/user-management" },
-    { name: "Total Borrowed", data: 212, link: "/home/history-list" },
-  ];
-
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 10;
 
   const results = useQueries({
-    queries: [useUserQuery(), useBorrowedItemsQuery()],
+    queries: [useBorrowedItemsQuery(), useAllItemsQuery()],
   });
 
-  // const userResult = results[0];
-  const borrowedItemsResult = results[1];
+  const borrowedItemsResult = results[0];
 
   // userResult.data ?? null;
   const borrowedItemsData: TBorrowedItems[] = useMemo(() => {
