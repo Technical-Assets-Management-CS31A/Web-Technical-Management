@@ -1,24 +1,7 @@
 import type { THistoryBorrwedItems } from "../types/types";
+import { FormattedDateTime } from "./FormatedDateTime";
+import { SlugStatus } from "./SlugStatus";
 
-const slugStatus = (stat: string) => {
-  if (stat === "returned") return "bg-green-100 text-green-700";
-  if (stat === "borrowed") return "bg-blue-100 text-blue-700";
-  if (stat === "overdue") return "bg-yellow-100 text-yellow-700";
-  if (stat === "lost") return "bg-red-100 text-red-700";
-
-  return stat;
-};
-
-const dateTImeFormated = (datetime: string) => {
-  if (!datetime) return;
-  return new Date(datetime).toLocaleString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
 
 type HistoryTableProps = {
   id: number;
@@ -59,11 +42,11 @@ export default function HistoryTable({
           <td className="py-3 px-6">{Room}</td>
           <td className="py-3 px-6">{Occupied}</td>
           <td className="py-3 px-6">{Condition}</td>
-          <td className="py-3 px-6">{dateTImeFormated(Event_Date)}</td>
+          <td className="py-3 px-6">{FormattedDateTime(Event_Date)}</td>
           <td className="py-3 px-6">
             <span
-              className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${slugStatus(
-                Status
+              className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${SlugStatus(
+                Status,
               )}`}
             >
               {Status}
