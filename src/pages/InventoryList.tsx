@@ -13,13 +13,6 @@ import Pagination from "../components/Pagination";
 import InventoryTable from "../components/InventoryTable";
 import ErrorTable from "../components/ErrorTables";
 
-const badges = [
-  { name: "Total Items", total: 123 },
-  { name: "Categories", total: 192 },
-  { name: "Available", total: 123 },
-  { name: "In Use", total: 442 },
-];
-
 export default function InventoryList() {
   const [isAddItemFormOpen, setIsAddItemFormOpen] = useState(false);
   const [searchItem, setSearchItem] = useState<string>("");
@@ -69,7 +62,7 @@ export default function InventoryList() {
 
   return (
     <div className="animate-fadeIn inventory-list-container min-h-screen w-full bg-gradient-to-br from-[#f8fafc] via-[#e0e7ef] to-[#c7d2fe] flex flex-col">
-      <header className="inventory-header pt-8 px-8 pb-8 bg-white/80 shadow-lg rounded-b-3xl flex flex-col items-center">
+      <header className="inventory-header pt-8 px-8 pb-8 bg-white/80 shadow-lg rounded-b-3xl flex flex-col items-center z-50">
         <h1 className="text-[#1e293b] text-5xl mb-2 font-extrabold tracking-tight drop-shadow-lg">
           Inventory List
         </h1>
@@ -79,110 +72,117 @@ export default function InventoryList() {
         </p>
       </header>
 
-      {/* Inventory Stats */}
-      <section className="inventory-stats-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-8 pt-6 pb-8">
-        {badges.map((item) => (
-          <div key={item.name}>
-            <InventoryBadges
-              name={item.name}
-              total={isError ? 0 : item.total}
-            />
-          </div>
-        ))}
-      </section>
-
-      {/* Inventory Items Table */}
-      <section className="px-8">
-        <div className="bg-white/90 h-[55vh] py-4 px-4 rounded-3xl shadow-2xl border border-[#e0e7ef] overflow-x-auto">
-          <section className="mb-4 flex justify-between">
-            <div className="">
-              <Button onClick={() => setIsAddItemFormOpen(true)} />
-            </div>
-            <div className="flex flex-row gap-2">
-              {totalPages > 1 && (
-                /*Pagination Component */
-                <Pagination
-                  totalPages={totalPages}
-                  currentPage={currentPage}
-                  handlePageChange={handlePageChange}
+      <div className="h-full overflow-auto">
+        {/* Inventory Stats */}
+        <section className="inventory-stats-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-8 pt-6 pb-8">
+          {Array.from(new Set(items.map((item) => item.category))).map(
+            (category) => {
+              const itemsInCategory = items.filter(
+                (item) => item.category === category,
+              );
+              return (
+                <InventoryBadges
+                  key={category}
+                  name={category}
+                  total={itemsInCategory.length}
                 />
-              )}
-              {/* Search Bar Component */}
-              <SearchBar
-                onChangeValue={(value) => setSearchItem(value)}
-                name={"search"}
-                placeholder={"Search your items..."}
-              />
-            </div>
-          </section>
-          <div className="h-[40vh] overflow-x-auto rounded-xl shadow-inner bg-white/95">
-            {isError ? (
-              <ErrorTable />
-            ) : (
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="sticky -top-4 bg-[#f8fafc]">
-                    <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
-                      Serial Num
-                    </th>
-                    <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
-                      Image
-                    </th>
-                    <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
-                      Name
-                    </th>
-                    <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
-                      Type
-                    </th>
-                    <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
-                      Category
-                    </th>
-                    <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
-                      Condition
-                    </th>
-                    <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
-                      DateTime
-                    </th>
-                    <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedData.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={7}
-                        className="text-center py-8 text-[#64748b] font-semibold"
-                      >
-                        No items found.
-                      </td>
+              );
+            },
+          )}
+        </section>
+
+        {/* Inventory Items Table */}
+        <section className="px-8">
+          <div className="bg-white/90 h-[55vh] py-4 px-4 rounded-3xl shadow-2xl border border-[#e0e7ef] overflow-x-auto">
+            <section className="mb-4 flex justify-between">
+              <div className="">
+                <Button onClick={() => setIsAddItemFormOpen(true)} />
+              </div>
+              <div className="flex flex-row gap-2">
+                {totalPages > 1 && (
+                  /*Pagination Component */
+                  <Pagination
+                    totalPages={totalPages}
+                    currentPage={currentPage}
+                    handlePageChange={handlePageChange}
+                  />
+                )}
+                {/* Search Bar Component */}
+                <SearchBar
+                  onChangeValue={(value) => setSearchItem(value)}
+                  name={"search"}
+                  placeholder={"Search your items..."}
+                />
+              </div>
+            </section>
+            <div className="h-[40vh] overflow-x-auto rounded-xl shadow-inner bg-white/95">
+              {isError ? (
+                <ErrorTable />
+              ) : (
+                <table className="w-full border-collapse text-left">
+                  <thead>
+                    <tr className="sticky -top-4 bg-[#f8fafc]">
+                      <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
+                        Serial Num
+                      </th>
+                      <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
+                        Image
+                      </th>
+                      <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
+                        Name
+                      </th>
+                      <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
+                        Category
+                      </th>
+                      <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
+                        Condition
+                      </th>
+                      <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
+                        DateTime
+                      </th>
+                      <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
+                        Action
+                      </th>
                     </tr>
-                  ) : (
-                    paginatedData.map((item) => (
-                      <tr
-                        key={item.serialNumber}
-                        className="hover:bg-[#f1f5f9] transition-colors odd:bg-white even:bg-[#f8fafc]"
-                      >
-                        <InventoryTable
-                          createdAt={item.createdAt}
-                          ItemName={item.itemName}
-                          SerialNumber={item.serialNumber}
-                          Image={item.image || logo}
-                          ItemType={item.itemType}
-                          Category={item.category}
-                          Condition={item.condition}
-                          onMutate={(Id) => mutate(Id)}
-                        />
+                  </thead>
+                  <tbody>
+                    {paginatedData.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={9}
+                          className="text-center py-10 text-red-400 font-semibold text-xl"
+                        >
+                          No items found.
+                        </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            )}
+                    ) : (
+                      paginatedData.map((item) => (
+                        <tr
+                          key={item.serialNumber}
+                          className="hover:bg-[#f1f5f9] transition-colors odd:bg-white even:bg-[#f8fafc]"
+                        >
+                          <InventoryTable
+                            id={item.id}
+                            createdAt={item.createdAt}
+                            ItemName={item.itemName}
+                            SerialNumber={item.serialNumber}
+                            Image={item.image || logo}
+                            ItemType={item.itemType}
+                            Category={item.category}
+                            Condition={item.condition}
+                            onMutate={(Id) => mutate(Id)}
+                          />
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
+
       {isAddItemFormOpen && (
         <AddItemForm onClose={() => setIsAddItemFormOpen(false)} />
       )}
