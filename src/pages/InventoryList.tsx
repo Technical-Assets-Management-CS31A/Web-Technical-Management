@@ -170,7 +170,7 @@ export default function InventoryList() {
                             ItemType={item.itemType}
                             Category={item.category}
                             Condition={item.condition}
-                            onMutate={(Id) => mutate(Id)}
+                            onMutate={() => mutate(item.id)}
                           />
                         </tr>
                       ))
