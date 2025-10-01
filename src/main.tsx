@@ -81,7 +81,7 @@ const routes = createBrowserRouter([
     ],
   },
   {
-    path: "/items/:id",
+    path: "/item/:id",
     element: (
       <ProtectedRoute>
         <ViewItem />
