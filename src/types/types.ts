@@ -66,6 +66,7 @@ export type TItemForm = {
 };
 
 export type TItemList = {
+  id: string;
   serialNumber: string;
   image: string;
   itemName: string;
