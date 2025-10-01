@@ -13,5 +13,8 @@ npm install
 
 ```text
 npm run dev
-
 ```
+## Testing
+
+```text
+npm run test
