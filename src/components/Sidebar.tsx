@@ -21,7 +21,7 @@ export default function Sidebar() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsSidebarLoading(false);
-    }, 1500);
+    }, 1000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -51,9 +51,10 @@ export default function Sidebar() {
               <NavLink
                 to={item.link}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-base transition-all duration-150 ${isActive
-                    ? "bg-[#2563eb] text-white shadow"
-                    : "text-[#334155] hover:bg-[#f1f5f9] hover:text-[#2563eb]"
+                  `flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-base transition-all duration-150 ${
+                    isActive
+                      ? "bg-[#2563eb] text-white shadow"
+                      : "text-[#334155] hover:bg-[#f1f5f9] hover:text-[#2563eb]"
                   }`
                 }
               >
