@@ -15,11 +15,11 @@ type InventoryTableProps = {
 };
 
 export default function InventoryTable({
+  id,
   createdAt,
   ItemName,
   SerialNumber,
   Image,
-  ItemType,
   Category,
   Condition,
   onMutate,
@@ -35,7 +35,6 @@ export default function InventoryTable({
         />
       </td>
       <td className="py-3 px-4">{ItemName}</td>
-      <td className="py-3 px-4">{ItemType}</td>
       <td className="py-3 px-4">{Category}</td>
       <td className="py-3 px-4">
         <span
@@ -63,7 +62,7 @@ export default function InventoryTable({
       </td>
       <td className="py-3 pr-6 flex flex-row gap-4">
         <Link
-          to={`/items/${SerialNumber}`}
+          to={`/item/${id}`}
           className="px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white rounded-xl font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-150"
         >
           View
