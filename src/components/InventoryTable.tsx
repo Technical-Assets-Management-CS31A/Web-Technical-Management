@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { FaTrash } from "react-icons/fa6";
 import logo from "../assets/img/aclcLogo.webp";
+import { FormattedDateTime } from "./FormatedDateTime";
+import { SlugCondition } from "./SlugCondition";
 
 type InventoryTableProps = {
   id?: string;
@@ -38,28 +40,12 @@ export default function InventoryTable({
       <td className="py-3 px-4">{Category}</td>
       <td className="py-3 px-4">
         <span
-          className={`px-3 py-1 rounded-full text-sm font-semibold ${
-            Condition === "New"
-              ? "bg-green-100 text-green-700"
-              : Condition === "Used"
-                ? "bg-yellow-100 text-yellow-700"
-                : Condition === "Refurbished"
-                  ? "bg-blue-100 text-blue-700"
-                  : "bg-gray-200 text-gray-600"
-          }`}
+          className={`px-3 py-1 rounded-full text-sm font-semibold ${SlugCondition(Condition)}`}
         >
           {Condition}
         </span>
       </td>
-      <td className="py-3 px-4">
-        {new Date(createdAt).toLocaleString("en-US", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-      </td>
+      <td className="py-3 px-4">{FormattedDateTime(createdAt)}</td>
       <td className="py-3 pr-6 flex flex-row gap-4">
         <Link
           to={`/item/${id}`}
@@ -70,8 +56,8 @@ export default function InventoryTable({
         <button
           onClick={() => {
             if (window.confirm("Are you sure you want to delete this item?")) {
-              onMutate(SerialNumber);
-              console.log("Delete item:", SerialNumber);
+              onMutate(id!);
+              window.location.reload();
             }
           }}
           className="px-4 py-2 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-150"
