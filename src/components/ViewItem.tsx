@@ -45,7 +45,6 @@ export default function ViewItem() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
-
       <div className="relative max-w-6xl mx-auto">
         <div className="absolute top-0 left-0 flex flex-row justify-between w-full gap-2">
           <Link to="/home/inventory-list">
@@ -63,7 +62,7 @@ export default function ViewItem() {
           <p className="text-gray-600 font-bold">{itemDetails.category}</p>
         </div>
 
-        {/* Image Section - Full Width */}
+        {/* Image Section */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <div className="flex justify-center">
             {itemDetails.image ? (
@@ -167,11 +166,13 @@ export default function ViewItem() {
                 Date Added
               </h3>
             </div>
-            <p className="text-gray-600">{FormattedDateTime(itemDetails.createdAt)}</p>
+            <p className="text-gray-600">
+              {FormattedDateTime(itemDetails.createdAt)}
+            </p>
           </div>
         </div>
 
-        {/* Description - Full Width */}
+        {/* Description */}
         <div className="bg-white rounded-lg shadow-md p-4 mt-6">
           <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center mr-3">
             <MdOutlineDescription className="text-white w-4 h-4" />
@@ -182,7 +183,12 @@ export default function ViewItem() {
           <p className="text-gray-600">{itemDetails.description}</p>
         </div>
       </div>
-      {isEditItemFormOpen && <EditItemForm onClose={() => setIsEditItemFormOpen(false)} Id={itemId} />}
-    </div >
+      {isEditItemFormOpen && (
+        <EditItemForm
+          onClose={() => setIsEditItemFormOpen(false)}
+          Id={itemId}
+        />
+      )}
+    </div>
   );
 }
