@@ -36,7 +36,6 @@ export default function InventoryList() {
       }),
     [items, searchItem, selectedCategory],
   );
-
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
   // check if the validCurrentPage is greater than ZERO then it will return the smaller currentPage and the totalPages if the condition is false then it return to ONE
@@ -98,7 +97,7 @@ export default function InventoryList() {
 
       <div className="h-full overflow-auto">
         {/* Inventory Stats */}
-        <section className="inventory-stats-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-8 pt-6 pb-8">
+        <section className="scrollbar-none w-[100rem] mx-auto flex flex-row gap-4 py-8 overflow-x-scroll">
           {Array.from(new Set(items.map((item) => item.category))).map(
             (category) => {
               const itemsInCategory = items.filter(
