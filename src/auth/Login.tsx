@@ -114,7 +114,7 @@ export default function Login() {
               <input
                 className={`w-[400px] h-[55px] rounded-md outline-none border mb-8 border-black/34 bg-white/78 pl-4 text-base hover:bg-white/93 focus:bg-white/93 max-lg:w-[90vw] max-lg:max-w-[98%] max-lg:min-w-[220px] max-sm:w-[98vw] max-sm:max-w-full max-sm:min-w-[120px] max-sm:text-base ${
                   usernameError ? "border-2 border-red-500" : ""
-                }`}
+                } ${Error && error instanceof Error && "border-2 border-red-500"}`}
                 autoFocus
                 type="text"
                 name="identifier"
@@ -134,7 +134,7 @@ export default function Login() {
               <input
                 className={`w-[400px] h-[55px] rounded-md outline-none border border-black/34 bg-white/78 pl-4 text-base hover:bg-white/93 focus:bg-white/93 max-lg:w-[90vw] max-lg:max-w-[98%] max-lg:min-w-[220px] max-sm:w-[98vw] max-sm:max-w-full max-sm:min-w-[120px] max-sm:text-base ${
                   passwordError ? "border-2 border-red-500" : ""
-                }`}
+                } ${Error && error instanceof Error && "border-2 border-red-500"}`}
                 type={isShowPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"

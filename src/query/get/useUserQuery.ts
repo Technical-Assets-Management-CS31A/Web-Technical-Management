@@ -8,6 +8,7 @@ const fetchUserData = async () => {
     headers: {
       Authorization: `Bearer ${getToken()}`,
     },
+    credentials: "include"
   });
 
   const data = await res.json();

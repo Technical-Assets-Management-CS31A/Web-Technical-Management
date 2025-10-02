@@ -8,8 +8,7 @@ const DeleteUser = async (id: string) => {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${getToken()}`,
-    },
-    credentials: "include",
+    }
   });
 
   if (!res.ok) {

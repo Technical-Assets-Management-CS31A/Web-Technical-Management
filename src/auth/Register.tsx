@@ -27,7 +27,7 @@ export default function Register({ onClose }: RegisterProps) {
 
   // Handle input change
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setSubmitForm((prev) => ({ ...prev, [name]: value }));
@@ -106,10 +106,10 @@ export default function Register({ onClose }: RegisterProps) {
             onClose();
           }, 2500);
         },
-        onError: (err: any) => {
+        onError: (err: Error) => {
           console.error("Registration failed:", err.message);
         },
-      }
+      },
     );
   };
 
@@ -294,7 +294,7 @@ export default function Register({ onClose }: RegisterProps) {
               {confirmPasswordError}
             </p>
           )}
-          {/* <select
+          <select
             name="role"
             id="role"
             className="w-full h-[56px] outline-0 border-[1px] border-gray-400 rounded-lg pl-4 bg-white hover:border-gray-600 hover:bg-gray-50 focus:border-blue-600"
@@ -303,9 +303,8 @@ export default function Register({ onClose }: RegisterProps) {
             data-testid="role"
           >
             <option value="Admin">Admin</option>
-            <option value="Technical">Technical</option>
-            <option value="Intern">Intern</option>
-          </select> */}
+            <option value="Staff">Staff</option>
+          </select>
 
           <div className="register-container overflow-hidden relative w-full h-[56px] flex justify-center items-center outline-0 border-0 rounded-[12px] bg-blue-500 text-white font-semibold cursor-pointer  hover:bg-blue-400">
             <button

@@ -11,7 +11,7 @@ export default function InventoryBadges({ name, total, onClick, isSelected = fal
       <div
         key={name}
         onClick={onClick}
-        className={`bg-white/90 shadow-xl rounded-2xl p-4 flex flex-col items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-200 border cursor-pointer ${isSelected
+        className={`bg-white/90 shadow-xl rounded-2xl p-6 min-w-[350px] flex flex-col items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-200 border cursor-pointer ${isSelected
           ? 'border-[#2563eb] bg-blue-50/90 shadow-blue-200'
           : 'border-[#e0e7ef] hover:border-[#2563eb]'
           }`}

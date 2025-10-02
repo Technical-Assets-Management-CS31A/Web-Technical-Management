@@ -9,6 +9,7 @@ import { FaHashtag, FaTools } from "react-icons/fa";
 import { FaCheckCircle } from "react-icons/fa";
 import { BsCalendar2Date } from "react-icons/bs";
 import { MdOutlineDescription } from "react-icons/md";
+import { FaBarcode } from "react-icons/fa6";
 import { useState } from "react";
 import { EditItemForm } from "./EditItemForm";
 import { FormattedDateTime } from "./FormatedDateTime";
@@ -171,7 +172,7 @@ export default function ViewItem() {
             </p>
           </div>
         </div>
-
+        
         {/* Description */}
         <div className="bg-white rounded-lg shadow-md p-4 mt-6">
           <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center mr-3">
@@ -181,6 +182,16 @@ export default function ViewItem() {
             Description
           </h3>
           <p className="text-gray-600">{itemDetails.description}</p>
+        </div>
+        <div className="flex flex-row items-center justify-end">
+          <div className=" bg-white rounded-lg shadow-md p-4 mt-6">
+            <button type="button" className="text-lg font-semibold text-gray-900 cursor-pointer">
+              <div className="flex flex-row justify-center items-center gap-2">
+                <FaBarcode />
+                Generate BarCode
+              </div>
+            </button>
+          </div>
         </div>
       </div>
       {isEditItemFormOpen && (
