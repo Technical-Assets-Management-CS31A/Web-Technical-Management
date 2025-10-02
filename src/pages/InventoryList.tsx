@@ -16,22 +16,30 @@ import ErrorTable from "../components/ErrorTables";
 export default function InventoryList() {
   const [isAddItemFormOpen, setIsAddItemFormOpen] = useState(false);
   const [searchItem, setSearchItem] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 5;
   const [items, setItems] = useState<TItemList[]>([]);
 
+  // this func use a useMemo to filtered item either its itemName or the Category and also for the Matches Category and return items,searchItem and selectedCategory
   const filteredItems = useMemo(
     () =>
-      items.filter(
-        (item) =>
+      items.filter((item) => {
+        const matchesSearch =
           item.itemName.toLowerCase().includes(searchItem.toLowerCase()) ||
-          item.category.toLowerCase().includes(searchItem.toLowerCase()),
-      ),
-    [items, searchItem],
+          item.category.toLowerCase().includes(searchItem.toLowerCase());
+
+        const matchesCategory =
+          selectedCategory === "" || item.category === selectedCategory;
+
+        return matchesSearch && matchesCategory;
+      }),
+    [items, searchItem, selectedCategory],
   );
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
+  // check if the validCurrentPage is greater than ZERO then it will return the smaller currentPage and the totalPages if the condition is false then it return to ONE
   const validCurrentPage =
     totalPages > 0 ? Math.min(currentPage, totalPages) : 1;
 
@@ -44,13 +52,29 @@ export default function InventoryList() {
     [filteredItems, itemsPerPage, validCurrentPage],
   );
 
+  // this func will handle all the page triggered in the button to set either to 1 to 2 or 3 etc
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
+  // this func check if the category is selected is true then it will return all the item matches on this category selected
+  const handleCategoryClick = (category: string) => {
+    setSelectedCategory(selectedCategory === category ? "" : category);
+    setCurrentPage(1);
+  };
+
+  // this func return to display all the items when the selectedCategory is executed
+  const handleShowAll = () => {
+    setSelectedCategory("");
+    setCurrentPage(1);
+  };
+
+  // get the response from useQuery
   const { data, isPending, isError } = useQuery(useAllItemsQuery());
+  // this mutate func will return the ID of the item and to to deleted
   const { mutate } = useDeleteItemMutation();
 
+  // this Effect will automatically updated the data of the items response
   useEffect(() => {
     if (!data) return;
     setItems(data);
@@ -85,6 +109,8 @@ export default function InventoryList() {
                   key={category}
                   name={category}
                   total={itemsInCategory.length}
+                  onClick={() => handleCategoryClick(category)}
+                  isSelected={selectedCategory === category}
                 />
               );
             },
@@ -99,12 +125,14 @@ export default function InventoryList() {
                 <Button onClick={() => setIsAddItemFormOpen(true)} />
               </div>
               <div className="flex flex-row gap-2">
-                {totalPages > 1 && (
-                  /*Pagination Component */
+                {/*Pagination Component*/}
+                {filteredItems.length > 0 && (
                   <Pagination
                     totalPages={totalPages}
                     currentPage={currentPage}
                     handlePageChange={handlePageChange}
+                    selectedCategory={selectedCategory}
+                    handleShowAll={handleShowAll}
                   />
                 )}
                 {/* Search Bar Component */}
@@ -116,6 +144,7 @@ export default function InventoryList() {
               </div>
             </section>
             <div className="h-[40vh] overflow-x-auto rounded-xl shadow-inner bg-white/95">
+              {/* Check if the response from the QUERY is error cause for internet connection etc, will return a ERROR TABLE COMPONENTS */}
               {isError ? (
                 <ErrorTable />
               ) : (
@@ -146,6 +175,7 @@ export default function InventoryList() {
                     </tr>
                   </thead>
                   <tbody>
+                    {/* Check if the paginated item is equal to ZERO  */}
                     {paginatedData.length === 0 ? (
                       <tr>
                         <td
@@ -156,6 +186,7 @@ export default function InventoryList() {
                         </td>
                       </tr>
                     ) : (
+                      // Mapping all the items created
                       paginatedData.map((item) => (
                         <tr
                           key={item.serialNumber}
@@ -183,6 +214,7 @@ export default function InventoryList() {
         </section>
       </div>
 
+      {/* Check if the add item form is true then it will show */}
       {isAddItemFormOpen && (
         <AddItemForm onClose={() => setIsAddItemFormOpen(false)} />
       )}
