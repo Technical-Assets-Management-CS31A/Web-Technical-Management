@@ -9,8 +9,7 @@ const BorrowItems = async () => {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${getToken}`,
-    },
-    credentials: "include",
+    }   
   });
   if (!res.ok) throw new Error("Failed to fetch item details");
   return res.json();
