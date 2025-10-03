@@ -18,63 +18,7 @@ export const UserManagement = () => {
   const [searchUser, setSearchUser] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [editUserId, setEditUserId] = useState<string | undefined>(undefined);
-  const [users, setUsers] = useState<TUsers[]>([
-    {
-      Id: "6EEAC6D",
-      firstName: "Alice",
-      lastName: "Johnson",
-      middleName: "",
-      username: "",
-      email: "",
-      phoneNumber: "",
-      userRole: "Staff",
-      status: "Active",
-    },
-    {
-      Id: "6EEACFD",
-      firstName: "Alice",
-      lastName: "Johnson",
-      middleName: "",
-      username: "",
-      email: "",
-      phoneNumber: "",
-      userRole: "Staff",
-      status: "Active",
-    },
-    {
-      Id: "6EECF6D",
-      firstName: "Alice",
-      lastName: "Johnson",
-      middleName: "",
-      username: "",
-      email: "",
-      phoneNumber: "",
-      userRole: "Staff",
-      status: "Active",
-    },
-    {
-      Id: "6EACF6D",
-      firstName: "Alice",
-      lastName: "Johnson",
-      middleName: "",
-      username: "",
-      email: "",
-      phoneNumber: "",
-      userRole: "Staff",
-      status: "InActive",
-    },
-    {
-      Id: "6EEACF2D",
-      firstName: "Alice",
-      lastName: "Johnson",
-      middleName: "",
-      username: "",
-      email: "",
-      phoneNumber: "",
-      userRole: "Staff",
-      status: "InActive",
-    },
-  ]);
+  const [users, setUsers] = useState<TUsers[]>([]);
 
   const filteredUser = useMemo(
     () =>
