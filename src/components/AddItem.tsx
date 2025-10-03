@@ -14,8 +14,6 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
   const [itemModelError, setItemModelError] = useState<string>("");
   const [serialNumberError, setSerialNumberError] = useState<string>("");
   const [itemMakeError, setItemMakeError] = useState<string>("");
-  const [categoryError, setCategoryError] = useState<string>("");
-  const [conditionError, setConditionError] = useState<string>("");
   const [descriptionError, setDescriptionError] = useState<string>("");
   const [imageError, setImageError] = useState<string | null>(null);
   const [formData, setFormData] = useState<TItemForm>({
@@ -55,8 +53,6 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
       if (name === "itemType") setItemTypeError("");
       if (name === "itemMake") setItemMakeError("");
       if (name === "itemModel") setItemModelError("");
-      if (name === "category") setCategoryError("");
-      if (name === "condition") setConditionError("");
       if (name === "description") setDescriptionError("");
       if (name === "image") setImageError("");
     }
@@ -64,16 +60,15 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    let hasError = false;
     if (
-      formData.itemName === "" &&
-      formData.serialNumber === "" &&
-      formData.category === "" &&
-      formData.condition === "" &&
-      formData.itemType === "" &&
-      formData.itemModel === "" &&
-      formData.itemMake === "" &&
-      formData.description === "" &&
-      formData.image === null
+      !formData.itemName &&
+      !formData.serialNumber &&
+      !formData.itemType &&
+      !formData.itemModel &&
+      !formData.itemMake &&
+      !formData.description &&
+      formData.image == null
     ) {
       setItemNameError("Item Name is required");
       setSerialNumberError("Serial Num is required");
@@ -81,56 +76,46 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
       setItemTypeError("Item Type is required");
       setItemMakeError("Item Make is required");
       setItemModelError("Item Model is required");
-      setCategoryError("Category is required");
-      setConditionError("Condition is required");
       setDescriptionError("Description is required");
-      return;
+      hasError = true;
     }
 
     if (!formData.itemName) {
       setItemNameError("Item Name is required");
-      return;
+      hasError = true;
     }
 
     if (!formData.serialNumber) {
       setSerialNumberError("Serial Num is required");
-      return;
+      hasError = true;
     }
 
     if (!formData.image) {
       setImageError("Image is required");
-      return;
+      hasError = true;
     }
 
     if (!formData.itemType) {
       setItemTypeError("Item Type is required");
-      return;
+      hasError = true;
     }
 
     if (!formData.itemMake) {
       setItemMakeError("Item Make is required");
-      return;
+      hasError = true;
     }
 
     if (!formData.itemModel) {
       setItemModelError("Item Model is required");
-      return;
-    }
-
-    if (!formData.category) {
-      setCategoryError("Category is required");
-      return;
-    }
-
-    if (!formData.condition) {
-      setConditionError("Condition is required");
-      return;
+      hasError = true;
     }
 
     if (!formData.description) {
       setDescriptionError("Description is required");
-      return;
+      hasError = true;
     }
+
+    if (hasError) return;
 
     const newItem = {
       serialNumber: formData.serialNumber,
@@ -150,7 +135,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
         setTimeout(() => {
           setShowAlert(false);
           onClose();
-          window.location.reload()
+          window.location.reload();
         }, 1000);
         setFormData({
           serialNumber: "",
@@ -160,8 +145,8 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
           itemModel: "",
           itemMake: "",
           description: "",
-          category: "",
-          condition: "",
+          category: "Electronics",
+          condition: "New",
           preview: null,
         });
       },
@@ -174,9 +159,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
   return (
     <>
       <div className="animate-fadeIn fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-        {showAlert && (
-          <SuccessAlert message={"Item Created Successfully"} />
-        )}
+        {showAlert && <SuccessAlert message={"Item Created Successfully"} />}
         <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-2xl relative animate-fadeInUp">
           <button
             className="absolute top-4 right-4 text-2xl text-[#64748b] hover:text-[#2563eb] transition-colors"
@@ -203,12 +186,13 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Item Name <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.itemName === "" && itemNameError
-                    ? "border-red-500"
-                    : itemNameError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
+                    formData.itemName === "" && itemNameError
                       ? "border-red-500"
-                      : ""
-                    }`}
+                      : itemNameError
+                        ? "border-red-500"
+                        : ""
+                  }`}
                   type="text"
                   id="itemName"
                   name="itemName"
@@ -229,12 +213,13 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Serial Number <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg" ${formData.serialNumber === "" && serialNumberError
-                    ? "border-red-500"
-                    : serialNumberError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg" ${
+                    formData.serialNumber === "" && serialNumberError
                       ? "border-red-500"
-                      : ""
-                    }`}
+                      : serialNumberError
+                        ? "border-red-500"
+                        : ""
+                  }`}
                   type="text"
                   id="serialNumber"
                   name="serialNumber"
@@ -259,12 +244,9 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Category <span className="text-red-500">*</span>
                 </label>
                 <select
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg" ${formData.category === "" && categoryError
-                    ? "border-red-500"
-                    : categoryError
-                      ? "border-red-500"
-                      : ""
-                    }`}
+                  className={
+                    "w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg"
+                  }
                   id="category"
                   name="category"
                   value={formData.category}
@@ -277,9 +259,6 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   <option value="Tools">Tools</option>
                   <option value="Miscellaneous">Miscellaneous</option>
                 </select>
-                {categoryError && (
-                  <p className="text-red-500 text-sm mt-1">{categoryError}</p>
-                )}
               </div>
               <div className="flex-1">
                 <label
@@ -289,12 +268,9 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Condition <span className="text-red-500">*</span>
                 </label>
                 <select
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.condition === "" && conditionError
-                    ? "border-red-500"
-                    : conditionError
-                      ? "border-red-500"
-                      : ""
-                    }`}
+                  className={
+                    "w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg"
+                  }
                   id="condition"
                   name="condition"
                   value={formData.condition}
@@ -307,9 +283,6 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   <option value="Refurbished">Refurbished</option>
                   <option value="NeedRepair">Need Repair</option>
                 </select>
-                {conditionError && (
-                  <p className="text-red-500 text-sm mt-1">{conditionError}</p>
-                )}
               </div>
             </div>
             <div className="flex flex-col md:flex-row gap-4">
@@ -321,12 +294,13 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Item Type <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.itemType === "" && itemTypeError
-                    ? "border-red-500"
-                    : itemTypeError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
+                    formData.itemType === "" && itemTypeError
                       ? "border-red-500"
-                      : ""
-                    }`}
+                      : itemTypeError
+                        ? "border-red-500"
+                        : ""
+                  }`}
                   type="text"
                   id="itemType"
                   name="itemType"
@@ -347,12 +321,13 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Item Model <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.itemModel === "" && itemModelError
-                    ? "border-red-500"
-                    : itemModelError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
+                    formData.itemModel === "" && itemModelError
                       ? "border-red-500"
-                      : ""
-                    }`}
+                      : itemModelError
+                        ? "border-red-500"
+                        : ""
+                  }`}
                   type="text"
                   id="itemModel"
                   name="itemModel"
@@ -375,12 +350,13 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Item Make <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.itemMake === "" && itemMakeError
-                    ? "border-red-500"
-                    : itemMakeError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
+                    formData.itemMake === "" && itemMakeError
                       ? "border-red-500"
-                      : ""
-                    }`}
+                      : itemMakeError
+                        ? "border-red-500"
+                        : ""
+                  }`}
                   type="text"
                   id="itemMake"
                   name="itemMake"
@@ -401,12 +377,13 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Description <span className="text-red-500">*</span>
                 </label>
                 <input
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.description === "" && descriptionError
-                    ? "border-red-500"
-                    : descriptionError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
+                    formData.description === "" && descriptionError
                       ? "border-red-500"
-                      : ""
-                    }`}
+                      : descriptionError
+                        ? "border-red-500"
+                        : ""
+                  }`}
                   type="text"
                   id="description"
                   name="description"
@@ -431,12 +408,13 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Item Image
                 </label>
                 <input
-                  className={`w-full px-4 py-2 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-base ${formData.image === null && imageError
-                    ? "border-red-500"
-                    : imageError
+                  className={`w-full px-4 py-2 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-base ${
+                    formData.image === null && imageError
                       ? "border-red-500"
-                      : ""
-                    }`}
+                      : imageError
+                        ? "border-red-500"
+                        : ""
+                  }`}
                   type="file"
                   id="image"
                   name="image"
