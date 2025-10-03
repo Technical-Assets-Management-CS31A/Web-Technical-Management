@@ -85,7 +85,7 @@ export default function InventoryList() {
 
   return (
     <div className="animate-fadeIn inventory-list-container min-h-screen w-full bg-gradient-to-br from-[#f8fafc] via-[#e0e7ef] to-[#c7d2fe] flex flex-col">
-      <header className="inventory-header pt-8 px-8 pb-8 bg-white/80 shadow-lg rounded-b-3xl flex flex-col items-center z-50">
+      <header className="inventory-header pt-8 px-8 pb-8 bg-white/80 shadow-md  flex flex-col items-center z-50">
         <h1 className="text-[#1e293b] text-5xl mb-2 font-extrabold tracking-tight drop-shadow-lg">
           Inventory List
         </h1>
@@ -118,7 +118,7 @@ export default function InventoryList() {
 
         {/* Inventory Items Table */}
         <section className="px-8">
-          <div className="bg-white/90 h-[55vh] py-4 px-4 rounded-3xl shadow-2xl border border-[#e0e7ef] overflow-x-auto">
+          <div className="bg-white/90 h-[55vh] py-4 px-4 rounded-3xl shadow-md border border-[#e0e7ef] overflow-x-auto">
             <section className="mb-4 flex justify-between">
               <div className="">
                 <Button onClick={() => setIsAddItemFormOpen(true)} />
@@ -142,7 +142,7 @@ export default function InventoryList() {
                 />
               </div>
             </section>
-            <div className="h-[40vh] overflow-x-auto rounded-xl shadow-inner bg-white/95">
+            <div className="h-[40vh] overflow-x-auto rounded-md shadow-inner bg-white/95">
               {/* Check if the response from the QUERY is error cause for internet connection etc, will return a ERROR TABLE COMPONENTS */}
               {isError ? (
                 <ErrorTable />
