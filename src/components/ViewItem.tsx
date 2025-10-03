@@ -172,26 +172,60 @@ export default function ViewItem() {
             </p>
           </div>
         </div>
-        
+
         {/* Description */}
-        <div className="bg-white rounded-lg shadow-md p-4 mt-6">
-          <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center mr-3">
-            <MdOutlineDescription className="text-white w-4 h-4" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">
-            Description
-          </h3>
-          <p className="text-gray-600">{itemDetails.description}</p>
-        </div>
-        <div className="flex flex-row items-center justify-end">
-          <div className=" bg-white rounded-lg shadow-md p-4 mt-6">
-            <button type="button" className="text-lg font-semibold text-gray-900 cursor-pointer">
-              <div className="flex flex-row justify-center items-center gap-2">
-                <FaBarcode />
-                Generate BarCode
+        <div className="flex flex-row justify-between gap-4">
+          <div className="flex flex-1 bg-white rounded-lg shadow-md p-6 mt-6">
+            <div className="mb-3">
+              <div className="flex flex-row items-center mb-4">
+                <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center mr-3">
+                  <MdOutlineDescription className="text-white w-4 h-4" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Description
+                </h3>
               </div>
-            </button>
+              <p className="text-gray-600">{itemDetails.description}</p>
+            </div>
           </div>
+          {/* Barcode */}
+          <div className="flex flex-1 bg-white rounded-lg shadow-md p-4 mt-6">
+            <div className="w-full flex justify-center items-center">
+              {itemDetails.barCode ? (
+                <img
+                  src={itemDetails.barCode}
+                  alt="Barcode"
+                  className="w-32 h-32"
+                />
+              ) : (
+                <p className="text-gray-600/50">
+                  Don't have generated BarCode.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-row justify-end mt-6">
+          <button
+            type="button"
+            className="text-lg font-semibold text-gray-900 cursor-pointer float-right bg-white rounded-lg shadow-md p-4 px-8"
+          >
+            <div className="flex flex-row justify-center items-center gap-2">
+              {itemDetails.barCode ? (
+                <>
+                  <FaBarcode />
+                  <p className="text-gray-600/50">
+                    You have generated BarCode.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <FaBarcode />
+                  <p className="text-gray-600/50">Generate BarCode ?</p>
+                </>
+              )}
+            </div>
+          </button>
         </div>
       </div>
       {isEditItemFormOpen && (
