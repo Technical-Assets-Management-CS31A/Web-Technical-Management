@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import AddItemForm from "../components/AddItem";
 import Button from "../components/Button";
 import SearchBar from "../components/SearchBar";
@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useDeleteItemMutation } from "../query/delete/useDeleteItemMutation";
 import type { TItemList } from "../types/types";
 import { useAllItemsQuery } from "../query/get/useAllItemsQuery";
-import InventoryBadges from "../components/InventoryBadges";
+import { InventoryBadges } from "../components/InventoryBadges";
 import Pagination from "../components/Pagination";
 import InventoryTable from "../components/InventoryTable";
 import ErrorTable from "../components/ErrorTables";
@@ -52,21 +52,24 @@ export default function InventoryList() {
   );
 
   // this func will handle all the page triggered in the button to set either to 1 to 2 or 3 etc
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-  };
+  }, []);
 
   // this func check if the category is selected is true then it will return all the item matches on this category selected
-  const handleCategoryClick = (category: string) => {
-    setSelectedCategory(selectedCategory === category ? "" : category);
-    setCurrentPage(1);
-  };
+  const handleCategoryClick = useCallback(
+    (category: string) => {
+      setSelectedCategory(selectedCategory === category ? "" : category);
+      setCurrentPage(1);
+    },
+    [selectedCategory],
+  );
 
   // this func return to display all the items when the selectedCategory is executed
-  const handleShowAll = () => {
+  const handleShowAll = useCallback(() => {
     setSelectedCategory("");
     setCurrentPage(1);
-  };
+  }, []);
 
   // get the response from useQuery
   const { data, isPending, isError } = useQuery(useAllItemsQuery());
