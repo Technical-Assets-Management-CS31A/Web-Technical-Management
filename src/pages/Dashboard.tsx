@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import type { TBorrowedItems } from "../types/types";
 import { useQueries } from "@tanstack/react-query";
@@ -51,11 +51,14 @@ export default function Dashboard() {
     [filteredData, currentPage],
   );
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const totalPages = useMemo(
+    () => Math.ceil(filteredData.length / itemsPerPage),
+    [filteredData],
+  );
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-  };
+  }, []);
 
   const isLoading = borrowedItemsResult.isLoading;
   const isError = borrowedItemsResult.error;
