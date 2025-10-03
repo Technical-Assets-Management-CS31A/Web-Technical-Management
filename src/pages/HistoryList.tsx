@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import { SelectHistoryStatus } from "../components/SelectHistoryStatus";
 import HistoryListSkeletonLoader from "../loader/HistoryListSkeletonLoader";
@@ -25,16 +25,19 @@ export default function HistoryList({
   const [borrowedItem, setBorrowedItem] = useState<THistoryBorrwedItems[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
-  const filteredItems = borrowedItem.filter((item) => {
-    const matchesSearch = item.ItemName.toLowerCase().includes(
-      searchItem.toLowerCase(),
-    );
+  const filteredItems = useMemo(() => {
+    return borrowedItem.filter((item) => {
+      const matchesSearch = item.ItemName.toLowerCase().includes(
+        searchItem.toLowerCase(),
+      );
 
-    const matchesStatus =
-      selectedStatus === "all" || toStatusSlug(item.Status) === selectedStatus;
+      const matchesStatus =
+        selectedStatus === "all" ||
+        toStatusSlug(item.Status) === selectedStatus;
 
-    return matchesSearch && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    });
+  }, [borrowedItem, searchItem, selectedStatus]);
 
   const { data, isPending, isError } = useQuery(useBorrowedItemsQuery());
 
