@@ -2,7 +2,6 @@ import type { THistoryBorrwedItems } from "../types/types";
 import { FormattedDateTime } from "./FormatedDateTime";
 import { SlugStatus } from "./SlugStatus";
 
-
 type HistoryTableProps = {
   id: number;
   ItemName: string;
@@ -30,9 +29,9 @@ export default function HistoryTable({
 }: HistoryTableProps) {
   return (
     <>
-      {filteredItems.map((r) => (
+      {filteredItems.map((_, index) => (
         <tr
-          key={r.id}
+          key={index}
           className="hover:bg-[#f1f5f9] transition-colors  odd:bg-white even:bg-[#f8fafc]"
         >
           <td className="py-3 px-6">{id}</td>
