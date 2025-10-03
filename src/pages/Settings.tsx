@@ -4,6 +4,7 @@ import type { TUsers } from "../types/types";
 import { FaUser, FaClock, FaPhone } from "react-icons/fa6";
 import { CiSettings } from "react-icons/ci";
 import { MdOutlineEmail } from "react-icons/md";
+import { FormatedPhoneNumber } from "../components/FormatedPhoneNumber";
 import SettingsSkeletonLoader from "../loader/SettingsSkeletonLoader";
 
 export default function Settings() {
@@ -32,11 +33,6 @@ export default function Settings() {
         </div>
       </div>
     );
-  }
-
-  function formatPhoneNumber(phone: string) {
-    if (phone.length !== 10) return `+63 ${phone}`;
-    return `+63 ${phone.slice(0, 3)} ${phone.slice(3, 6)} ${phone.slice(6)}`;
   }
 
   const user: TUsers = userData;
@@ -172,7 +168,7 @@ export default function Settings() {
                       <div>
                         <p className="text-sm text-gray-500">Phone Number</p>
                         <p className="font-medium text-gray-900">
-                          {formatPhoneNumber(user.phoneNumber)}
+                          {FormatedPhoneNumber(user.phoneNumber)}
                         </p>
                       </div>
                     </div>
