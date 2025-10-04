@@ -13,7 +13,6 @@ It ensures accountability and prevents loss or misuse of equipment by keeping a 
 ### ✨ Key Features
 - 📦 **Item Management** – Add, update, and categorize technical items (e.g., projectors, HDMI cables, extension cords).
 - 👥 **Borrower Tracking** – Record who borrowed which item and when it’s due for return.
-- 👥 User Management - 
 - 🔍 **Search & Filter** – Quickly find available or borrowed items.
 - ⏰ **Status Monitoring** – Mark items as *available*, *borrowed*, or *under maintenance*.
 - 📊 **Reports / History** – View borrowing history and equipment usage over time.
