@@ -3,7 +3,7 @@ import { FaTrash } from "react-icons/fa6";
 import logo from "../assets/img/aclcLogo.webp";
 import { FormattedDateTime } from "./FormatedDateTime";
 import { SlugCondition } from "./SlugCondition";
-
+import { MdOutlineGridView } from "react-icons/md";
 type InventoryTableProps = {
   id?: string;
   createdAt: string;
@@ -46,21 +46,25 @@ export default function InventoryTable({
         </span>
       </td>
       <td className="py-3 px-4">{FormattedDateTime(createdAt)}</td>
-      <td className="py-3 pr-6 flex flex-row gap-4">
+      <td className="py-3 pr-4 flex flex-row ">
         <Link
           to={`/item/${id}`}
-          className="px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white rounded-xl font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-150"
+          title="View more"
+          className="px-4 py-2 text-blue-500 text-2xl"
         >
-          View
+          <MdOutlineGridView />
         </Link>
         <button
           onClick={() => {
             if (window.confirm("Are you sure you want to delete this item?")) {
               onMutate(id!);
               window.location.reload();
+            } else {
+              return;
             }
           }}
-          className="px-4 py-2 bg-gradient-to-r from-[#ef4444] to-[#dc2626] text-white rounded-xl font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-150"
+          title="Delete item"
+          className="text-red-600 text-lg cursor-pointer"
         >
           <FaTrash />
         </button>

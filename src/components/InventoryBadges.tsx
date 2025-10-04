@@ -13,7 +13,7 @@ export const InventoryBadges = memo(
         <div
           key={name}
           onClick={onClick}
-          className={`bg-white/90 shadow-md rounded-2xl p-6 min-w-[350px] flex flex-col items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-200 border cursor-pointer ${
+          className={`bg-white/90 shadow-md rounded-2xl p-6 w-full max-w-[350px] flex flex-col items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-200 border cursor-pointer ${
             isSelected
               ? "border-[#2563eb] bg-blue-50/90 shadow-blue-200"
               : "border-[#e0e7ef] hover:border-[#2563eb]"

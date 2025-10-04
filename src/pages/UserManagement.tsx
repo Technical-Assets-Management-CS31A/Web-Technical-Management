@@ -79,7 +79,7 @@ export const UserManagement = () => {
         </div>
         <section className="flex flex-row justify-between">
           <div>
-            <Button onClick={() => setIsAddUserOpen(true)} />
+            <Button onClick={() => setIsAddUserOpen(true)} name={"New User"} />
           </div>
           <div className="flex flex-row">
             {/* Select Component */}
@@ -87,8 +87,8 @@ export const UserManagement = () => {
             {/* Search Bar Component */}
             <SearchBar
               onChangeValue={(value) => setSearchUser(value)}
-              name={"Search Staff"}
-              placeholder={"Search your Staff"}
+              name={"Search Users"}
+              placeholder={"Search your Users"}
             />
           </div>
         </section>
