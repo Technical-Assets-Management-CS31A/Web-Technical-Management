@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import AddItemForm from "../components/AddItem";
 import Button from "../components/Button";
 import SearchBar from "../components/SearchBar";
@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useDeleteItemMutation } from "../query/delete/useDeleteItemMutation";
 import type { TItemList } from "../types/types";
 import { useAllItemsQuery } from "../query/get/useAllItemsQuery";
-import InventoryBadges from "../components/InventoryBadges";
+import { InventoryBadges } from "../components/InventoryBadges";
 import Pagination from "../components/Pagination";
 import InventoryTable from "../components/InventoryTable";
 import ErrorTable from "../components/ErrorTables";
@@ -52,21 +52,24 @@ export default function InventoryList() {
   );
 
   // this func will handle all the page triggered in the button to set either to 1 to 2 or 3 etc
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-  };
+  }, []);
 
   // this func check if the category is selected is true then it will return all the item matches on this category selected
-  const handleCategoryClick = (category: string) => {
-    setSelectedCategory(selectedCategory === category ? "" : category);
-    setCurrentPage(1);
-  };
+  const handleCategoryClick = useCallback(
+    (category: string) => {
+      setSelectedCategory(selectedCategory === category ? "" : category);
+      setCurrentPage(1);
+    },
+    [selectedCategory],
+  );
 
   // this func return to display all the items when the selectedCategory is executed
-  const handleShowAll = () => {
+  const handleShowAll = useCallback(() => {
     setSelectedCategory("");
     setCurrentPage(1);
-  };
+  }, []);
 
   // get the response from useQuery
   const { data, isPending, isError } = useQuery(useAllItemsQuery());
@@ -85,7 +88,7 @@ export default function InventoryList() {
 
   return (
     <div className="animate-fadeIn inventory-list-container min-h-screen w-full bg-gradient-to-br from-[#f8fafc] via-[#e0e7ef] to-[#c7d2fe] flex flex-col">
-      <header className="inventory-header pt-8 px-8 pb-8 bg-white/80 shadow-lg rounded-b-3xl flex flex-col items-center z-50">
+      <header className="inventory-header pt-8 px-8 pb-8 bg-white/80 shadow-md  flex flex-col items-center z-50">
         <h1 className="text-[#1e293b] text-5xl mb-2 font-extrabold tracking-tight drop-shadow-lg">
           Inventory List
         </h1>
@@ -118,7 +121,7 @@ export default function InventoryList() {
 
         {/* Inventory Items Table */}
         <section className="px-8">
-          <div className="bg-white/90 h-[55vh] py-4 px-4 rounded-3xl shadow-2xl border border-[#e0e7ef] overflow-x-auto">
+          <div className="bg-white/90 h-[55vh] py-4 px-4 rounded-3xl shadow-md border border-[#e0e7ef] overflow-x-auto">
             <section className="mb-4 flex justify-between">
               <div className="">
                 <Button onClick={() => setIsAddItemFormOpen(true)} />
@@ -142,7 +145,7 @@ export default function InventoryList() {
                 />
               </div>
             </section>
-            <div className="h-[40vh] overflow-x-auto rounded-xl shadow-inner bg-white/95">
+            <div className="h-[40vh] overflow-x-auto rounded-md shadow-inner bg-white/95">
               {/* Check if the response from the QUERY is error cause for internet connection etc, will return a ERROR TABLE COMPONENTS */}
               {isError ? (
                 <ErrorTable />

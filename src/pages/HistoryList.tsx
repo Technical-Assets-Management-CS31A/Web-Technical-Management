@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import { SelectHistoryStatus } from "../components/SelectHistoryStatus";
 import HistoryListSkeletonLoader from "../loader/HistoryListSkeletonLoader";
@@ -22,130 +22,22 @@ export default function HistoryList({
   description = "This table lists item borrowing events, including the condition reported and the current status.",
 }) {
   const [searchItem, setSearchItem] = useState<string>("");
-  const [borrowedItem, setBorrowedItem] = useState<THistoryBorrwedItems[]>([
-    {
-      id: 1,
-      ItemName: "HDMI",
-      Borrowed_id: "BRW-0001",
-      Teacher: "John Doe",
-      Room: "Slab2",
-      Occupied: "Cortes",
-      Event_Date: "2025-08-18T09:30:00",
-      Condition: "Good",
-      Status: "Returned",
-    },
-    {
-      id: 2,
-      ItemName: "HDMI",
-      Borrowed_id: "BRW-0004",
-      Teacher: "Michael Brown",
-      Room: "Slab2",
-      Occupied: "Cortes",
-      Event_Date: "2025-08-21T10:00:00",
-      Condition: "Damaged port",
-      Status: "Lost",
-    },
-    {
-      id: 3,
-      ItemName: "HDMI",
-      Borrowed_id: "BRW-0004",
-      Teacher: "Michael Brown",
-      Room: "Slab2",
-      Occupied: "Cortes",
-      Event_Date: "2025-08-21T10:00:00",
-      Condition: "Damaged port",
-      Status: "Lost",
-    },
-    {
-      id: 4,
-      ItemName: "HDMI",
-      Borrowed_id: "BRW-0004",
-      Teacher: "Michael Brown",
-      Room: "Slab2",
-      Occupied: "Cortes",
-      Event_Date: "2025-08-21T10:00:00",
-      Condition: "Damaged port",
-      Status: "Lost",
-    },
-    {
-      id: 5,
-      ItemName: "HDMI",
-      Borrowed_id: "BRW-0004",
-      Teacher: "Michael Brown",
-      Room: "Slab2",
-      Occupied: "Cortes",
-      Event_Date: "2025-08-21T10:00:00",
-      Condition: "Damaged port",
-      Status: "Lost",
-    },
-    {
-      id: 6,
-      ItemName: "HDMI",
-      Borrowed_id: "BRW-0004",
-      Teacher: "Michael Brown",
-      Room: "Slab2",
-      Occupied: "Cortes",
-      Event_Date: "2025-08-21T10:00:00",
-      Condition: "Damaged port",
-      Status: "Lost",
-    },
-    {
-      id: 7,
-      ItemName: "HDMI",
-      Borrowed_id: "BRW-0004",
-      Teacher: "Michael Brown",
-      Room: "Slab2",
-      Occupied: "Cortes",
-      Event_Date: "2025-08-21T10:00:00",
-      Condition: "Damaged port",
-      Status: "Lost",
-    },
-    {
-      id: 8,
-      ItemName: "HDMI",
-      Borrowed_id: "BRW-0004",
-      Teacher: "Michael Brown",
-      Room: "Slab2",
-      Occupied: "Cortes",
-      Event_Date: "2025-08-21T10:00:00",
-      Condition: "Damaged port",
-      Status: "Lost",
-    },
-    {
-      id: 9,
-      ItemName: "HDMI",
-      Borrowed_id: "BRW-0004",
-      Teacher: "Michael Brown",
-      Room: "Slab2",
-      Occupied: "Cortes",
-      Event_Date: "2025-08-21T10:00:00",
-      Condition: "Damaged port",
-      Status: "Lost",
-    },
-    {
-      id: 10,
-      ItemName: "HDMI",
-      Borrowed_id: "BRW-0004",
-      Teacher: "Michael Brown",
-      Room: "Slab2",
-      Occupied: "Cortes",
-      Event_Date: "2025-08-21T10:00:00",
-      Condition: "Damaged port",
-      Status: "Lost",
-    },
-  ]);
+  const [borrowedItem, setBorrowedItem] = useState<THistoryBorrwedItems[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
-  const filteredItems = borrowedItem.filter((item) => {
-    const matchesSearch = item.ItemName.toLowerCase().includes(
-      searchItem.toLowerCase()
-    );
+  const filteredItems = useMemo(() => {
+    return borrowedItem.filter((item) => {
+      const matchesSearch = item.ItemName.toLowerCase().includes(
+        searchItem.toLowerCase(),
+      );
 
-    const matchesStatus =
-      selectedStatus === "all" || toStatusSlug(item.Status) === selectedStatus;
+      const matchesStatus =
+        selectedStatus === "all" ||
+        toStatusSlug(item.Status) === selectedStatus;
 
-    return matchesSearch && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    });
+  }, [borrowedItem, searchItem, selectedStatus]);
 
   const { data, isPending, isError } = useQuery(useBorrowedItemsQuery());
 
@@ -159,7 +51,7 @@ export default function HistoryList({
 
   return (
     <div className="animate-fadeIn min-h-screen w-full bg-gradient-to-br from-[#f8fafc] via-[#e0e7ef] to-[#c7d2fe] flex flex-col items-center py-10 px-2">
-      <div className="w-full max-w-[90%] bg-white/90 shadow-2xl rounded-3xl p-8 relative">
+      <div className="w-full max-w-[90%] bg-white/90 shadow-md rounded-3xl p-8 relative">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
           <div>
             <h1 className="text-4xl font-extrabold text-[#1e293b] mb-2 tracking-tight drop-shadow">

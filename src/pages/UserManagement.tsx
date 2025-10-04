@@ -18,63 +18,7 @@ export const UserManagement = () => {
   const [searchUser, setSearchUser] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [editUserId, setEditUserId] = useState<string | undefined>(undefined);
-  const [users, setUsers] = useState<TUsers[]>([
-    {
-      Id: "6EEAC6D",
-      firstName: "Alice",
-      lastName: "Johnson",
-      middleName: "",
-      username: "",
-      email: "",
-      phoneNumber: "",
-      userRole: "Staff",
-      status: "Active",
-    },
-    {
-      Id: "6EEACFD",
-      firstName: "Alice",
-      lastName: "Johnson",
-      middleName: "",
-      username: "",
-      email: "",
-      phoneNumber: "",
-      userRole: "Staff",
-      status: "Active",
-    },
-    {
-      Id: "6EECF6D",
-      firstName: "Alice",
-      lastName: "Johnson",
-      middleName: "",
-      username: "",
-      email: "",
-      phoneNumber: "",
-      userRole: "Staff",
-      status: "Active",
-    },
-    {
-      Id: "6EACF6D",
-      firstName: "Alice",
-      lastName: "Johnson",
-      middleName: "",
-      username: "",
-      email: "",
-      phoneNumber: "",
-      userRole: "Staff",
-      status: "InActive",
-    },
-    {
-      Id: "6EEACF2D",
-      firstName: "Alice",
-      lastName: "Johnson",
-      middleName: "",
-      username: "",
-      email: "",
-      phoneNumber: "",
-      userRole: "Staff",
-      status: "InActive",
-    },
-  ]);
+  const [users, setUsers] = useState<TUsers[]>([]);
 
   const filteredUser = useMemo(
     () =>
@@ -103,7 +47,7 @@ export const UserManagement = () => {
           userStatus.includes(searchValue)
         );
       }),
-    [searchUser, selectedStatus, users]
+    [searchUser, selectedStatus, users],
   );
 
   const { data, isPending, isError } = useQuery(useAllStaffsQuery());
@@ -121,7 +65,7 @@ export const UserManagement = () => {
 
   return (
     <div className="animate-fadeIn min-h-screen w-full bg-gradient-to-br from-[#f8fafc] via-[#e0e7ef] to-[#c7d2fe] flex flex-col items-center py-10 px-2">
-      <div className="w-full max-w-[90%] bg-white/90 shadow-2xl rounded-3xl p-8 relative">
+      <div className="w-full max-w-[90%] bg-white/90 shadow-md rounded-3xl p-8 relative">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
           <div>
             <h1 className="text-4xl font-extrabold text-[#1e293b] mb-2 tracking-tight drop-shadow">

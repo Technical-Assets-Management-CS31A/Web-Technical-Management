@@ -1,6 +1,11 @@
 import { NavLink } from "react-router-dom";
 import logo from "../assets/img/aclcLogo.webp";
 import { CiLogout } from "react-icons/ci";
+import { CiSettings } from "react-icons/ci";
+import { MdHistory } from "react-icons/md";
+import { CiUser } from "react-icons/ci";
+import { MdInventory } from "react-icons/md";
+import { MdOutlineDashboard } from "react-icons/md";
 import { removeToken } from "../utils/token";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -11,11 +16,11 @@ export default function Sidebar() {
   const [isSidebarLoading, setIsSidebarLoading] = useState(true);
 
   const sideBarList = [
-    { label: "Dashboard", link: "dashboard" },
-    { label: "Inventory List", link: "inventory-list" },
-    { label: "User Management", link: "user-management" },
-    { label: "Your History", link: "history-list" },
-    { label: "Settings", link: "settings" },
+    { label: "Dashboard", link: "dashboard", icon: MdOutlineDashboard },
+    { label: "Inventory List", link: "inventory-list", icon: MdInventory },
+    { label: "User Management", link: "user-management", icon: CiUser },
+    { label: "Your History", link: "history-list", icon: MdHistory },
+    { label: "Settings", link: "settings", icon: CiSettings },
   ];
 
   useEffect(() => {
@@ -26,7 +31,7 @@ export default function Sidebar() {
   }, []);
 
   const logoutUser = async () => {
-    await removeToken();
+    removeToken();
     navigate("/");
   };
 
@@ -58,6 +63,7 @@ export default function Sidebar() {
                   }`
                 }
               >
+                {item.icon && <item.icon className="text-xl" />}
                 <span>{item.label}</span>
               </NavLink>
             </li>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import type { TBorrowedItems } from "../types/types";
 import { useQueries } from "@tanstack/react-query";
@@ -51,11 +51,14 @@ export default function Dashboard() {
     [filteredData, currentPage],
   );
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const totalPages = useMemo(
+    () => Math.ceil(filteredData.length / itemsPerPage),
+    [filteredData],
+  );
 
-  const handlePageChange = (page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-  };
+  }, []);
 
   const isLoading = borrowedItemsResult.isLoading;
   const isError = borrowedItemsResult.error;
@@ -78,7 +81,7 @@ export default function Dashboard() {
       </div>
 
       {/* Table Borrowed Section */}
-      <div className="w-full max-w-7xl bg-white/90 shadow-xl rounded-2xl p-8 border border-[#e0e7ef]">
+      <div className="w-full max-w-7xl bg-white/90 shadow-md rounded-2xl p-8 border border-[#e0e7ef]">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
           <h1 className="font-bold text-[#1e293b] text-2xl -mt-10">
             Recently Borrowed Items
