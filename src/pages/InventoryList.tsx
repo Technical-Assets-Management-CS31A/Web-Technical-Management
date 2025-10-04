@@ -124,7 +124,10 @@ export default function InventoryList() {
           <div className="bg-white/90 h-[55vh] py-4 px-4 rounded-3xl shadow-md border border-[#e0e7ef] overflow-x-auto">
             <section className="mb-4 flex justify-between">
               <div className="">
-                <Button onClick={() => setIsAddItemFormOpen(true)} />
+                <Button
+                  onClick={() => setIsAddItemFormOpen(true)}
+                  name={"New Item"}
+                />
               </div>
               <div className="flex flex-row gap-2">
                 {/*Pagination Component*/}
@@ -192,7 +195,7 @@ export default function InventoryList() {
                       paginatedData.map((item) => (
                         <tr
                           key={item.serialNumber}
-                          className="hover:bg-[#f1f5f9] transition-colors odd:bg-white even:bg-[#f8fafc]"
+                          className="hover:bg-[#f1f5f9] transition-colors odd:bg-white even:bg-[#f8fafc] cursor-pointer"
                         >
                           <InventoryTable
                             id={item.id}
