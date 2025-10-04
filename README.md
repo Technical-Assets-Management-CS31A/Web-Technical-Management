@@ -40,8 +40,7 @@ It ensures accountability and prevents loss or misuse of equipment by keeping a 
 1. **Clone the repository**
    ```bash
    git git@github.com:Technical-Assets-Management-CS31A/Web-Technical-Management.git
-   cd technical-assets-management
-
+   cd Web-Technical-Management.git
 
 2. Installation
 
