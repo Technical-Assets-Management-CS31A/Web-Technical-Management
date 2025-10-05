@@ -1,4 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
 import CloseButton from "./CloseButton";
 import type { TItemForm, TItemList } from "../types/types";
 import { useQuery } from "@tanstack/react-query";
@@ -13,6 +19,7 @@ type EditItemFormProps = {
 
 export const EditItemForm = ({ onClose, Id }: EditItemFormProps) => {
   const { data, isLoading, error } = useQuery(useItemDetailsQuery(Id));
+  const [originalData, setOriginalData] = useState<TItemForm | null>(null);
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [itemNameError, setItemNameError] = useState<string>("");
   const [itemTypeError, setItemTypeError] = useState<string>("");
@@ -42,8 +49,7 @@ export const EditItemForm = ({ onClose, Id }: EditItemFormProps) => {
   useEffect(() => {
     if (data) {
       const item = data as TItemList;
-      setFormData((prev) => ({
-        ...prev,
+      const itemData: TItemForm = {
         serialNumber: item.serialNumber || "",
         itemName: item.itemName || "",
         itemType: item.itemType || "",
@@ -52,40 +58,61 @@ export const EditItemForm = ({ onClose, Id }: EditItemFormProps) => {
         description: item.description || "",
         category: item.category || "Electronics",
         condition: item.condition || "New",
+        image: null,
         preview: typeof item.image === "string" ? item.image : "",
-      }));
+      };
+
+      setFormData(itemData);
+      setOriginalData(itemData);
     }
   }, [data]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value, files } = e.target as HTMLInputElement;
-    if (files && files[0]) {
-      setFormData((prev) => ({
-        ...prev,
-        image: files[0],
-        preview: URL.createObjectURL(files[0]),
-      }));
-      setImageError("");
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+  const handleChange = useMemo(
+    () => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const { name, value, files } = e.target as HTMLInputElement;
+      if (files && files[0]) {
+        setFormData((prev) => ({
+          ...prev,
+          image: files[0],
+          preview: URL.createObjectURL(files[0]),
+        }));
+        setImageError("");
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: value,
+        }));
 
-      if (name === "itemName") setItemNameError("");
-      if (name === "serialNumber") setSerialNumberError("");
-      if (name === "itemType") setItemTypeError("");
-      if (name === "itemMake") setItemMakeError("");
-      if (name === "itemModel") setItemModelError("");
-      if (name === "category") setCategoryError("");
-      if (name === "condition") setConditionError("");
-      if (name === "description") setDescriptionError("");
-    }
-  };
+        if (name === "itemName") setItemNameError("");
+        if (name === "serialNumber") setSerialNumberError("");
+        if (name === "itemType") setItemTypeError("");
+        if (name === "itemMake") setItemMakeError("");
+        if (name === "itemModel") setItemModelError("");
+        if (name === "category") setCategoryError("");
+        if (name === "condition") setConditionError("");
+        if (name === "description") setDescriptionError("");
+      }
+    },
+    [],
+  );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const hasChanges = useMemo(() => {
+    if (!originalData) return false;
+
+    return (
+      formData.serialNumber !== originalData.serialNumber ||
+      formData.itemName !== originalData.itemName ||
+      formData.itemType !== originalData.itemType ||
+      formData.itemModel !== originalData.itemModel ||
+      formData.itemMake !== originalData.itemMake ||
+      formData.description !== originalData.description ||
+      formData.category !== originalData.category ||
+      formData.condition !== originalData.condition ||
+      formData.image !== null
+    );
+  }, [formData, originalData]);
+
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
     if (!formData.itemName) {
@@ -429,8 +456,9 @@ export const EditItemForm = ({ onClose, Id }: EditItemFormProps) => {
               <div className="flex justify-center pt-2">
                 <button
                   type="submit"
-                  className="px-8 py-3 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white font-bold rounded-xl shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-150 flex items-center gap-2 cursor-pointer"
+                  className={`px-8 py-3 bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white font-bold rounded-xl shadow-lg hover:scale-105 hover:shadow-2xl transition-all duration-150 flex items-center gap-2 cursor-pointer ${!hasChanges ? "hover:cursor-not-allowed" : ""}`}
                   data-testid="editItem-button"
+                  disabled={!hasChanges}
                 >
                   Save Changes
                 </button>
