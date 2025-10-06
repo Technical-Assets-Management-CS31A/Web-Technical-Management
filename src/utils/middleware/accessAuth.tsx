@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import { getToken } from "../token";
 import { removeToken } from "../token";
 
-// 🔍 Helper to get the key safely and warn if missing
+// Helper to get the key safely and warn if missing
 const getAccessTokenKey = () => {
   const key = import.meta.env.VITE_ACCESS_TOKEN;
 
