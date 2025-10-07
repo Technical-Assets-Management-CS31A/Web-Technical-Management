@@ -56,7 +56,7 @@ export default function InventoryTable({
         </Link>
         <button
           onClick={() => {
-            if (window.confirm("Are you sure you want to delete this item?")) {
+            if (window.confirm("Are you sure you want to archive this item?")) {
               onMutate(id!);
               window.location.reload();
             } else {
