@@ -9,6 +9,7 @@ import { UserManagement } from "./pages/UserManagement.tsx";
 import HistoryList from "./pages/HistoryList.tsx";
 import Settings from "./pages/Settings.tsx";
 import ViewItem from "./components/ViewItem.tsx";
+import ArchiveTable from "./pages/ArchiveTable.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PublicRoute, ProtectedRoute } from "./utils/middleware/accessAuth.tsx";
@@ -16,6 +17,7 @@ import NotFound from "./pages/NotFound.tsx";
 import Login from "./auth/Login.tsx";
 
 const routes = createBrowserRouter([
+  // Public routes
   {
     path: "/",
     element: (
@@ -30,56 +32,25 @@ const routes = createBrowserRouter([
       },
     ],
   },
-  {
-    path: "*",
-    element: <NotFound />,
-  },
+
+  // Protected routes (wrap Home)
   {
     path: "/home",
-    element: <Home />,
+    element: (
+      <ProtectedRoute>
+        <Home />
+      </ProtectedRoute>
+    ),
     children: [
-      {
-        path: "dashboard",
-        element: (
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "inventory-list",
-        element: (
-          <ProtectedRoute>
-            <InventoryList />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "user-management",
-        element: (
-          <ProtectedRoute>
-            <UserManagement />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "history-list",
-        element: (
-          <ProtectedRoute>
-            <HistoryList />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: "settings",
-        element: (
-          <ProtectedRoute>
-            <Settings />
-          </ProtectedRoute>
-        ),
-      },
+      { path: "dashboard", element: <Dashboard /> },
+      { path: "inventory-list", element: <InventoryList /> },
+      { path: "user-management", element: <UserManagement /> },
+      { path: "history-list", element: <HistoryList /> },
+      { path: "settings", element: <Settings /> },
+      { path: "archive-table", element: <ArchiveTable /> },
     ],
   },
+
   {
     path: "/item/:id",
     element: (
@@ -88,7 +59,12 @@ const routes = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+  {
+    path: "*",
+    element: <NotFound />,
+  },
 ]);
+
 
 const queryClient = new QueryClient();
 
