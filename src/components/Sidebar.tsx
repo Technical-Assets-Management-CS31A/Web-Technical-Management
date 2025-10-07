@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import logo from "../assets/img/aclcLogo.webp";
 import { CiLogout, CiSettings, CiUser } from "react-icons/ci";
+import { GiArchiveRegister } from "react-icons/gi";
 import { MdHistory, MdInventory, MdDashboardCustomize } from "react-icons/md";
 import { removeToken } from "../utils/token";
 import { useState, useEffect } from "react";
@@ -12,10 +13,11 @@ export default function Sidebar() {
 
   const sideBarList = [
     { label: "Dashboard", link: "dashboard", icon: MdDashboardCustomize },
-    { label: "Inventory List", link: "inventory-list", icon: MdInventory },
+    { label: "Inventory List", link: "inventory-list", icon: GiArchiveRegister },
     { label: "User Management", link: "user-management", icon: CiUser },
     { label: "Your History", link: "history-list", icon: MdHistory },
-    { label: "Settings", link: "settings", icon: CiSettings },
+    { label: "Your Archive", link: "archive-table", icon: MdInventory},
+    { label: "Your Settings", link: "settings", icon: CiSettings }, 
   ];
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="group animate-fadeIn h-screen w-[75px] hover:w-[300px] transition-all duration-300 bg-white border-r border-[#e5e7eb] flex flex-col justify-between shadow-xl left-0 top-0 z-30">
+    <aside className="group animate-fadeIn h-screen w-[75px] hover:w-[250px] transition-all duration-300 bg-white border-r border-[#e5e7eb] flex flex-col justify-between shadow-xl left-0 top-0 z-30">
       {/* Logo and Title */}
       <div className="flex flex-col items-center py-8">
         <img
@@ -63,7 +65,7 @@ export default function Sidebar() {
                   }`
                 }
               >
-                <item.icon className="text-2xl min-w-[30px] group-hover:min-w-[24px] group-hover:text-2xl" />
+                <item.icon className="text-2xl min-w-[30px] group-hover:min-w-[25px] group-hover:text-2xl"/>
                 <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
                   {item.label}
                 </span>
