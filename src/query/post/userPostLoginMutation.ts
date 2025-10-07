@@ -1,5 +1,4 @@
 import { useMutation } from "@tanstack/react-query";
-import { saveToken } from "../../utils/token";
 import type { TLoginUser } from "../../types/types";
 
 const LoginUser = async (formData: TLoginUser) => {
@@ -17,8 +16,7 @@ const LoginUser = async (formData: TLoginUser) => {
   if (!res.ok) {
     throw new Error(data.message || "Failed to login user");
   }
-
-  saveToken(data.accessToken);
+  console.log(data)
 
   return data;
 };
