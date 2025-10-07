@@ -7,13 +7,12 @@ const allItems = async () => {
   const res = await fetch(BASE_URL, {
     method: "GET",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${getToken()}`,
     },
   });
   const data = await res.json();
   if (!res.ok) throw new Error("Failed to fetch item details");
-  return data;
+  return data.data;
 };
 export const useAllItemsQuery = () => {
   return queryOptions({
