@@ -14,7 +14,7 @@ const fetchUserData = async () => {
   if (!res.ok) {
     throw new Error(data.message || "User not found");
   }
-  return data;
+  return data.data;
 };
 
 export const useUserQuery = () => {
