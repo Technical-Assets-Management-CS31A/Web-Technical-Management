@@ -1,47 +1,43 @@
 import { Navigate } from "react-router-dom";
-import { getToken } from "../token";
-import { removeToken } from "../token";
+import Cookies from "js-cookie";
 
-// Helper to get the key safely and warn if missing
 const getAccessTokenKey = () => {
-  const key = import.meta.env.VITE_ACCESS_TOKEN;
-
+  const key = import.meta.env.VITE_ACCESS_TOKEN_KEY;
   if (!key) {
     console.warn(
-      "⚠️ Environment variable 'VITE_ACCESS_TOKEN' is undefined. Using fallback key 'accessToken'.",
+      "⚠️ Environment variable 'VITE_ACCESS_TOKEN_KEY' is undefined. Using fallback key 'accessToken'."
     );
     return "accessToken";
   }
-
   return key;
 };
 
-export const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const key = getAccessTokenKey();
-  const token = getToken();
+interface RouteProps {
+  children: React.ReactNode;
+}
 
-  if (!token) {
-    console.log(
-      `🟢 No token found under key '${key}'. Allowing public access.`,
-    );
-    return <>{children}</>;
+export const PublicRoute = ({ children }: RouteProps) => {
+  const key = getAccessTokenKey();
+  const token = Cookies.get(key);
+
+  if (token) {
+    console.log(`🔒 Token found under key '${key}'. Redirecting to dashboard.`);
+    return <Navigate to="/home/dashboard" replace />;
   }
 
-  console.log(
-    `🔒 Token found under key '${key}'. Redirecting to /home/dashboard.`,
-  );
-  return <Navigate to="/home/dashboard" replace />;
+  console.log(`🟢 No token found under key '${key}'. Allowing public access.`);
+  return <>{children}</>;
 };
 
-export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+export const ProtectedRoute = ({ children }: RouteProps) => {
   const key = getAccessTokenKey();
-  const token = getToken();
+  const token = Cookies.get(key);
 
-  if (!key || !token || token === "undefined" || token === "null") {
-    console.error("🚫 Invalid or missing token. Logging out.");
-    removeToken();
+  if (!token) {
+    console.log(`🚫 Missing or invalid token under key '${key}'. Redirecting to login.`);
     return <Navigate to="/" replace />;
   }
 
+  console.log(`✅ Valid token found under key '${key}'. Access granted.`);
   return <>{children}</>;
 };
