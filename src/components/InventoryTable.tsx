@@ -4,6 +4,8 @@ import logo from "../assets/img/aclcLogo.webp";
 import { FormattedDateTime } from "./FormatedDateTime";
 import { SlugCondition } from "./SlugCondition";
 import { MdOutlineGridView } from "react-icons/md";
+import { UserData } from "../utils/usersData/userData";
+
 type InventoryTableProps = {
   id?: string;
   createdAt: string;
@@ -26,6 +28,9 @@ export default function InventoryTable({
   Condition,
   onMutate,
 }: InventoryTableProps) {
+
+  const data = UserData()
+
   return (
     <>
       <td className="py-3 px-4 font-semibold">{SerialNumber}</td>
@@ -54,20 +59,23 @@ export default function InventoryTable({
         >
           <MdOutlineGridView />
         </Link>
-        <button
-          onClick={() => {
-            if (window.confirm("Are you sure you want to archive this item?")) {
-              onMutate(id!);
-              window.location.reload();
-            } else {
-              return;
-            }
-          }}
-          title="Delete item"
-          className="text-red-600 text-lg cursor-pointer"
-        >
-          <FaTrash />
-        </button>
+        {data.userRole === "Admin" ? (
+          <button
+            onClick={() => {
+              if (window.confirm("Are you sure you want to archive this item?")) {
+                onMutate(id!);
+                window.location.reload();
+              } else {
+                return;
+              }
+            }}
+            title="Delete item"
+            className="text-red-600 text-lg cursor-pointer"
+          >
+            <FaTrash />
+          </button>
+        ) : ""}
+
       </td>
     </>
   );
