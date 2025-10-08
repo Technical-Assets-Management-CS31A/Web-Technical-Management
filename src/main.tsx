@@ -9,7 +9,7 @@ import { UserManagement } from "./pages/UserManagement.tsx";
 import HistoryList from "./pages/HistoryList.tsx";
 import Settings from "./pages/Settings.tsx";
 import ViewItem from "./components/ViewItem.tsx";
-import ArchiveTable from "./pages/ArchiveTable.tsx";
+import Archive from "./pages/Archive.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PublicRoute, ProtectedRoute } from "./utils/middleware/accessAuth.tsx";
@@ -47,7 +47,7 @@ const routes = createBrowserRouter([
       { path: "user-management", element: <UserManagement /> },
       { path: "history-list", element: <HistoryList /> },
       { path: "settings", element: <Settings /> },
-      { path: "archive-table", element: <ArchiveTable /> },
+      { path: "archive-table", element: <Archive /> },
     ],
   },
 
