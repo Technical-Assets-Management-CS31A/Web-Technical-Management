@@ -5,7 +5,7 @@ import SearchBar from "../components/SearchBar";
 import InventoryListSkeletonLoader from "../loader/InventoryListSkeletonLoader";
 import logo from "../assets/img/aclcLogo.webp";
 import { useQuery } from "@tanstack/react-query";
-import { useDeleteItemMutation } from "../query/delete/useDeleteItemMutation";
+import { useArchiveItemMutation } from "../query/delete/useArchiveItemMutation";
 import type { TItemList } from "../types/types";
 import { useAllItemsQuery } from "../query/get/useAllItemsQuery";
 import { InventoryBadges } from "../components/InventoryBadges";
@@ -20,6 +20,7 @@ export default function InventoryList() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 5;
   const [items, setItems] = useState<TItemList[]>([]);
+ 
 
   // this func use a useMemo to filtered item either its itemName or the Category and also for the Matches Category and return items,searchItem and selectedCategory
   const filteredItems = useMemo(
@@ -74,7 +75,7 @@ export default function InventoryList() {
   // get the response from useQuery
   const { data, isPending, isError } = useQuery(useAllItemsQuery());
   // this mutate func will return the ID of the item and to to deleted
-  const { mutate } = useDeleteItemMutation();
+  const { mutate } = useArchiveItemMutation();
 
   // this Effect will automatically updated the data of the items response
   useEffect(() => {
