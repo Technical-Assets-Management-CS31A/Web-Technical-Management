@@ -6,10 +6,12 @@ import { FaEyeSlash } from "react-icons/fa6";
 import logo from "../assets/img/aclcLogo.webp";
 import type { TLoginUser } from "../types/types";
 import { usePostLoginMutation } from "../query/post/userPostLoginMutation";
-import { getToken } from "../utils/token";
+// import { getToken } from "../utils/token";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login, isAuthenticated } = useAuth();
   const [isShowPassword, setIsShowPassword] = useState<boolean>(false);
   const [isForgotPasswordFormOpen, setIsForgotPasswordFormOpen] =
     useState<boolean>(false);
@@ -22,12 +24,19 @@ export default function Login() {
 
   const { mutate, isPending, error, isError } = usePostLoginMutation();
 
+
+  // useEffect(() => {
+  //   const token = getToken();
+  //   if (token) {
+  //     navigate("/home/dashboard");
+  //   }
+  // }, [navigate]);
   useEffect(() => {
-    const token = getToken();
-    if (token) {
+    if (isAuthenticated) {
       navigate("/home/dashboard");
     }
-  }, [navigate]);
+  }, [isAuthenticated, navigate]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -37,7 +46,7 @@ export default function Login() {
     if (name === "password") setPasswordError("");
   };
 
-  const handleSubmitLoginForm = async (e: React.FormEvent) => {
+  const handleSubmitLoginForm = (e: React.FormEvent) => {
     e.preventDefault();
 
     let hasError = false;
@@ -60,12 +69,36 @@ export default function Login() {
 
     if (hasError) return;
 
+    // mutate(submitForm, {
+    //   onSuccess: () => {
+    //     navigate("/home/dashboard");
+    //   },
+    //   onError: (err: Error) => {
+    //     console.error("Registration failed:", err.message);
+    //   },
+    // });
     mutate(submitForm, {
-      onSuccess: () => {
+      onSuccess: (userData) => {
+        // This callback fires ONLY on a successful login.
+        // The 'userData' parameter is the user object (TUsers) returned
+        // from our refactored mutation function.
+
+        console.log("Login successful! User data:", userData);
+
+        // 1. Update our global state with the user's data.
+        //    This will set isAuthenticated to true application-wide.
+        login(userData);
+
+        // 2. Navigate the user to the dashboard.
+        //    (The useEffect will also catch this state change and redirect).
         navigate("/home/dashboard");
       },
-      onError: (err: Error) => {
-        console.error("Registration failed:", err.message);
+      onError: (err) => {
+        // This callback fires on a failed login.
+        // The 'err' parameter is the Error object we threw in our mutation.
+        // TanStack Query automatically sets the `error` and `isError`
+        // states for us, so we just need to log it for debugging.
+        console.error("Login failed:", err.message);
       },
     });
   };

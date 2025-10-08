@@ -78,6 +78,7 @@ export type TItemList = {
   condition: string;
   createdAt: string;
   updatedAt?: string;
+  barcode?: string;
 };
 
 export type TEditItemForm = {

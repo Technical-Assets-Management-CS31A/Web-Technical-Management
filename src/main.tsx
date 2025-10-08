@@ -7,9 +7,11 @@ import Dashboard from "./pages/Dashboard.tsx";
 import InventoryList from "./pages/InventoryList.tsx";
 import { UserManagement } from "./pages/UserManagement.tsx";
 import HistoryList from "./pages/HistoryList.tsx";
-import Settings from "./pages/Settings.tsx";
-import ViewItem from "./components/ViewItem.tsx";
-import ArchiveTable from "./pages/ArchiveTable.tsx";
+//added AuthProvider -stan
+import { AuthProvider } from './context/AuthContext';
+// import Settings from "./pages/Settings.tsx";
+// import ViewItem from "./components/ViewItem.tsx";
+// import ArchiveTable from "./pages/ArchiveTable.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PublicRoute, ProtectedRoute } from "./utils/middleware/accessAuth.tsx";
@@ -46,18 +48,18 @@ const routes = createBrowserRouter([
       { path: "inventory-list", element: <InventoryList /> },
       { path: "user-management", element: <UserManagement /> },
       { path: "history-list", element: <HistoryList /> },
-      { path: "settings", element: <Settings /> },
-      { path: "archive-table", element: <ArchiveTable /> },
+      // { path: "settings", element: <Settings /> },
+      // { path: "archive-table", element: <ArchiveTable /> },
     ],
   },
 
   {
-    path: "/item/:id",
-    element: (
-      <ProtectedRoute>
-        <ViewItem />
-      </ProtectedRoute>
-    ),
+    // path: "/item/:id",
+    // element: (
+    //   // <ProtectedRoute>
+    //   //   {/* <ViewItem /> */}
+    //   // </ProtectedRoute>
+    // ),
   },
   {
     path: "*",
@@ -67,11 +69,13 @@ const routes = createBrowserRouter([
 
 
 const queryClient = new QueryClient();
-
+//wrapped AuthProvider here -stan
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={routes} />
+      <AuthProvider>
+        <RouterProvider router={routes} />
+      </AuthProvider>
     </QueryClientProvider>
   </StrictMode>,
 );
