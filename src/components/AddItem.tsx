@@ -151,7 +151,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
         });
       },
       onError: (error: Error) => {
-        console.error("Error adding item", error);
+        console.error("Error adding item", error.message);
       },
     });
   };
