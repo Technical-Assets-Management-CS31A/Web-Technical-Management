@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import ArchiveSkeletonLoader from "../loader/ArchiveSkeletonLoader.tsx";
 import type { TArchiveItem } from "../types/types.ts";
-import { useRestoreMutation } from "../query/delete/useRestoreMutation.ts";
+import { useRestoreItemMutation } from "../query/delete/useRestoreItemMutation.ts";
 import ErrorTable from "../components/ErrorTables.tsx";
 import SearchBar from "../components/SearchBar.tsx";
 import Pagination from "../components/Pagination.tsx";
@@ -18,7 +18,7 @@ export default function Archive() {
   const itemsPerPage = 5;
 
   const { data, isPending, isError } = useQuery(useArchivesQuery());
-  const restoreMutation = useRestoreMutation();
+  const restoreMutation = useRestoreItemMutation();
 
   // Filter items based on search term and category
   const filteredItems = useMemo(
