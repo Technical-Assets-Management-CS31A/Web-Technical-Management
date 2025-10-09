@@ -231,7 +231,7 @@ export default function ViewItem() {
       {isEditItemFormOpen && (
         <EditItemForm
           onClose={() => setIsEditItemFormOpen(false)}
-          Id={itemId}
+          id={itemId}
         />
       )}
     </div>
