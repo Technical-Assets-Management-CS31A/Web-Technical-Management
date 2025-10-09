@@ -6,7 +6,7 @@ import SearchBar from "../components/SearchBar";
 import type { TUsers } from "../types/types";
 import { useQuery } from "@tanstack/react-query";
 import { SelectUserStatus } from "../components/SelectUserStatus";
-import { useAllStaffsQuery } from "../query/get/useAllStaffsQuery";
+import { useAllUsersQuery } from "../query/get/useAllUsersQuery";
 import { StaffSkeletonLoader } from "../loader/StaffSkeletonLoader";
 import { useDeleteUserMutation } from "../query/delete/useDeleteUserMutation";
 import UserTable from "../components/UserTable";
@@ -33,16 +33,14 @@ export const UserManagement = () => {
         if (selected !== "all") {
           return (
             matchesStatus &&
-            (user.firstName.toLowerCase().includes(searchValue) ||
-              user.lastName.toLowerCase().includes(searchValue) ||
+            (user.username.toLowerCase().includes(searchValue) ||
               user.userRole.toLowerCase().includes(searchValue) ||
               userStatus.includes(searchValue))
           );
         }
 
         return (
-          user.firstName.toLowerCase().includes(searchValue) ||
-          user.lastName.toLowerCase().includes(searchValue) ||
+          user.username.toLowerCase().includes(searchValue) ||
           user.userRole.toLowerCase().includes(searchValue) ||
           userStatus.includes(searchValue)
         );
@@ -50,7 +48,7 @@ export const UserManagement = () => {
     [searchUser, selectedStatus, users],
   );
 
-  const { data, isPending, isError } = useQuery(useAllStaffsQuery());
+  const { data, isPending, isError } = useQuery(useAllUsersQuery());
   const { mutate } = useDeleteUserMutation();
 
   useEffect(() => {
@@ -110,6 +108,12 @@ export const UserManagement = () => {
                   <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
                     Lastname
                   </th>
+                    <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
+                    Username
+                  </th>
+                  <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
+                    Email
+                  </th>
                   <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
                     Role
                   </th>
@@ -124,19 +128,21 @@ export const UserManagement = () => {
               <tbody>
                 {filteredUser.map((user) => (
                   <tr
-                    key={user.Id}
+                    key={user.id}
                     className="hover:bg-[#f1f5f9] transition-colors odd:bg-white even:bg-[#f8fafc]"
                   >
                     {/* User Table Component*/}
                     <UserTable
-                      Id={user.Id}
+                      id={user.id}
                       firstName={user.firstName}
                       lastName={user.lastName}
+                      username={user.username}
+                      email={user.email}
                       userRole={user.userRole}
                       status={user.status}
-                      onSetEditUserId={() => setEditUserId(user.Id)}
+                      onSetEditUserId={() => setEditUserId(user.id)}
                       onSetIsEditUserOpen={() => setIsEditUserOpen(true)}
-                      onMutate={() => mutate(user.Id)}
+                      onMutate={() => mutate(user.id)}
                     />
                   </tr>
                 ))}
