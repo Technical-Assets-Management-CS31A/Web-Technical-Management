@@ -14,11 +14,11 @@ import { SuccessAlert } from "./SuccessAlert";
 
 type EditItemFormProps = {
   onClose: () => void;
-  Id: string;
+  id: string;
 };
 
-export const EditItemForm = ({ onClose, Id }: EditItemFormProps) => {
-  const { data, isLoading, error } = useQuery(useItemDetailsQuery(Id));
+export const EditItemForm = ({ onClose, id }: EditItemFormProps) => {
+  const { data, isLoading, error } = useQuery(useItemDetailsQuery(id));
   const [originalData, setOriginalData] = useState<TItemForm | null>(null);
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [itemNameError, setItemNameError] = useState<string>("");
@@ -108,7 +108,7 @@ export const EditItemForm = ({ onClose, Id }: EditItemFormProps) => {
       formData.description !== originalData.description ||
       formData.category !== originalData.category ||
       formData.condition !== originalData.condition ||
-      formData.image !== null
+      formData.image !== originalData.image
     );
   }, [formData, originalData]);
 
@@ -167,7 +167,7 @@ export const EditItemForm = ({ onClose, Id }: EditItemFormProps) => {
     };
 
     mutate(
-      { Id, formData: updateItem },
+      { id, formData: updateItem },
       {
         onSuccess: () => {
           setShowAlert(true);
@@ -190,7 +190,7 @@ export const EditItemForm = ({ onClose, Id }: EditItemFormProps) => {
           });
         },
         onError: (error: Error) => {
-          console.log(error);
+          console.log(error.message);
         },
       },
     );
