@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import type { TUserFormData } from "../types/types";
 import CloseButton from "./CloseButton";
 import { usePostUserMutation } from "../query/post/usePostUserMutation";
+import { FaEye, FaEyeSlash } from "react-icons/fa6";
+import { SuccessAlert } from "./SuccessAlert";
 
 type AddUserProps = {
   onClose: () => void;
@@ -16,7 +18,10 @@ export const AddUsers = ({ onClose }: AddUserProps) => {
   const [phoneNumberError, setPhoneNumberError] = useState<string>("");
   const [roleError, setRoleError] = useState<string>("");
   const [passwordError, setPasswordError] = useState<string>("");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [confirmPasswordError, setConfirmPasswordError] = useState<string>("");
+  const [showAlert, setShowAlert] = useState<boolean>(false)
   const [formData, setFormData] = useState<TUserFormData>({
     firstName: "",
     lastName: "",
@@ -56,6 +61,7 @@ export const AddUsers = ({ onClose }: AddUserProps) => {
     console.log("User data:", formData);
 
     let hasError = false;
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
     if (
       !formData.firstName &&
@@ -108,6 +114,10 @@ export const AddUsers = ({ onClose }: AddUserProps) => {
       hasError = true;
     }
 
+    if (!passwordRegex.test(formData.password)) {
+      setPasswordError("❌ Password must include:\n uppercase, lowercase, number, special character and be at least 8 characters long.");
+    }
+
     if (!formData.password) {
       setPasswordError("Password is required");
       hasError = true;
@@ -118,13 +128,21 @@ export const AddUsers = ({ onClose }: AddUserProps) => {
       hasError = true;
     }
 
-    if (hasError) return;
+    if (formData.password !== formData.confirmPassword) {
+      setConfirmPasswordError("Password does not match");
+      hasError = true;
+    }
 
-    console.log(formData)
+    if (hasError) return;
 
     mutate(formData, {
       onSuccess: () => {
-        onClose();
+        setShowAlert(true);
+        setTimeout(() => {
+          setShowAlert(false);
+          onClose();
+          window.location.reload();
+        }, 1000);
         setFormData({
           firstName: "",
           lastName: "",
@@ -137,12 +155,16 @@ export const AddUsers = ({ onClose }: AddUserProps) => {
           role: "",
         });
       },
+      onError: (error) => {
+        console.log(error)
+      }
     });
   };
 
   return (
     <>
       <div className="fixed animate-fadeIn inset-0 z-50 flex items-center justify-center bg-gray-900/60">
+        {showAlert && <SuccessAlert message={"User Created Successfully"} />}
         <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-3xl relative animate-fadeInUp">
           <button
             className="absolute top-4 right-4 text-2xl text-[#64748b] hover:text-[#2563eb] transition-colors"
@@ -167,13 +189,12 @@ export const AddUsers = ({ onClose }: AddUserProps) => {
                   type="text"
                   id="firstName"
                   name="firstName"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.firstName === "" && firstnameError
-                      ? "border-red-500"
-                      : firstnameError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.firstName === "" && firstnameError
+                    ? "border-red-500"
+                    : firstnameError
                       ? "border-red-500"
                       : ""
-                  }`}
+                    }`}
                   value={formData.firstName}
                   onChange={handleInputChange}
                   placeholder="Enter first name"
@@ -194,13 +215,12 @@ export const AddUsers = ({ onClose }: AddUserProps) => {
                   type="text"
                   id="lastName"
                   name="lastName"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.lastName === "" && lastnameError
-                      ? "border-red-500"
-                      : lastnameError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.lastName === "" && lastnameError
+                    ? "border-red-500"
+                    : lastnameError
                       ? "border-red-500"
                       : ""
-                  }`}
+                    }`}
                   value={formData.lastName}
                   onChange={handleInputChange}
                   placeholder="Enter last name"
@@ -223,13 +243,12 @@ export const AddUsers = ({ onClose }: AddUserProps) => {
                   type="text"
                   id="middleName"
                   name="middleName"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.middleName === "" && middlenameError
-                      ? "border-red-500"
-                      : middlenameError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.middleName === "" && middlenameError
+                    ? "border-red-500"
+                    : middlenameError
                       ? "border-red-500"
                       : ""
-                  }`}
+                    }`}
                   value={formData.middleName}
                   onChange={handleInputChange}
                   placeholder="Enter middle name"
@@ -252,13 +271,12 @@ export const AddUsers = ({ onClose }: AddUserProps) => {
                   type="text"
                   id="username"
                   name="username"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.username === "" && usernameError
-                      ? "border-red-500"
-                      : usernameError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.username === "" && usernameError
+                    ? "border-red-500"
+                    : usernameError
                       ? "border-red-500"
                       : ""
-                  }`}
+                    }`}
                   value={formData.username}
                   onChange={handleInputChange}
                   placeholder="Enter username"
@@ -279,13 +297,12 @@ export const AddUsers = ({ onClose }: AddUserProps) => {
                   type="text"
                   id="email"
                   name="email"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.email === "" && emailError
-                      ? "border-red-500"
-                      : emailError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.email === "" && emailError
+                    ? "border-red-500"
+                    : emailError
                       ? "border-red-500"
                       : ""
-                  }`}
+                    }`}
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="example@example.com"
@@ -306,17 +323,16 @@ export const AddUsers = ({ onClose }: AddUserProps) => {
                   type="tel"
                   id="phoneNumber"
                   name="phoneNumber"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.phoneNumber === "" && phoneNumberError
-                      ? "border-red-500"
-                      : phoneNumberError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.phoneNumber === "" && phoneNumberError
+                    ? "border-red-500"
+                    : phoneNumberError
                       ? "border-red-500"
                       : ""
-                  }`}
+                    }`}
                   value={formData.phoneNumber}
-                  maxLength={11}
+                  maxLength={10}
                   onChange={handleInputChange}
-                  placeholder="09XXXXXXXXX"
+                  placeholder="9XXXXXXXXX"
                   data-testid="phoneNumber"
                 />
                 {phoneNumberError && (
@@ -334,25 +350,43 @@ export const AddUsers = ({ onClose }: AddUserProps) => {
                 >
                   Password <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.password === "" && passwordError
+                <div className="relative flex flex-row">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.password === "" && passwordError
                       ? "border-red-500"
                       : passwordError
-                      ? "border-red-500"
-                      : ""
-                  }`}
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  placeholder="Enter password"
-                  data-testid="password"
-                />
+                        ? "border-red-500"
+                        : ""
+                      }`}
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder="Enter password"
+                    data-testid="password"
+                  />
+                  {formData.password.length > 0 && (
+                    <>
+                      {showPassword ? (
+                        <FaEye
+                          onClick={() => setShowPassword(false)}
+                          className="absolute top-4 right-4 text-2xl text-gray-400 cursor-pointer"
+                        />
+                      ) : (
+                        <FaEyeSlash
+                          onClick={() => setShowPassword(true)}
+                          className="absolute top-4 right-4 text-2xl text-gray-400 cursor-pointer"
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
+
                 {passwordError && (
                   <p className="text-red-500 text-sm mt-1">{passwordError}</p>
                 )}
+
               </div>
               <div className="flex-1">
                 <label
@@ -361,22 +395,39 @@ export const AddUsers = ({ onClose }: AddUserProps) => {
                 >
                   Confirm Password <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.confirmPassword === "" && confirmPasswordError
+                <div className="relative flex flex-row">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.confirmPassword === "" && confirmPasswordError
                       ? "border-red-500"
                       : confirmPasswordError
-                      ? "border-red-500"
-                      : ""
-                  }`}
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  placeholder="Confirm password"
-                  data-testid="confirmPassword"
-                />
+                        ? "border-red-500"
+                        : ""
+                      }`}
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    placeholder="Confirm password"
+                    data-testid="confirmPassword"
+                  />
+                  {formData.confirmPassword.length > 0 && (
+                    <>
+                      {showConfirmPassword ? (
+                        <FaEye
+                          onClick={() => setShowConfirmPassword(false)}
+                          className="absolute top-4 right-4 text-2xl text-gray-400 cursor-pointer"
+                        />
+                      ) : (
+                        <FaEyeSlash
+                          onClick={() => setShowConfirmPassword(true)}
+                          className="absolute top-4 right-4 text-2xl text-gray-400 cursor-pointer"
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
+
                 {confirmPasswordError && (
                   <p className="text-red-500 text-sm mt-1">
                     {confirmPasswordError}
@@ -395,13 +446,12 @@ export const AddUsers = ({ onClose }: AddUserProps) => {
                 <select
                   id="role"
                   name="role"
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.role === "" && roleError
-                      ? "border-red-500"
-                      : roleError
+                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${formData.role === "" && roleError
+                    ? "border-red-500"
+                    : roleError
                       ? "border-red-500"
                       : ""
-                  }`}
+                    }`}
                   value={formData.role}
                   onChange={handleInputChange}
                   data-testid="role"
