@@ -1,35 +1,44 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import SearchBar from "../components/SearchBar";
 import type { TBorrowedItems } from "../types/types";
 import { useQueries } from "@tanstack/react-query";
 import { useBorrowedItemsQuery } from "../query/get/useBorrwedItemsQuery";
 import { DashboardSkeletonLoader } from "../loader/DashboardSkeletonLoader";
-// import { useUserQuery } from "../query/get/useUserQuery";
 import DashboardBadges from "../components/DashboardBadges";
 import ErrorTable from "../components/ErrorTables";
 import Pagination from "../components/Pagination";
 import RecentBorrowedItemsTable from "../components/RecentBorrowedItemsTable";
-import { useAllItemsQuery } from "../query/get/useAllItemsQuery";
+import { useSummaryDataQuery } from "../query/get/useSummaryDataQuery";
 
-const badges = [
-  { name: "Total Items", data: 123, link: "/home/inventory-list" },
-  { name: "Categories", data: 123, link: "/home/inventory-list" },
-  { name: "Active Staff", data: 123, link: "/home/user-management" },
-  { name: "Total Borrowed", data: 212, link: "/home/history-list" },
-];
+type summary = {
+  totalItems: number,
+  totalActiveUsers: number
+}
 
 export default function Dashboard() {
+  const [dataSummary, setDataSummary] = useState<summary>({
+    totalItems: 0,
+    totalActiveUsers: 0
+  })
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 10;
 
+  const badges = [
+    { name: "Total Items", data: dataSummary.totalItems, link: "/home/inventory-list" },
+    { name: "Categories", data: 0, link: "/home/inventory-list" },
+    { name: "Active Staff", data: dataSummary.totalActiveUsers, link: "/home/user-management" },
+    { name: "Total Borrowed", data: 0, link: "/home/history-list" },
+  ];
+
+
   const results = useQueries({
-    queries: [useBorrowedItemsQuery(), useAllItemsQuery()],
+    queries: [useBorrowedItemsQuery(), useSummaryDataQuery()],
   });
 
   const borrowedItemsResult = results[0];
+  const summaryData = results[1];
 
-  // userResult.data ?? null;
   const borrowedItemsData: TBorrowedItems[] = useMemo(() => {
     return borrowedItemsResult.data ?? [];
   }, [borrowedItemsResult]);
@@ -60,6 +69,28 @@ export default function Dashboard() {
     setCurrentPage(page);
   }, []);
 
+  useEffect(() => {
+    if (!summaryData) return;
+
+    setDataSummary(prev => {
+      const newTotalItems = summaryData.data?.data.totalItems;
+      const newTotalActiveUsers = summaryData.data?.data.totalActiveUsers;
+
+      if (
+        prev.totalItems === newTotalItems &&
+        prev.totalActiveUsers === newTotalActiveUsers
+      ) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        totalItems: newTotalItems,
+        totalActiveUsers: newTotalActiveUsers,
+      };
+    });
+  }, [summaryData]);
+
   const isLoading = borrowedItemsResult.isLoading;
   const isError = borrowedItemsResult.error;
 
@@ -74,7 +105,7 @@ export default function Dashboard() {
             <DashboardBadges
               name={item.name}
               link={item.link}
-              data={isError ? 0 : (item.data as number)}
+              data={item.data}
             />
           </div>
         ))}
