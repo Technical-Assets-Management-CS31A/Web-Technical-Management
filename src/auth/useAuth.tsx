@@ -1,44 +1,23 @@
-import { useState, useEffect } from "react";
-import { jwtDecode } from "jwt-decode";
-import { getToken } from "../utils/token";
+import Cookies from "js-cookie";
 
-export type MyTokenPayload = {
-  id: string;
-  name: string;
-  email: string;
-  exp: number;
+const getAccessTokenKey = (): string => {
+  const key = import.meta.env.VITE_ACCESS_TOKEN_KEY;
+  if (!key) {
+    console.warn(
+      "Environment variable 'VITE_ACCESS_TOKEN_KEY' is undefined. Using fallback key 'accessToken'."
+    );
+    return "accessToken";
+  }
+  return key;
 };
 
-export function useAuth() {
-  const [user, setUser] = useState<MyTokenPayload | null>(null);
+export const useAuth = () => {
+  const key = getAccessTokenKey();
+  const token = Cookies.get(key);
 
-  useEffect(() => {
-    const token = getToken();
-    if (!token) return;
-
-    try {
-      const decoded: any = jwtDecode(token);
-
-      const mapped: MyTokenPayload = {
-        id: decoded[
-          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
-        ],
-        name: decoded[
-          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
-        ],
-        email:
-          decoded[
-            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
-          ],
-        exp: decoded.exp,
-      };
-
-      setUser(mapped);
-    } catch (err) {
-      console.error("Invalid token", err);
-      setUser(null);
-    }
-  }, []);
-
-  return user;
-}
+  return {
+    key,
+    token,
+    isAuthenticated: Boolean(token),
+  };
+};
