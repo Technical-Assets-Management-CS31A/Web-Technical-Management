@@ -3,12 +3,13 @@ import type { TRegisterUser } from "../../types/types";
 
 const RegisterUser = async (formData: TRegisterUser) => {
   const BASE_URL = import.meta.env.VITE_REGISTER_USER_API;
+  const newUserData = JSON.stringify(formData)
   const res = await fetch(BASE_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(formData),
+    body: newUserData,
   });
 
   const data = await res.json();
