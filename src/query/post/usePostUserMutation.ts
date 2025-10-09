@@ -4,20 +4,20 @@ import { getToken } from "../../utils/token";
 
 const PostUser = async (formData: TUserFormData) => {
   const BASE_URL = import.meta.env.VITE_REGISTER_USER_API;
+  const newUserData = JSON.stringify(formData)
   const res = await fetch(BASE_URL, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${getToken()}`,
-      "Content-Type": "application/json",
+      "Content-Type" : "application/json"
     },
-    body: JSON.stringify(formData),
+    body: newUserData,
   });
   const data = await res.json();
 
-  if (!res.ok) throw new Error(data);
-  console.log(data);
+  if (!res.ok) throw new Error(data.message);
 
-  return data;
+  return data.message;
 };
 
 export const usePostUserMutation = () => {
