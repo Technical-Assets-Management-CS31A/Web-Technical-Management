@@ -17,17 +17,17 @@ const PostItem = async (formData: ItemData) => {
   const BASE_URL = import.meta.env.VITE_CREATE_ITEM_API;
 
   const body = new FormData();
-  body.append("serialNumber", formData.serialNumber);
-  body.append("itemName", formData.itemName);
-  body.append("itemType", formData.itemType);
-  body.append("itemModel", formData.itemModel);
-  body.append("itemMake", formData.itemMake);
-  body.append("description", formData.description);
-  body.append("category", formData.category);
-  body.append("condition", formData.condition);
+  body.append("SerialNumber", formData.serialNumber);
+  body.append("ItemName", formData.itemName);
+  body.append("ItemType", formData.itemType);
+  body.append("ItemModel", formData.itemModel);
+  body.append("ItemMake", formData.itemMake);
+  body.append("Description", formData.description);
+  body.append("Category", formData.category);
+  body.append("Condition", formData.condition);
 
   if (formData.image) {
-    body.append("image", formData.image);
+    body.append("Image", formData.image);
   }
 
   const res = await fetch(BASE_URL, {
@@ -45,7 +45,7 @@ const PostItem = async (formData: ItemData) => {
 
 export const usePostItemMutation = () => {
   return useMutation({
-    mutationKey: ["Item"],
+    mutationKey: ["items"],
     mutationFn: PostItem,
   });
 };
