@@ -147,17 +147,20 @@ export default function Login() {
                 </p>
               )}
               <div className="absolute w-[10%] flex justify-center items-center float-right mt-3.5 ml-[22.5rem] max-lg:-mt-16 max-lg:ml-[80%] max-sm:-mt-14 max-sm:ml-[80%] max-sm:text-[1.2rem]">
-                {isShowPassword ? (
-                  <FaEye
-                    className="text-[1.6rem] mr-4 text-gray-400 cursor-pointer"
-                    onClick={() => setIsShowPassword((prev) => !prev)}
-                  />
-                ) : (
-                  <FaEyeSlash
-                    className="text-[1.6rem] mr-4 text-gray-400 cursor-pointer"
-                    onClick={() => setIsShowPassword((prev) => !prev)}
-                  />
+                {submitForm.password.length > 0 && (
+                  isShowPassword ? (
+                    <FaEye
+                      className="text-[1.6rem] mr-4 text-gray-400 cursor-pointer"
+                      onClick={() => setIsShowPassword((prev) => !prev)}
+                    />
+                  ) : (
+                    <FaEyeSlash
+                      className="text-[1.6rem] mr-4 text-gray-400 cursor-pointer"
+                      onClick={() => setIsShowPassword((prev) => !prev)}
+                    />
+                  )
                 )}
+
               </div>
               <div className="absolute cursor-pointer mt-15 right-0 max-sm:justify-center max-sm:mt-4">
                 <p
