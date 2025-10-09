@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { FaTrash } from "react-icons/fa6";
+import { IoArchive } from "react-icons/io5";
 import logo from "../assets/img/aclcLogo.webp";
 import { FormattedDateTime } from "./FormatedDateTime";
 import { SlugCondition } from "./SlugCondition";
@@ -51,11 +51,11 @@ export default function InventoryTable({
         </span>
       </td>
       <td className="py-3 px-4">{FormattedDateTime(createdAt)}</td>
-      <td className="py-3 pr-4 flex flex-row ">
+      <td className="py-3 px-4 flex flex-row ">
         <Link
           to={`/item/${id}`}
           title="View more"
-          className="px-4 py-2 text-blue-500 text-2xl"
+          className="mr-2 text-blue-500 text-2xl"
         >
           <MdOutlineGridView />
         </Link>
@@ -69,10 +69,10 @@ export default function InventoryTable({
                 return;
               }
             }}
-            title="Delete item"
-            className="text-red-600 text-lg cursor-pointer"
+            title="Archive item"
+            className="text-orange-600 text-2xl cursor-pointer"
           >
-            <FaTrash />
+            <IoArchive />
           </button>
         ) : ""}
 
