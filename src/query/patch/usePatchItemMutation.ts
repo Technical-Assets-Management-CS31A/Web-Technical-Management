@@ -13,12 +13,12 @@ type updateItem = {
 };
 
 type PatchItemProps = {
-  Id: string;
+  id: string;
   formData: updateItem;
 };
 
-const PatchItem = async ({ Id, formData }: PatchItemProps) => {
-  const BASE_URL = import.meta.env.VITE_ITEM_PATCH;
+const PatchItem = async ({ id, formData }: PatchItemProps) => {
+  const BASE_URL = import.meta.env.VITE_ITEM_PATCH_API;
 
   const body = new FormData();
   body.append("ItemMake", formData.itemMake);
@@ -28,46 +28,30 @@ const PatchItem = async ({ Id, formData }: PatchItemProps) => {
   body.append("Description", formData.description);
   body.append("ItemName", formData.itemName);
   body.append("Category", formData.category);
-
   if (formData.image) {
     body.append("Image", formData.image);
   }
 
-  const res = await fetch(`${BASE_URL}/${Id}`, {
-    method: "PUT",
+  const res = await fetch(`${BASE_URL}/${id}`, {
+    method: "PATCH",
     headers: {
       Authorization: `Bearer ${getToken()}`,
     },
     body: body,
   });
 
-  const contentType = res.headers.get("content-type") || "";
-  let data: unknown = null;
 
-  if (res.status !== 204) {
-    if (contentType.includes("application/json")) {
-      try {
-        data = await res.json();
-      } catch (err: unknown) {
-        console.log(err);
-        data = null;
-      }
-    } else {
-      const text = await res.text();
-      data = text || null;
-    }
-  }
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : {};
 
-  if (!res.ok) {
-    throw new Error("Update item failed");
-  }
+  if (!res.ok) throw new Error(data.message || "Update item failed");
 
   return data;
 };
 
 export const usePatchItemMutation = () => {
   return useMutation({
-    mutationKey: ["Item"],
+    mutationKey: ["items"],
     mutationFn: PatchItem,
   });
 };
