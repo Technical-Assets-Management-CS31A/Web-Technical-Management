@@ -20,7 +20,7 @@ export default function InventoryList() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 5;
   const [items, setItems] = useState<TItemList[]>([]);
- 
+
 
   // this func use a useMemo to filtered item either its itemName or the Category and also for the Matches Category and return items,searchItem and selectedCategory
   const filteredItems = useMemo(
@@ -182,16 +182,7 @@ export default function InventoryList() {
                   </thead>
                   <tbody>
                     {/* Check if the paginated item is equal to ZERO  */}
-                    {paginatedData.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={9}
-                          className="text-center py-10 text-red-400 font-semibold text-xl"
-                        >
-                          No items found.
-                        </td>
-                      </tr>
-                    ) : (
+                    {
                       // Mapping all the items created
                       paginatedData.map((item) => (
                         <tr
@@ -211,10 +202,21 @@ export default function InventoryList() {
                           />
                         </tr>
                       ))
-                    )}
+                    }
                   </tbody>
                 </table>
               )}
+              {paginatedData.length == 0 && <div className="w-full mt-24 flex items-center justify-center">
+                <div className="text-center">
+                  {/* <div className="text-6xl mb-4 text-[#64748b]">👥</div> */}
+                  <h3 className="text-2xl font-semibold text-[#1e293b] mb-2">
+                    No Items found
+                  </h3>
+                  <p className="text-[#64748b] text-lg max-w-md">
+                    Currently, there are no items in the system. When item are created, they will appear here.
+                  </p>
+                </div>
+              </div>}
             </div>
           </div>
         </section>
