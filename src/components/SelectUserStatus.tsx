@@ -7,8 +7,8 @@ type SelectStatusProps = {
 
 const defaultOptions = [
   { value: "all", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
+  { value: "Online", label: "Online" },
+  { value: "Offline", label: "Offline" },
 ];
 
 export const SelectUserStatus = ({
