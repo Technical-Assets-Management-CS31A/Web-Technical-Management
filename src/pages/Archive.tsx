@@ -1,4 +1,5 @@
 import { useArchivesQuery } from "../query/get/useArchivesQuery.ts";
+import { FaUser } from "react-icons/fa6";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import ArchiveSkeletonLoader from "../loader/ArchiveSkeletonLoader.tsx";
@@ -8,6 +9,7 @@ import ErrorTable from "../components/ErrorTables.tsx";
 import SearchBar from "../components/SearchBar.tsx";
 import Pagination from "../components/Pagination.tsx";
 import ArchiveTableRow from "../components/ArchiveTable.tsx";
+import { useDeleteItemMutation } from "../query/delete/useDeleteItemMutation.ts";
 
 export default function Archive() {
   const [archiveItems, setArchiveItems] = useState<TArchiveItem[]>([]);
@@ -19,6 +21,7 @@ export default function Archive() {
 
   const { data, isPending, isError } = useQuery(useArchivesQuery());
   const restoreMutation = useRestoreItemMutation();
+  const deleteMutation = useDeleteItemMutation()
 
   // Filter items based on search term and category
   const filteredItems = useMemo(
@@ -81,6 +84,16 @@ export default function Archive() {
     }
   };
 
+  const handleDelete = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this item?")) {
+      deleteMutation.mutate(id, {
+        onSuccess: () => {
+          window.location.reload();
+        }
+      });
+    }
+  };
+
   if (isPending) {
     return <ArchiveSkeletonLoader />;
   }
@@ -98,7 +111,7 @@ export default function Archive() {
 
       {/* Filter Buttons */}
       {isError ? "" : (
-        <div className="flex gap-4 mb-2 mt-4 ml-10">
+        <div className="flex gap-4 mt-8 ml-10">
           <button
             onClick={() => {
               setActiveFilter("items");
@@ -106,7 +119,7 @@ export default function Archive() {
               setSearchItem("");
               setSelectedCategory("");
             }}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${activeFilter === "items"
+            className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${activeFilter === "items"
               ? "bg-gradient-to-r from-[#4f88f9] to-[#38bdf8] text-white shadow-lg scale-105"
               : "bg-white text-[#64748b] border-2 border-[#e0e7ef] hover:border-[#2563eb] hover:text-[#2563eb]"
               }`}
@@ -120,7 +133,7 @@ export default function Archive() {
               setSearchItem("");
               setSelectedCategory("");
             }}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${activeFilter === "users"
+            className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${activeFilter === "users"
               ? "bg-gradient-to-r from-[#4f88f9] to-[#38bdf8] text-white shadow-lg scale-105"
               : "bg-white text-[#64748b] border-2 border-[#e0e7ef] hover:border-[#2563eb] hover:text-[#2563eb]"
               }`}
@@ -212,8 +225,8 @@ export default function Archive() {
                           {archiveItems.length === 0
                             ? <div className="flex items-center justify-center h-full">
                               <div className="text-center">
-                                <div className="text-6xl mb-4 text-[#64748b]">👥</div>
-                                <h3 className="text-2xl font-semibold text-[#1e293b] mb-2">
+                                {/* <div className="text-6xl mb-4 text-[#64748b]">👥</div> */}
+                                <h3 className="mt-14 text-2xl font-semibold text-[#1e293b] mb-2">
                                   No Archived Items
                                 </h3>
                                 <p className="text-[#64748b] text-lg max-w-md">
@@ -245,7 +258,9 @@ export default function Archive() {
                             condition={item.condition}
                             barCode={item.barCode}
                             onRestore={handleRestore}
+                            onDelete={handleDelete}
                             isRestoring={restoreMutation.isPending}
+                            isDeleting={deleteMutation.isPending}
                           />
                         </tr>
                       ))
@@ -256,7 +271,9 @@ export default function Archive() {
                 // Users table placeholder
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
-                    <div className="text-6xl mb-4 text-[#64748b]">👥</div>
+                    <div className="w-full flex justify-center text-6xl mb-4 text-[#64748b]">
+                      <FaUser />
+                    </div>
                     <h3 className="text-2xl font-semibold text-[#1e293b] mb-2">
                       No Archived Users
                     </h3>
