@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { useUserQuery } from "../query/get/useUserQuery";
-import type { TUsers } from "../types/types";
 import { FaUser, FaClock, FaPhone } from "react-icons/fa6";
 import { CiSettings } from "react-icons/ci";
 import { MdOutlineEmail } from "react-icons/md";
@@ -35,7 +34,7 @@ export default function Settings() {
     );
   }
 
-  const user: TUsers = userData;
+  const user = userData;
 
   return (
     <div className="p-8 w-full mx-auto">
