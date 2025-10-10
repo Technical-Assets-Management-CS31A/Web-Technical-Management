@@ -1,5 +1,4 @@
-import { FaTrashRestore } from "react-icons/fa";
-import logo from "../assets/img/aclcLogo.webp";
+import { FaTrashRestore, FaTrash } from "react-icons/fa";
 import { FormattedDateTime } from "./FormatedDateTime";
 import { SlugCondition } from "./SlugCondition";
 import { UserData } from "../utils/usersData/userData";
@@ -17,8 +16,10 @@ type ArchiveTableProps = {
     category: string;
     condition: string;
     barCode: string;
+    onDelete: (id: string) => void;
     onRestore: (id: string) => void;
     isRestoring: boolean;
+    isDeleting: boolean;
 };
 
 export default function ArchiveTableRow({
@@ -34,8 +35,10 @@ export default function ArchiveTableRow({
     category,
     condition,
     barCode,
+    onDelete,
     onRestore,
     isRestoring,
+    isDeleting
 }: ArchiveTableProps) {
 
     const data = UserData()
@@ -45,7 +48,9 @@ export default function ArchiveTableRow({
             <td className="py-3 px-4 font-semibold">{serialNumber}</td>
             <td className="py-3 px-4">
                 <img
-                    src={image || logo}
+                    src={
+                        typeof image === "string" ? image : ""
+                    }
                     alt={itemName}
                     className="w-10 h-10 rounded-xl"
                 />
@@ -67,13 +72,23 @@ export default function ArchiveTableRow({
             </td>
             <td className="py-3 px-4 font-mono text-sm">{barCode}</td>
             <td className="py-3 px-4">{FormattedDateTime(archivedAt)}</td>
-            <td className="py-3 pr-4 text-center">
+            <td className="py-3 text-center">
+                {data.userRole === "Admin" ? (
+                    <button
+                        onClick={() => onDelete(id)}
+                        disabled={isDeleting}
+                        title="Restore item"
+                        className="text-red-600 text-2xl cursor-pointer mr-2"
+                    >
+                        <FaTrash />
+                    </button>
+                ) : ""}
                 {data.userRole === "Admin" ? (
                     <button
                         onClick={() => onRestore(id)}
                         disabled={isRestoring}
                         title="Restore item"
-                        className="text-orange-300 text-lg cursor-pointer"
+                        className="text-orange-300 text-2xl cursor-pointer"
                     >
                         <FaTrashRestore />
                     </button>
