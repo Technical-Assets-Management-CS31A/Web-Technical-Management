@@ -25,7 +25,7 @@ export type TUserFormData = {
 };
 
 export type TUsers = {
-  Id: string;
+  id: string;
   username: string;
   lastName: string;
   middleName: string;
@@ -76,6 +76,7 @@ export type TItemList = {
   description: string;
   category: string;
   condition: string;
+  barCode: string;
   createdAt: string;
   updatedAt?: string;
 };
@@ -115,4 +116,19 @@ export type THistoryBorrwedItems = {
   Condition: string;
   Event_Date: string;
   Status: string;
+};
+
+export type TArchiveItem = {
+  id: string;
+  serialNumber: string;
+  image: string;
+  itemName: string;
+  itemType: string;
+  itemModel: string;
+  itemMake: string;
+  description: string;
+  category: string;
+  condition: string;
+  barCode: string;
+  archivedAt: string;
 };
