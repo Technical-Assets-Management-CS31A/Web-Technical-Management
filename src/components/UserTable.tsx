@@ -30,6 +30,24 @@ export default function UserTable({
 
   const data = UserData()
 
+  const UserStatus = (status: string) => {
+    if (!status) return "bg-red-100 text-gray-700"
+    if (status === "Online") return "bg-green-100 text-green-700"
+    if (status === "Offline") return "bg-orange-100 text-gray-700"
+    return status
+  }
+
+  const handleArchveUser = () => {
+    if (window.confirm(`Are you sure you want to archive this User Email ${email} ?`)) {
+      onMutate(id)
+    }
+  }
+
+  const handleEditUser = (id: string) => {
+    onSetEditUserId(id);
+    onSetIsEditUserOpen(true);
+  }
+
   return (
     <>
       <td className="py-3 px-6">{id}</td>
@@ -40,12 +58,7 @@ export default function UserTable({
       <td className="py-3 px-6">{userRole}</td>
       <td className="py-3 px-6">
         <span
-          className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${status.toLowerCase() === "active"
-            ? "bg-green-100 text-green-700"
-            : status.toLowerCase() === "inactive"
-              ? "bg-orange-100 text-gray-700"
-              : "bg-gray-400 text-gray-700"
-            }`}
+          className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${UserStatus(status)}`}
         >
           {status}
         </span>
@@ -53,23 +66,12 @@ export default function UserTable({
       <td className="py-3 px-6 flex flex-row gap-4">
         <button
           className="px-4 py-2 cursor-pointer bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white rounded-lg font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-150"
-          onClick={() => {
-            onSetEditUserId(id);
-            onSetIsEditUserOpen(true);
-          }}
+          onClick={() => handleEditUser(id)}
         >
           <FaEdit />
         </button>
         {data.userRole === "Admin" ? <button
-          onClick={() => {
-            if (
-              window.confirm(
-                `Are you sure you want to archive this User Id ${id} ?`
-              )
-            ) {
-              onMutate(id);
-            }
-          }}
+          onClick={handleArchveUser}
           className="px-4 py-2 cursor-pointer bg-gradient-to-r from-[#ffce72] to-[orange] text-white rounded-lg font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-150"
         >
           <FaTrash />
