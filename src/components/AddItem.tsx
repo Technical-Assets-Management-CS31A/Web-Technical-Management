@@ -293,7 +293,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                 >
                   Item Type <span className="text-red-500">*</span>
                 </label>
-                <input
+                <select
                   className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
                     formData.itemType === "" && itemTypeError
                       ? "border-red-500"
@@ -301,14 +301,17 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                         ? "border-red-500"
                         : ""
                   }`}
-                  type="text"
                   id="itemType"
                   name="itemType"
-                  placeholder="Enter item type"
                   value={formData.itemType}
                   onChange={handleChange}
                   data-testid="itemType"
-                />
+                >
+                  <option value="Mouse">Mouse</option>
+                  <option value="Keyboard">Keyboard</option>
+                  <option value="Extension">Extension</option>
+                  <option value="Cable">Cable</option>
+                </select>
                 {itemTypeError && (
                   <p className="text-red-500 text-sm mt-1">{itemTypeError}</p>
                 )}
