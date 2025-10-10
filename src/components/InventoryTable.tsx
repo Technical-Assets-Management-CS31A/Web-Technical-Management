@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import { Link } from "react-router-dom";
 import { IoArchive } from "react-icons/io5";
 import logo from "../assets/img/aclcLogo.webp";
@@ -5,6 +6,11 @@ import { FormattedDateTime } from "./FormatedDateTime";
 import { SlugCondition } from "./SlugCondition";
 import { MdOutlineGridView } from "react-icons/md";
 import { UserData } from "../utils/usersData/userData";
+
+type checkIfUserAdminProps = {
+  userRole?: string,
+  onHandleArchiveItem: () => void
+}
 
 type InventoryTableProps = {
   id?: string;
@@ -30,6 +36,30 @@ export default function InventoryTable({
 }: InventoryTableProps) {
 
   const data = UserData()
+  const userRole = data.userRole
+
+  const handleArchiveItem = () => {
+    if (window.confirm(`Are you sure you want to archive this item Id ${SerialNumber}?`)) {
+      onMutate(id!);
+      window.location.reload();
+    }
+  }
+
+  const ShowButtonIfUserAdmin: FC<checkIfUserAdminProps> = ({
+    userRole,
+    onHandleArchiveItem,
+  }) => {
+    if (userRole !== "Admin") return null;
+    return (
+      <button
+        onClick={onHandleArchiveItem}
+        title="Archive item"
+        className="text-orange-600 text-2xl cursor-pointer hover:text-orange-700 transition-colors"
+      >
+        <IoArchive />
+      </button>
+    );
+  };
 
   return (
     <>
@@ -59,23 +89,10 @@ export default function InventoryTable({
         >
           <MdOutlineGridView />
         </Link>
-        {data.userRole === "Admin" ? (
-          <button
-            onClick={() => {
-              if (window.confirm("Are you sure you want to archive this item?")) {
-                onMutate(id!);
-                window.location.reload();
-              } else {
-                return;
-              }
-            }}
-            title="Archive item"
-            className="text-orange-600 text-2xl cursor-pointer"
-          >
-            <IoArchive />
-          </button>
-        ) : ""}
-
+        <ShowButtonIfUserAdmin
+          userRole={userRole}
+          onHandleArchiveItem={handleArchiveItem}
+        />
       </td>
     </>
   );
