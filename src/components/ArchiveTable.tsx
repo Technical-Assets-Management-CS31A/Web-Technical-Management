@@ -77,7 +77,7 @@ export default function ArchiveTableRow({
                     <button
                         onClick={() => onDelete(id)}
                         disabled={isDeleting}
-                        title="Restore item"
+                        title="Delete item"
                         className="text-red-600 text-2xl cursor-pointer mr-2"
                     >
                         <FaTrash />
