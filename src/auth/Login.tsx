@@ -162,14 +162,14 @@ export default function Login() {
                 )}
 
               </div>
-              <div className="absolute cursor-pointer mt-15 right-0 max-sm:justify-center max-sm:mt-4">
+              {/* <div className="absolute cursor-pointer mt-15 right-0 max-sm:justify-center max-sm:mt-4">
                 <p
                   className="text-gray-400 font-normal hover:text-gray-700"
                   onClick={() => setIsForgotPasswordFormOpen(true)}
                 >
                   Forgot Password ?
                 </p>
-              </div>
+              </div> */}
             </div>
 
             <div className="mt-20 max-sm:mt-4">
