@@ -10,7 +10,6 @@ type AddItemFormProps = {
 const AddItemForm = ({ onClose }: AddItemFormProps) => {
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [itemNameError, setItemNameError] = useState<string>("");
-  const [itemTypeError, setItemTypeError] = useState<string>("");
   const [itemModelError, setItemModelError] = useState<string>("");
   const [serialNumberError, setSerialNumberError] = useState<string>("");
   const [itemMakeError, setItemMakeError] = useState<string>("");
@@ -20,7 +19,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
     serialNumber: "",
     image: null,
     itemName: "",
-    itemType: "",
+    itemType: "Mouse",
     itemModel: "",
     itemMake: "",
     description: "",
@@ -50,7 +49,6 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
       if (name === "itemName") setItemNameError("");
       if (name === "serialNumber") setSerialNumberError("");
       if (name === "Image") setImageError("");
-      if (name === "itemType") setItemTypeError("");
       if (name === "itemMake") setItemMakeError("");
       if (name === "itemModel") setItemModelError("");
       if (name === "description") setDescriptionError("");
@@ -73,7 +71,6 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
       setItemNameError("Item Name is required");
       setSerialNumberError("Serial Num is required");
       setImageError("Image is required");
-      setItemTypeError("Item Type is required");
       setItemMakeError("Item Make is required");
       setItemModelError("Item Model is required");
       setDescriptionError("Description is required");
@@ -92,11 +89,6 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
 
     if (!formData.image) {
       setImageError("Image is required");
-      hasError = true;
-    }
-
-    if (!formData.itemType) {
-      setItemTypeError("Item Type is required");
       hasError = true;
     }
 
@@ -141,7 +133,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
           serialNumber: "",
           image: null,
           itemName: "",
-          itemType: "",
+          itemType: "Mouse",
           itemModel: "",
           itemMake: "",
           description: "",
@@ -151,7 +143,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
         });
       },
       onError: (error: Error) => {
-        console.error("Error adding item", error.message);
+        console.error(error.message);
       },
     });
   };
@@ -294,13 +286,7 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   Item Type <span className="text-red-500">*</span>
                 </label>
                 <select
-                  className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${
-                    formData.itemType === "" && itemTypeError
-                      ? "border-red-500"
-                      : itemTypeError
-                        ? "border-red-500"
-                        : ""
-                  }`}
+                  className="w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg"
                   id="itemType"
                   name="itemType"
                   value={formData.itemType}
@@ -312,9 +298,6 @@ const AddItemForm = ({ onClose }: AddItemFormProps) => {
                   <option value="Extension">Extension</option>
                   <option value="Cable">Cable</option>
                 </select>
-                {itemTypeError && (
-                  <p className="text-red-500 text-sm mt-1">{itemTypeError}</p>
-                )}
               </div>
               <div className="flex-1">
                 <label
