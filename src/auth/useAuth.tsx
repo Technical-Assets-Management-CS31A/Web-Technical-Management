@@ -2,27 +2,24 @@ import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
 import { getToken } from "../utils/token";
 
-const getAccessTokenKey = (): string => {
-  const key = import.meta.env.VITE_ACCESS_TOKEN_KEY;
-  return key;
-};
+const getAccessTokenKey = () => import.meta.env.VITE_ACCESS_TOKEN_KEY;
+const BASE_URL = import.meta.env.VITE_REFRESH_TOKEN_API;
 
 const getRefreshAccessToken = async (): Promise<string | null> => {
   try {
-    const BASE_URL = import.meta.env.VITE_REFRESH_TOKEN_API;
+    if (!BASE_URL) throw new Error("Refresh token URL not found");
+
     const res = await fetch(BASE_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       credentials: "include",
     });
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "refreshToken is failed");
+    if (!res.ok) throw new Error(data.message || "Failed to refresh token");
 
     return data.data;
-
   } catch (err) {
-    console.error("Failed to refresh token:", err);
+    console.error(err);
     return null;
   }
 };
@@ -34,13 +31,14 @@ export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(Boolean(token));
 
   useEffect(() => {
-    const refreshNow = async () => {
+    const refresh = async () => {
       if (token) {
         setLoading(false);
         return;
       }
 
       const newToken = await getRefreshAccessToken();
+      
       if (newToken) {
         Cookies.set(key, newToken);
         setToken(newToken);
@@ -51,13 +49,8 @@ export const useAuth = () => {
       setLoading(false);
     };
 
-    refreshNow();
+    refresh();
   }, [token, key]);
 
-  return {
-    key,
-    token,
-    isAuthenticated,
-    loading,
-  };
+  return { token, isAuthenticated, loading };
 };
