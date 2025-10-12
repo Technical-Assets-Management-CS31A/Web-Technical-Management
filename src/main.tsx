@@ -10,9 +10,10 @@ import HistoryList from "./pages/HistoryList.tsx";
 import Settings from "./pages/Settings.tsx";
 import ViewItem from "./components/ViewItem.tsx";
 import Archive from "./pages/Archive.tsx";
+import BorrowItem from "./pages/BorrowItem.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { PublicRoute, ProtectedRoute } from "./utils/middleware/accessAuth.tsx";
+import { ProtectedRoute } from "./utils/middleware/accessAuth.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Login from "./auth/Login.tsx";
 
@@ -21,9 +22,7 @@ const routes = createBrowserRouter([
   {
     path: "/",
     element: (
-      <PublicRoute>
-        <App />
-      </PublicRoute>
+      <App />
     ),
     children: [
       {
@@ -32,8 +31,7 @@ const routes = createBrowserRouter([
       },
     ],
   },
-
-  // Protected routes (wrap Home)
+  // Protected Routes
   {
     path: "/home",
     element: (
@@ -46,8 +44,9 @@ const routes = createBrowserRouter([
       { path: "inventory-list", element: <InventoryList /> },
       { path: "user-management", element: <UserManagement /> },
       { path: "history-list", element: <HistoryList /> },
-      { path: "settings", element: <Settings /> },
       { path: "archive-table", element: <Archive /> },
+      { path: "borrow-item", element: <BorrowItem /> },
+      { path: "settings", element: <Settings /> },
     ],
   },
 
