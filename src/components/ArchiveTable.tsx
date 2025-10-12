@@ -15,7 +15,7 @@ type ArchiveTableProps = {
     description: string;
     category: string;
     condition: string;
-    barCode: string;
+    barcodeImage: string;
     onDelete: (id: string) => void;
     onRestore: (id: string) => void;
     isRestoring: boolean;
@@ -34,7 +34,7 @@ export default function ArchiveTableRow({
     description,
     category,
     condition,
-    barCode,
+    barcodeImage,
     onDelete,
     onRestore,
     isRestoring,
@@ -70,7 +70,14 @@ export default function ArchiveTableRow({
                     {condition}
                 </span>
             </td>
-            <td className="py-3 px-4 font-mono text-sm">{barCode}</td>
+            <td className="py-3 px-4 font-mono text-sm">
+                {barcodeImage && <img
+                    src={barcodeImage}
+                    alt="Barcode"
+                    className="w-14 h-10"
+                />}
+
+            </td>
             <td className="py-3 px-4">{FormattedDateTime(archivedAt)}</td>
             <td className="py-3 text-center">
                 {data.userRole === "Admin" ? (
