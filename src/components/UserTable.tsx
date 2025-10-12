@@ -1,6 +1,7 @@
-import { FaEdit } from "react-icons/fa";
-import { FaTrash } from "react-icons/fa6";
 import { UserData } from "../utils/usersData/userData";
+import { MdOutlineGridView } from "react-icons/md";
+import { IoArchive } from "react-icons/io5";
+import type { FC } from "react";
 
 type UserTableProps = {
   id: string;
@@ -37,7 +38,7 @@ export default function UserTable({
     return status
   }
 
-  const handleArchveUser = () => {
+  const handleArchiveUser = () => {
     if (window.confirm(`Are you sure you want to archive this User Email ${email} ?`)) {
       onMutate(id)
     }
@@ -48,6 +49,26 @@ export default function UserTable({
     onSetIsEditUserOpen(true);
   }
 
+  type showButtonIfUserAdminProps = {
+    userRole?: string;
+    onHandleArchiveUser: () => void
+  }
+
+  const ShowButtonIfUserAdmin: FC<showButtonIfUserAdminProps> = ({
+    userRole,
+    onHandleArchiveUser,
+  }) => {
+    if (userRole !== "Admin") return null;
+    return (
+      <button
+        onClick={onHandleArchiveUser}
+        title="Archive item"
+        className="text-orange-600 text-2xl cursor-pointer hover:text-orange-700 transition-colors"
+      >
+        <IoArchive />
+      </button>
+    );
+  };
   return (
     <>
       <td className="py-3 px-6">{id}</td>
@@ -63,20 +84,14 @@ export default function UserTable({
           {status}
         </span>
       </td>
-      <td className="py-3 px-6 flex flex-row gap-4">
+      <td className="py-3 px-6 flex flex-row">
         <button
-          className="px-4 py-2 cursor-pointer bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white rounded-lg font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-150"
+          className="mr-2 text-blue-500 text-2xl"
           onClick={() => handleEditUser(id)}
         >
-          <FaEdit />
+          <MdOutlineGridView />
         </button>
-        {data.userRole === "Admin" ? <button
-          onClick={handleArchveUser}
-          className="px-4 py-2 cursor-pointer bg-gradient-to-r from-[#ffce72] to-[orange] text-white rounded-lg font-semibold shadow hover:scale-105 hover:shadow-lg transition-all duration-150"
-        >
-          <FaTrash />
-        </button> : ""}
-
+        <ShowButtonIfUserAdmin userRole={data.userRole} onHandleArchiveUser={handleArchiveUser} />
       </td>
     </>
   );
