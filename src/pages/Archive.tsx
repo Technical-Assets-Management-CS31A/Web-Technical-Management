@@ -256,7 +256,7 @@ export default function Archive() {
                             description={item.description}
                             category={item.category}
                             condition={item.condition}
-                            barCode={item.barCode}
+                            barcodeImage={item.barcodeImage}
                             onRestore={handleRestore}
                             onDelete={handleDelete}
                             isRestoring={restoreMutation.isPending}
