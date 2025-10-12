@@ -39,8 +39,8 @@ const PostItem = async (formData: ItemData) => {
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Submission failed");
-  return data;
+  if (!res.ok) throw new Error(data.Message || "Submition Failed");
+  return data.data;
 };
 
 export const usePostItemMutation = () => {
