@@ -191,12 +191,14 @@ export default function ViewItem() {
           {/* Barcode */}
           <div className="flex flex-1 bg-white rounded-lg shadow-md p-4 mt-6">
             <div className="w-full flex justify-center items-center">
-              {itemDetails.barCode ? (
-                <img
-                  src={itemDetails.barCode}
-                  alt="Barcode"
-                  className="w-32 h-32"
-                />
+              {itemDetails.barcodeImage ? (
+                <a href="" target="_blank">
+                  <img
+                    src={itemDetails.barcodeImage}
+                    alt="Barcode"
+                    className="w-96 h-32"
+                  />
+                </a>
               ) : (
                 <p className="text-gray-600/50">
                   Don't have generated BarCode.
@@ -211,7 +213,7 @@ export default function ViewItem() {
             className="text-lg font-semibold text-gray-900 cursor-pointer float-right bg-white rounded-lg shadow-md p-4 px-8"
           >
             <div className="flex flex-row justify-center items-center gap-2">
-              {itemDetails.barCode ? (
+              {itemDetails.barcode ? (
                 <>
                   <FaBarcode />
                   <p className="text-gray-600/50">
