@@ -76,7 +76,8 @@ export type TItemList = {
   description: string;
   category: string;
   condition: string;
-  barCode: string;
+  barcode: "",
+  barcodeImage: "",
   createdAt: string;
   updatedAt?: string;
 };
@@ -129,7 +130,7 @@ export type TArchiveItem = {
   description: string;
   category: string;
   condition: string;
-  barCode: string;
+  barcodeImage: string;
   archivedAt: string;
 };
 
