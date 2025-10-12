@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import logo from "../assets/img/aclcLogo.webp";
 import { CiLogout, CiSettings, CiUser } from "react-icons/ci";
 import { GiArchiveRegister } from "react-icons/gi";
+import { GrStorage } from "react-icons/gr";
 import { MdHistory, MdInventory, MdDashboardCustomize } from "react-icons/md";
 import { useState, useEffect } from "react";
 import SidebarSkeletonLoader from "../loader/SidebarSkeletonLoader";
@@ -17,8 +18,9 @@ export default function Sidebar() {
     { label: "Dashboard", link: "dashboard", icon: MdDashboardCustomize },
     { label: "Inventory List", link: "inventory-list", icon: GiArchiveRegister },
     { label: "User Management", link: "user-management", icon: CiUser },
-    { label: "Your History", link: "history-list", icon: MdHistory },
     { label: "Your Archive", link: "archive-table", icon: MdInventory },
+    { label: "Your History", link: "history-list", icon: MdHistory },
+    { label: "Borrow Items", link: "borrow-item", icon: GrStorage },
     { label: "Your Settings", link: "settings", icon: CiSettings },
   ];
 
@@ -44,7 +46,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="group animate-fadeIn h-screen w-[75px] hover:w-[250px] transition-all duration-300 bg-white border-r border-[#e5e7eb] flex flex-col justify-between shadow-xl left-0 top-0 z-30">
+    <aside className="group animate-fadeIn h-screen w-[75px] hover:w-[270px] transition-all duration-300 bg-white border-r border-[#e5e7eb] flex flex-col justify-between shadow-xl left-0 top-0 z-30">
       {/* Logo and Title */}
       <div className="flex flex-col items-center py-8">
         <img
@@ -65,7 +67,7 @@ export default function Sidebar() {
               <NavLink
                 to={item.link}
                 className={({ isActive }) =>
-                  `flex items-center gap-2.5 px-3 py-3 rounded-lg font-medium text-base transition-all duration-150 ${isActive
+                  `flex items-center outline-0 gap-2.5 px-3 py-3 rounded-lg font-medium text-base transition-all duration-150 ${isActive
                     ? "bg-blue-600 text-white shadow"
                     : "text-gray-500 hover:bg-[#f1f5f9] hover:text-[#2563eb]"
                   }`
@@ -86,7 +88,7 @@ export default function Sidebar() {
         <button
           type="button"
           onClick={logoutUser}
-          className="w-full flex items-center gap-3 px-3 py-3 rounded-lg font-medium text-base text-[#ef4444] hover:bg-[#fee2e2] hover:text-[#b91c1c] transition-all duration-150"
+          className="w-full flex items-center outline-0 gap-3 px-3 py-3 rounded-lg font-medium text-base text-[#ef4444] hover:bg-[#fee2e2] hover:text-[#b91c1c] transition-all duration-150"
           disabled={isPending}
         >
           <CiLogout className="text-2xl min-w-[24px] flex-shrink-0" />
