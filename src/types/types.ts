@@ -132,3 +132,16 @@ export type TArchiveItem = {
   barCode: string;
   archivedAt: string;
 };
+
+export type TBorrowItemForm = {
+  itemId: string;
+  borrowerFirstName: string;
+  borrowerLastName: string;
+  borrowerRole: string;
+  teacherFirstName: string | null;
+  teacherLastName: string | null;
+  room: string;
+  subjectTimeSchedule: string;
+  remarks: string | null;
+  studentIdNumber: string | null;
+};
