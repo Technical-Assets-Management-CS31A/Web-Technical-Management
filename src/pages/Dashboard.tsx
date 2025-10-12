@@ -11,14 +11,18 @@ import RecentBorrowedItemsTable from "../components/RecentBorrowedItemsTable";
 import { useSummaryDataQuery } from "../query/get/useSummaryDataQuery";
 
 type summary = {
-  totalItems: number,
-  totalActiveUsers: number
+  totalItems: number;
+  totalActiveUsers: number;
+  totalLentItems: number;
+  totalItemsCategories: number;
 }
 
 export default function Dashboard() {
   const [dataSummary, setDataSummary] = useState<summary>({
     totalItems: 0,
-    totalActiveUsers: 0
+    totalActiveUsers: 0,
+    totalLentItems: 0,
+    totalItemsCategories: 0
   })
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -26,9 +30,9 @@ export default function Dashboard() {
 
   const badges = [
     { name: "Total Items", data: dataSummary.totalItems, link: "/home/inventory-list" },
-    { name: "Categories", data: 0, link: "/home/inventory-list" },
-    { name: "Active Staff", data: dataSummary.totalActiveUsers, link: "/home/user-management" },
-    { name: "Total Borrowed", data: 0, link: "/home/history-list" },
+    { name: "Categories", data: dataSummary.totalItemsCategories, link: "/home/inventory-list" },
+    { name: "Active Users", data: dataSummary.totalActiveUsers, link: "/home/user-management" },
+    { name: "Total Borrowed", data: dataSummary.totalLentItems, link: "/home/history-list" },
   ];
 
 
@@ -75,10 +79,14 @@ export default function Dashboard() {
     setDataSummary(prev => {
       const newTotalItems = summaryData.data?.data.totalItems;
       const newTotalActiveUsers = summaryData.data?.data.totalActiveUsers;
+      const newTotalCategories = summaryData.data?.data.totalItemsCategories;
+      const newTotalLentItems = summaryData.data?.data.totalLentItems;
 
       if (
         prev.totalItems === newTotalItems &&
-        prev.totalActiveUsers === newTotalActiveUsers
+        prev.totalActiveUsers === newTotalActiveUsers &&
+        prev.totalItemsCategories === newTotalCategories &&
+        prev.totalLentItems === newTotalLentItems
       ) {
         return prev;
       }
@@ -87,6 +95,8 @@ export default function Dashboard() {
         ...prev,
         totalItems: newTotalItems,
         totalActiveUsers: newTotalActiveUsers,
+        totalItemsCategories: newTotalCategories,
+        totalLentItems: newTotalLentItems
       };
     });
   }, [summaryData]);
