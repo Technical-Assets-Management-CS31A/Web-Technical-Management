@@ -24,7 +24,6 @@ export const EditItemForm = ({ onClose, id }: EditItemFormProps) => {
   const [itemNameError, setItemNameError] = useState<string>("");
   const [itemTypeError, setItemTypeError] = useState<string>("");
   const [itemModelError, setItemModelError] = useState<string>("");
-  const [serialNumberError, setSerialNumberError] = useState<string>("");
   const [itemMakeError, setItemMakeError] = useState<string>("");
   const [categoryError, setCategoryError] = useState<string>("");
   const [conditionError, setConditionError] = useState<string>("");
@@ -84,7 +83,6 @@ export const EditItemForm = ({ onClose, id }: EditItemFormProps) => {
         }));
 
         if (name === "itemName") setItemNameError("");
-        if (name === "serialNumber") setSerialNumberError("");
         if (name === "itemType") setItemTypeError("");
         if (name === "itemMake") setItemMakeError("");
         if (name === "itemModel") setItemModelError("");
@@ -120,10 +118,6 @@ export const EditItemForm = ({ onClose, id }: EditItemFormProps) => {
       return;
     }
 
-    if (!formData.serialNumber) {
-      setSerialNumberError("Serial Num is required");
-      return;
-    }
 
     if (!formData.itemType) {
       setItemTypeError("Item Type is required");
@@ -156,6 +150,7 @@ export const EditItemForm = ({ onClose, id }: EditItemFormProps) => {
     }
 
     const updateItem = {
+      serialNumber: formData.serialNumber,
       image: formData.image,
       itemName: formData.itemName,
       itemType: formData.itemType,
@@ -254,7 +249,7 @@ export const EditItemForm = ({ onClose, id }: EditItemFormProps) => {
                     Serial Number <span className="text-red-500">*</span>
                   </label>
                   <input
-                    className={`w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg ${serialNumberError ? "border-red-500" : ""}`}
+                    className="w-full px-4 py-3 rounded-xl border border-[#e0e7ef] bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg"
                     type="text"
                     id="serialNumber"
                     name="serialNumber"
@@ -264,11 +259,6 @@ export const EditItemForm = ({ onClose, id }: EditItemFormProps) => {
                     data-testid="edit-serialNumber"
                     readOnly
                   />
-                  {serialNumberError && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {serialNumberError}
-                    </p>
-                  )}
                 </div>
               </div>
 
