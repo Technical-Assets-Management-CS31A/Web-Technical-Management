@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { getToken } from "../../utils/token";
 
 type updateItem = {
+  serialNumber: string,
   image: File | null;
   itemName: string;
   itemType: string;
@@ -22,6 +23,7 @@ const PatchItem = async ({ id, formData }: PatchItemProps) => {
 
   const body = new FormData();
   body.append("ItemMake", formData.itemMake);
+  body.append("SerialNumber", formData.serialNumber);
   body.append("ItemType", formData.itemType);
   body.append("ItemModel", formData.itemModel);
   body.append("Condition", formData.condition);
