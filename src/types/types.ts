@@ -136,6 +136,7 @@ export type TArchiveItem = {
 
 export type TBorrowItemForm = {
   itemId: string;
+  itemName: string;
   borrowerFirstName: string;
   borrowerLastName: string;
   borrowerRole: string;
