@@ -16,6 +16,7 @@ const BorrowItemForm = () => {
 
     const [formData, setFormData] = useState<TBorrowItemForm>({
         itemId: "",
+        itemName: "",
         borrowerFirstName: "",
         borrowerLastName: "",
         borrowerRole: "",
@@ -139,6 +140,30 @@ const BorrowItemForm = () => {
                                 <p className="text-red-500 text-sm mt-1">{itemIdError}</p>
                             )}
                         </div>
+                      
+                         {/* Borrower First Name */}
+                        <div>
+                            <label
+                                htmlFor="borrowerFirstName"
+                                className="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                                Item Name<span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${borrowerFirstNameError ? "border-red-500" : "border-gray-300"}`}
+                                type="text"
+                                id="borrowerFirstName"
+                                name="borrowerFirstName"
+                                placeholder="Enter Item Name"
+                                value={formData.itemName}
+                                onChange={handleChange}
+                                data-testid="borrowerFirstName"
+                            />
+                            {borrowerFirstNameError && (
+                                <p className="text-red-500 text-sm mt-1">{borrowerFirstNameError}</p>
+                            )}
+                        </div>
+
 
                         {/* Borrower First Name */}
                         <div>
