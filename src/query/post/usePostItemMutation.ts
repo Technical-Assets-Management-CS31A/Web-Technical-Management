@@ -39,7 +39,7 @@ const PostItem = async (formData: ItemData) => {
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.Message || "Submition Failed");
+  if (!res.ok) throw new Error(data.errors || "Item Id already exist");
   return data.data;
 };
 
