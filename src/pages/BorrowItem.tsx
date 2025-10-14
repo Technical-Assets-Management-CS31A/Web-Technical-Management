@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import type { TBorrowItemForm } from '../types/types';
+import React, { useEffect, useState } from 'react';
+import type { TBorrowItemForm, TItemList } from '../types/types';
 import { SuccessAlert } from '../components/SuccessAlert';
+import { useQuery } from '@tanstack/react-query';
+import { useAllItemsQuery } from '../query/get/useAllItemsQuery';
 
 const BorrowItemForm = () => {
     const [showAlert, setShowAlert] = useState<boolean>(false);
@@ -13,7 +15,7 @@ const BorrowItemForm = () => {
     const [borrowerRoleError, setBorrowerRoleError] = useState<string>("");
     const [roomError, setRoomError] = useState<string>("");
     const [subjectTimeScheduleError, setSubjectTimeScheduleError] = useState<string>("");
-
+    const [itemName, setItemName] = useState<TItemList[]>([]);
     const [formData, setFormData] = useState<TBorrowItemForm>({
         itemId: "",
         itemName: "",
@@ -28,6 +30,13 @@ const BorrowItemForm = () => {
         studentIdNumber: "",
     });
 
+    const { data } = useQuery(useAllItemsQuery());
+    useEffect(() => {
+        if (!data) return;
+        if (data) {
+            setItemName(data)
+        }
+    }, [data])
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
     ) => {
@@ -140,8 +149,8 @@ const BorrowItemForm = () => {
                                 <p className="text-red-500 text-sm mt-1">{itemIdError}</p>
                             )}
                         </div>
-                      
-                         {/* Borrower First Name */}
+
+                        {/* Borrower First Name */}
                         <div>
                             <label
                                 htmlFor="borrowerFirstName"
@@ -149,19 +158,26 @@ const BorrowItemForm = () => {
                             >
                                 Item Name<span className="text-red-500">*</span>
                             </label>
-                            <input
-                                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${borrowerFirstNameError ? "border-red-500" : "border-gray-300"}`}
-                                type="text"
-                                id="borrowerFirstName"
-                                name="borrowerFirstName"
-                                placeholder="Enter Item Name"
-                                value={formData.itemName}
-                                onChange={handleChange}
-                                data-testid="borrowerFirstName"
-                            />
-                            {borrowerFirstNameError && (
-                                <p className="text-red-500 text-sm mt-1">{borrowerFirstNameError}</p>
-                            )}
+                            <select name='itemName' value={formData.itemName} onChange={handleChange} className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 border-gray-300`}
+                            >
+                                {itemName.map((item) => (
+                                    <option key={item.itemName} value={item.itemName}>{item.itemName}</option>
+                                ))}
+                            </select>
+                            {/* ${borrowerFirstNameError ? "border-red-500" : "border-gray-300"}` */}
+                            {/* <input */}
+                            {/*     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${borrowerFirstNameError ? "border-red-500" : "border-gray-300"}`} */}
+                            {/*     type="text" */}
+                            {/*     id="borrowerFirstName" */}
+                            {/*     name="borrowerFirstName" */}
+                            {/*     placeholder="Enter Item Name" */}
+                            {/*     value={formData.itemName} */}
+                            {/*     onChange={handleChange} */}
+                            {/*     data-testid="borrowerFirstName" */}
+                            {/* /> */}
+                            {/* {borrowerFirstNameError && ( */}
+                            {/*     <p className="text-red-500 text-sm mt-1">{borrowerFirstNameError}</p> */}
+                            {/* )} */}
                         </div>
 
 
@@ -211,6 +227,30 @@ const BorrowItemForm = () => {
                             )}
                         </div>
 
+                        {/* Student ID Number */}
+                        <div>
+                            <label
+                                htmlFor="studentIdNumber"
+                                className="block text-sm font-medium text-gray-700 mb-2"
+                            >
+                                Student ID Number
+                            </label>
+                            <input
+                                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${borrowerStudentIdNumberError ? "border-red-500" : "border-gray-300"}`}
+                                type="text"
+                                id="studentIdNumber"
+                                name="studentIdNumber"
+                                placeholder="Enter student ID number"
+                                value={formData.studentIdNumber || ""}
+                                onChange={handleChange}
+                                data-testid="studentIdNumber"
+                            />
+
+                            {borrowerStudentIdNumberError && (
+                                <p className="text-red-500 text-sm mt-1">{borrowerStudentIdNumberError}</p>
+                            )}
+                        </div>
+
                         {/* Borrower Role */}
                         <div>
                             <label
@@ -233,30 +273,6 @@ const BorrowItemForm = () => {
                             </select>
                             {borrowerRoleError && (
                                 <p className="text-red-500 text-sm mt-1">{borrowerRoleError}</p>
-                            )}
-                        </div>
-
-                        {/* Student ID Number */}
-                        <div>
-                            <label
-                                htmlFor="studentIdNumber"
-                                className="block text-sm font-medium text-gray-700 mb-2"
-                            >
-                                Student ID Number
-                            </label>
-                            <input
-                                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${borrowerStudentIdNumberError ? "border-red-500" : "border-gray-300"}`}
-                                type="text"
-                                id="studentIdNumber"
-                                name="studentIdNumber"
-                                placeholder="Enter student ID number"
-                                value={formData.studentIdNumber || ""}
-                                onChange={handleChange}
-                                data-testid="studentIdNumber"
-                            />
-
-                            {borrowerStudentIdNumberError && (
-                                <p className="text-red-500 text-sm mt-1">{borrowerStudentIdNumberError}</p>
                             )}
                         </div>
 
@@ -319,7 +335,7 @@ const BorrowItemForm = () => {
                                 type="text"
                                 id="room"
                                 name="room"
-                                placeholder="Enter room number"
+                                placeholder="Enter room"
                                 value={formData.room}
                                 onChange={handleChange}
                                 data-testid="room"
