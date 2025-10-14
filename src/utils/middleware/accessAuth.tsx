@@ -7,7 +7,7 @@ interface RouteProps {
 }
 
 export const ProtectedRoute = ({ children }: RouteProps) => {
-  const { token, loading, isAuthenticated } = useAuth();
+  const { loading, isAuthenticated } = useAuth();
 
   if (loading) {
     return (
@@ -17,7 +17,7 @@ export const ProtectedRoute = ({ children }: RouteProps) => {
     );
   }
 
-  if (!isAuthenticated && !token) {
+  if (!isAuthenticated) {
     removeToken();
     return <Navigate to="/" replace />;
   }
