@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { IoArchive } from "react-icons/io5";
 import logo from "../assets/img/aclcLogo.webp";
@@ -6,6 +7,7 @@ import { FormattedDateTime } from "./FormatedDateTime";
 import { SlugCondition } from "./SlugCondition";
 import { MdOutlineGridView } from "react-icons/md";
 import { UserData } from "../utils/usersData/userData";
+import PopUpModal from "./PopUpModal";
 
 type checkIfUserAdminProps = {
   userRole?: string,
@@ -35,14 +37,21 @@ export default function InventoryTable({
   onMutate,
 }: InventoryTableProps) {
 
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false)
   const data = UserData()
   const userRole = data.userRole
 
   const handleArchiveItem = () => {
-    if (window.confirm(`Are you sure you want to archive this item Id ${SerialNumber}?`)) {
-      onMutate(id!);
-      window.location.reload();
-    }
+    setIsConfirmOpen(true)
+  }
+
+  const handleConfirmArchive = () => {
+    onMutate(id!);
+    window.location.reload();
+  }
+
+  const handleCancelArchive = () => {
+    setIsConfirmOpen(false)
   }
 
   const ShowButtonIfUserAdmin: FC<checkIfUserAdminProps> = ({
@@ -94,6 +103,14 @@ export default function InventoryTable({
           onHandleArchiveItem={handleArchiveItem}
         />
       </td>
+      {isConfirmOpen && (
+        <PopUpModal
+          label={"archive"}
+          destination={"archive"}
+          onHandleCancleAction={handleCancelArchive}
+          onHandleConfirmAction={handleConfirmArchive}
+        />
+      )}
     </>
   );
 }
