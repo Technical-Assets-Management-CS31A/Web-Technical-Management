@@ -2,6 +2,7 @@ import { FaTrashRestore, FaTrash } from "react-icons/fa";
 import { FormattedDateTime } from "./FormatedDateTime";
 import { SlugCondition } from "./SlugCondition";
 import { UserData } from "../utils/usersData/userData";
+import { type FC } from "react";
 
 type ArchiveTableProps = {
     id: string;
@@ -41,7 +42,38 @@ export default function ArchiveTableRow({
     isDeleting
 }: ArchiveTableProps) {
 
+    type checkIfUserAdminProps = {
+        userRole?: string,
+        onHandleRestoreItem: () => void,
+        onHandleDeleteItem: () => void
+    }
     const data = UserData()
+
+
+    const ShowButtonIfUserAdmin: FC<checkIfUserAdminProps> = ({ userRole, onHandleRestoreItem, onHandleDeleteItem }) => {
+        if (userRole !== "Admin") return null;
+        return (
+            <>
+                <button
+                    onClick={onHandleDeleteItem}
+                    disabled={isDeleting}
+                    title="Delete item"
+                    className="text-red-600 text-2xl cursor-pointer mr-2"
+                >
+                    <FaTrash />
+                </button>
+
+                <button
+                    onClick={onHandleRestoreItem}
+                    disabled={isRestoring}
+                    title="Restore item"
+                    className="text-orange-300 text-2xl cursor-pointer"
+                >
+                    <FaTrashRestore />
+                </button>
+            </>
+        )
+    }
 
     return (
         <>
@@ -80,27 +112,13 @@ export default function ArchiveTableRow({
             </td>
             <td className="py-3 px-4">{FormattedDateTime(archivedAt)}</td>
             <td className="py-3 text-center">
-                {data.userRole === "Admin" ? (
-                    <button
-                        onClick={() => onDelete(id)}
-                        disabled={isDeleting}
-                        title="Delete item"
-                        className="text-red-600 text-2xl cursor-pointer mr-2"
-                    >
-                        <FaTrash />
-                    </button>
-                ) : ""}
-                {data.userRole === "Admin" ? (
-                    <button
-                        onClick={() => onRestore(id)}
-                        disabled={isRestoring}
-                        title="Restore item"
-                        className="text-orange-300 text-2xl cursor-pointer"
-                    >
-                        <FaTrashRestore />
-                    </button>
-                ) : ""}
+                <ShowButtonIfUserAdmin
+                    userRole={data.userRole}
+                    onHandleDeleteItem={() => onDelete(id)}
+                    onHandleRestoreItem={() => onRestore(id)}
+                />
             </td>
+
         </>
     );
 }
