@@ -36,16 +36,12 @@ export type TUsers = {
   status: string;
 };
 
-export type TUpdatedUsers = {
-  Id: string;
-  username: string;
+export type TUpdateUsers = {
+  id: string;
   lastName: string;
   middleName: string;
   firstName: string;
-  email: string;
-  phoneNumber: string;
-  role: string;
-  status: string;
+  position: string;
 };
 
 export type TForgotPasswordUser = {
