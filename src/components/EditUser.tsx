@@ -1,32 +1,35 @@
 import React, { useState } from "react";
 import CloseButton from "./CloseButton";
-import type { TUpdatedUsers } from "../types/types";
+import type { TUpdateUsers } from "../types/types";
+import { useAllUsersQuery } from "../query/get/useAllUsersQuery";
+import { useQuery } from "@tanstack/react-query";
 
 type EditItemProps = {
   onClose(): void;
-  Id: string | undefined;
+  Id: string;
+  firstName: string;
+  lastName: string;
+  middleName: string;
+  position: string;
 };
 
-export default function EditUser({ onClose, Id }: EditItemProps) {
+export default function EditUser({ onClose, Id, firstName, lastName, middleName, position }: EditItemProps) {
   const [firstnameError, setFirstnameError] = useState<string>("");
   const [lastnameError, setLastnameError] = useState<string>("");
   const [middlenameError, setMiddlenameError] = useState<string>("");
-  const [usernameError, setUsernameError] = useState<string>("");
-  const [emailError, setEmailError] = useState<string>("");
-  const [phoneNumberError, setPhoneNumberError] = useState<string>("");
-  const [roleError, setRoleError] = useState<string>("");
+  const [roleError, setPositionError] = useState<string>("");
 
-  const [formData, setFormData] = useState<TUpdatedUsers>({
-    Id: "",
-    username: "",
-    lastName: "",
-    middleName: "",
-    firstName: "",
-    email: "",
-    phoneNumber: "",
-    role: "",
-    status: "",
+  const [formData, setFormData] = useState<TUpdateUsers>({
+    id: Id,
+    lastName: lastName,
+    middleName: middleName,
+    firstName: firstName,
+    position: position
   });
+
+  const { data } = useQuery(useAllUsersQuery());
+  if (data) console.log(data)
+
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -40,10 +43,7 @@ export default function EditUser({ onClose, Id }: EditItemProps) {
     if (name === "firstName") return setFirstnameError("");
     if (name === "lastName") return setLastnameError("");
     if (name === "middleName") return setMiddlenameError("");
-    if (name === "username") return setUsernameError("");
-    if (name === "email") return setEmailError("");
-    if (name === "phoneNumber") return setPhoneNumberError("");
-    if (name === "role") return setRoleError("");
+    if (name === "position") return setPositionError("");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -68,7 +68,6 @@ export default function EditUser({ onClose, Id }: EditItemProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
-              <input type="text" hidden value={Id} />
               <label
                 htmlFor="firstName"
                 className="block text-[#2563eb] font-semibold mb-1"
@@ -79,9 +78,8 @@ export default function EditUser({ onClose, Id }: EditItemProps) {
                 type="text"
                 id="firstName"
                 name="firstName"
-                className={`w-full px-4 py-3 rounded-xl border ${
-                  firstnameError ? "border-red-500" : "border-[#e0e7ef]"
-                } bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg`}
+                className={`w-full px-4 py-3 rounded-xl border ${firstnameError ? "border-red-500" : "border-[#e0e7ef]"
+                  } bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg`}
                 value={formData.firstName}
                 onChange={handleInputChange}
                 placeholder="Enter first name"
@@ -102,9 +100,8 @@ export default function EditUser({ onClose, Id }: EditItemProps) {
                 type="text"
                 id="lastName"
                 name="lastName"
-                className={`w-full px-4 py-3 rounded-xl border ${
-                  lastnameError ? "border-red-500" : "border-[#e0e7ef]"
-                } bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg`}
+                className={`w-full px-4 py-3 rounded-xl border ${lastnameError ? "border-red-500" : "border-[#e0e7ef]"
+                  } bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg`}
                 value={formData.lastName}
                 onChange={handleInputChange}
                 placeholder="Enter last name"
@@ -125,9 +122,8 @@ export default function EditUser({ onClose, Id }: EditItemProps) {
                 type="text"
                 id="middleName"
                 name="middleName"
-                className={`w-full px-4 py-3 rounded-xl border ${
-                  middlenameError ? "border-red-500" : "border-[#e0e7ef]"
-                } bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg`}
+                className={`w-full px-4 py-3 rounded-xl border ${middlenameError ? "border-red-500" : "border-[#e0e7ef]"
+                  } bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg`}
                 value={formData.middleName}
                 onChange={handleInputChange}
                 placeholder="Enter middle name"
@@ -139,7 +135,7 @@ export default function EditUser({ onClose, Id }: EditItemProps) {
           </div>
 
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
+            {/* <div className="flex-1">
               <label
                 htmlFor="username"
                 className="block text-[#2563eb] font-semibold mb-1"
@@ -160,9 +156,9 @@ export default function EditUser({ onClose, Id }: EditItemProps) {
               {usernameError && (
                 <p className="text-red-500 text-sm mt-1">{usernameError}</p>
               )}
-            </div>
+            </div> */}
 
-            <div className="flex-1">
+            {/* <div className="flex-1">
               <label
                 htmlFor="email"
                 className="block text-[#2563eb] font-semibold mb-1"
@@ -183,9 +179,9 @@ export default function EditUser({ onClose, Id }: EditItemProps) {
               {emailError && (
                 <p className="text-red-500 text-sm mt-1">{emailError}</p>
               )}
-            </div>
+            </div> */}
 
-            <div className="flex-1">
+            {/* <div className="flex-1">
               <label
                 htmlFor="phoneNumber"
                 className="block text-[#2563eb] font-semibold mb-1"
@@ -207,7 +203,7 @@ export default function EditUser({ onClose, Id }: EditItemProps) {
               {phoneNumberError && (
                 <p className="text-red-500 text-sm mt-1">{phoneNumberError}</p>
               )}
-            </div>
+            </div> */}
           </div>
 
           <div className="flex flex-col md:flex-row gap-4">
@@ -221,10 +217,9 @@ export default function EditUser({ onClose, Id }: EditItemProps) {
               <select
                 id="role"
                 name="role"
-                className={`w-full px-4 py-3 rounded-xl border ${
-                  roleError ? "border-red-500" : "border-[#e0e7ef]"
-                } bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg`}
-                value={formData.role}
+                className={`w-full px-4 py-3 rounded-xl border ${roleError ? "border-red-500" : "border-[#e0e7ef]"
+                  } bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg`}
+                value={formData.position}
                 onChange={handleInputChange}
               >
                 <option value="">Select Role</option>
