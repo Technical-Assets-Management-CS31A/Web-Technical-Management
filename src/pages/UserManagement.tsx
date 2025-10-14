@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { SelectUserStatus } from "../components/SelectUserStatus";
 import { useAllUsersQuery } from "../query/get/useAllUsersQuery";
 import { StaffSkeletonLoader } from "../loader/StaffSkeletonLoader";
-import { useDeleteUserMutation } from "../query/delete/useDeleteUserMutation";
+import { useArchiveUserMutation } from "../query/delete/useArchiveUserMutation";
 import UserTable from "../components/UserTable";
 import ErrorTable from "../components/ErrorTables";
 
@@ -17,7 +17,11 @@ export const UserManagement = () => {
   const [isEditUserOpen, setIsEditUserOpen] = useState<boolean>(false);
   const [searchUser, setSearchUser] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const [editUserId, setEditUserId] = useState<string | undefined>(undefined);
+  const [editUserId, setEditUserId] = useState<string>("");
+  // const [editUserFirstName, setUserFirstName] = useState<string>("");
+  // const [editUserLastName, setUserLastName] = useState<string>("");
+  // const [editUserMiddleName, setUserMiddleName] = useState<string>("");
+  // const [editUserPosition, setUserPosition] = useState<string>("");
   const [users, setUsers] = useState<TUsers[]>([]);
 
   const filteredUser = useMemo(
@@ -49,7 +53,7 @@ export const UserManagement = () => {
   );
 
   const { data, isPending, isError } = useQuery(useAllUsersQuery());
-  const { mutate } = useDeleteUserMutation();
+  const { mutate } = useArchiveUserMutation();
 
   useEffect(() => {
     if (data && Array.isArray(data)) {
@@ -108,7 +112,7 @@ export const UserManagement = () => {
                   <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
                     Lastname
                   </th>
-                    <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
+                  <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
                     Username
                   </th>
                   <th className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
@@ -160,7 +164,7 @@ export const UserManagement = () => {
       </div>
       {isAddUserOpen && <AddUsers onClose={() => setIsAddUserOpen(false)} />}
       {isEditUserOpen && (
-        <EditUser onClose={() => setIsEditUserOpen(false)} Id={editUserId} />
+        <EditUser onClose={() => setIsEditUserOpen(false)} Id={editUserId} firstName={filteredUser[0].firstName} lastName={filteredUser[0].lastName} middleName={filteredUser[0].middleName} position={filteredUser[0].userRole} />
       )}
     </div>
   );
