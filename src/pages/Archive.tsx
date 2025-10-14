@@ -10,6 +10,8 @@ import SearchBar from "../components/SearchBar.tsx";
 import Pagination from "../components/Pagination.tsx";
 import ArchiveTableRow from "../components/ArchiveTable.tsx";
 import { useDeleteItemMutation } from "../query/delete/useDeleteItemMutation.ts";
+import PopUpModal from "../components/PopUpModal.tsx";
+import PopUpModalDelete from "../components/PopUpModalDelete.tsx";
 
 export default function Archive() {
   const [archiveItems, setArchiveItems] = useState<TArchiveItem[]>([]);
@@ -22,6 +24,11 @@ export default function Archive() {
   const { data, isPending, isError } = useQuery(useArchivesQuery());
   const restoreMutation = useRestoreItemMutation();
   const deleteMutation = useDeleteItemMutation()
+  const [isRestoreConfirmOpen, setIsRestoreConfirmOpen] = useState(false)
+  const [restoreSelectedId, setRestoreSelectedId] = useState<string | null>(null)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+  const [deleteSelectedId, setDeleteSelectedId] = useState<string | null>(null)
+
 
   // Filter items based on search term and category
   const filteredItems = useMemo(
@@ -74,28 +81,50 @@ export default function Archive() {
     if (data) setArchiveItems(data);
   }, [data]);
 
-  const handleRestore = (id: string) => {
-    if (window.confirm("Are you sure you want to restore this item?")) {
-      restoreMutation.mutate(id, {
-        onSuccess: () => {
-          window.location.reload();
-        }
-      });
-    }
-  };
-
-  const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this item?")) {
-      deleteMutation.mutate(id, {
-        onSuccess: () => {
-          window.location.reload();
-        }
-      });
-    }
-  };
-
   if (isPending) {
     return <ArchiveSkeletonLoader />;
+  }
+
+  const handleRestoreItem = (id: string) => {
+    setRestoreSelectedId(id)
+    setIsRestoreConfirmOpen(true)
+  }
+
+  const handleCancelRestore = () => {
+    setIsRestoreConfirmOpen(false)
+    setRestoreSelectedId(null)
+  }
+
+  const handleConfirmRestoreItem = () => {
+    if (!restoreSelectedId) return
+    restoreMutation.mutate(restoreSelectedId, {
+      onSuccess: () => {
+        setIsRestoreConfirmOpen(false)
+        setRestoreSelectedId(null)
+        window.location.reload();
+      }
+    });
+  }
+
+  const handleDelete = (id: string) => {
+    setDeleteSelectedId(id)
+    setIsDeleteConfirmOpen(true)
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteConfirmOpen(false)
+    setDeleteSelectedId(null)
+  }
+
+  const handleConfirmDelete = () => {
+    if (!deleteSelectedId) return
+    deleteMutation.mutate(deleteSelectedId, {
+      onSuccess: () => {
+        setIsDeleteConfirmOpen(false)
+        setDeleteSelectedId(null)
+        window.location.reload();
+      }
+    });
   }
 
   return (
@@ -257,7 +286,7 @@ export default function Archive() {
                             category={item.category}
                             condition={item.condition}
                             barcodeImage={item.barcodeImage}
-                            onRestore={handleRestore}
+                            onRestore={handleRestoreItem}
                             onDelete={handleDelete}
                             isRestoring={restoreMutation.isPending}
                             isDeleting={deleteMutation.isPending}
@@ -287,6 +316,23 @@ export default function Archive() {
           </div>
         </section>
       </div>
+      {/* Restore confirmation */}
+      {isRestoreConfirmOpen && (
+        <PopUpModal
+          label={"restore"}
+          destination={"inventory list"}
+          onHandleCancleAction={handleCancelRestore}
+          onHandleConfirmAction={handleConfirmRestoreItem}
+        />
+      )}
+      {/* Delete confirmation */}
+      {isDeleteConfirmOpen && (
+        <PopUpModalDelete
+          label={"delete"}
+          onHandleCancleAction={handleCancelDelete}
+          onHandleConfirmAction={handleConfirmDelete}
+        />
+      )}
     </div>
   );
 }
