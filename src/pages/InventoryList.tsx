@@ -88,12 +88,12 @@ export default function InventoryList() {
   }
 
   return (
-    <div className="animate-fadeIn inventory-list-container min-h-screen w-full bg-gradient-to-br from-[#f8fafc] via-[#e0e7ef] to-[#c7d2fe] flex flex-col">
-      <header className="inventory-header pt-8 px-8 pb-8 bg-white/80 shadow-md  flex flex-col items-center z-50">
+    <div className="animate-fadeIn inventory-list-container min-h-svh w-full bg-gradient-to-br from-[#f8fafc] via-[#e8eef7] to-[#dbeafe] flex flex-col antialiased">
+      <header className="inventory-header sticky top-0 pt-8 px-8 pb-6 bg-white/70 backdrop-blur-md shadow-sm border-b border-[#e5e9f2] flex flex-col items-center z-50">
         <h1 className="text-[#1e293b] text-5xl mb-2 font-extrabold tracking-tight drop-shadow-lg">
           Inventory List
         </h1>
-        <p className="text-[#64748b] text-lg font-medium max-w-2xl text-center">
+        <p className="text-[#64748b] text-base md:text-lg font-medium max-w-2xl text-center">
           Overview of assets and availability. Track counts by category, staff
           status, and items currently borrowed.
         </p>
@@ -101,36 +101,38 @@ export default function InventoryList() {
 
       <div className="h-full overflow-auto">
         {/* Inventory Stats */}
-        <section className="scrollbar-none w-[100rem] mx-auto flex flex-row gap-4 py-8 overflow-x-scroll">
-          {Array.from(new Set(items.map((item) => item.category))).map(
-            (category) => {
-              const itemsInCategory = items.filter(
-                (item) => item.category === category,
-              );
-              return (
-                <InventoryBadges
-                  key={category}
-                  name={category}
-                  total={itemsInCategory.length}
-                  onClick={() => handleCategoryClick(category)}
-                  isSelected={selectedCategory === category}
-                />
-              );
-            },
-          )}
+        <section className="scrollbar-none mx-auto w-full px-8 py-6">
+          <div className="inline-flex gap-3 overflow-x-auto w-full pb-2">
+            {Array.from(new Set(items.map((item) => item.category))).map(
+              (category) => {
+                const itemsInCategory = items.filter(
+                  (item) => item.category === category,
+                );
+                return (
+                  <InventoryBadges
+                    key={category}
+                    name={category}
+                    total={itemsInCategory.length}
+                    onClick={() => handleCategoryClick(category)}
+                    isSelected={selectedCategory === category}
+                  />
+                );
+              },
+            )}
+          </div>
         </section>
 
         {/* Inventory Items Table */}
         <section className="px-8">
-          <div className="bg-white/90 h-[55vh] py-4 px-4 rounded-3xl shadow-md border border-[#e0e7ef] overflow-x-auto">
-            <section className="mb-4 flex justify-between">
-              <div className="">
+          <div className="bg-white/90 h-[60vh] p-4 rounded-2xl shadow-xl ring-1 ring-[#e0e7ef]/80 overflow-x-auto">
+            <section className="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div>
                 <Button
                   onClick={() => setIsAddItemFormOpen(true)}
                   name={"New Item"}
                 />
               </div>
-              <div className="flex flex-row gap-2">
+              <div className="flex flex-row gap-2 items-center">
                 {/*Pagination Component*/}
                 {filteredItems.length > 0 && (
                   <Pagination
@@ -149,33 +151,33 @@ export default function InventoryList() {
                 />
               </div>
             </section>
-            <div className="h-[40vh] overflow-x-auto rounded-md shadow-inner bg-white/95">
+            <div className="h-[46vh] overflow-x-auto rounded-lg shadow-inner bg-white/95">
               {/* Check if the response from the QUERY is error cause for internet connection etc, will return a ERROR TABLE COMPONENTS */}
               {isError ? (
                 <ErrorTable />
               ) : (
                 <table className="w-full border-collapse text-left">
                   <thead>
-                    <tr className="sticky -top-4 bg-[#f8fafc]">
-                      <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
+                    <tr className="sticky top-0 bg-white/90 backdrop-blur-sm">
+                      <th className="bg-transparent font-semibold py-3 px-4 border-b border-[#e6e6e6] text-[#0f172a] text-xs uppercase tracking-wider">
                         Serial Num
                       </th>
-                      <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
+                      <th className="bg-transparent font-semibold py-3 px-4 border-b border-[#e6e6e6] text-[#0f172a] text-xs uppercase tracking-wider">
                         Image
                       </th>
-                      <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
+                      <th className="bg-transparent font-semibold py-3 px-4 border-b border-[#e6e6e6] text-[#0f172a] text-xs uppercase tracking-wider">
                         Name
                       </th>
-                      <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
+                      <th className="bg-transparent font-semibold py-3 px-4 border-b border-[#e6e6e6] text-[#0f172a] text-xs uppercase tracking-wider">
                         Category
                       </th>
-                      <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
+                      <th className="bg-transparent font-semibold py-3 px-4 border-b border-[#e6e6e6] text-[#0f172a] text-xs uppercase tracking-wider">
                         Condition
                       </th>
-                      <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
+                      <th className="bg-transparent font-semibold py-3 px-4 border-b border-[#e6e6e6] text-[#0f172a] text-xs uppercase tracking-wider">
                         DateTime
                       </th>
-                      <th className="bg-[#f8fafc]font-semibold py-4 px-4 border-b border-[#e6e6e6] text-[#2563eb]">
+                      <th className="bg-transparent font-semibold py-3 px-4 border-b border-[#e6e6e6] text-[#0f172a] text-xs uppercase tracking-wider">
                         Action
                       </th>
                     </tr>
@@ -187,7 +189,7 @@ export default function InventoryList() {
                       paginatedData.map((item) => (
                         <tr
                           key={item.serialNumber}
-                          className="hover:bg-[#f1f5f9] transition-colors odd:bg-white even:bg-[#f8fafc] cursor-pointer"
+                          className="hover:bg-[#f8fafc] transition-colors odd:bg-white even:bg-[#f9fbff] cursor-pointer"
                         >
                           <InventoryTable
                             id={item.id}
@@ -206,17 +208,19 @@ export default function InventoryList() {
                   </tbody>
                 </table>
               )}
-              {paginatedData.length == 0 && <div className="w-full mt-24 flex items-center justify-center">
-                <div className="text-center">
-                  {/* <div className="text-6xl mb-4 text-[#64748b]">👥</div> */}
-                  <h3 className="text-2xl font-semibold text-[#1e293b] mb-2">
-                    No Items found
-                  </h3>
-                  <p className="text-[#64748b] text-lg max-w-md">
-                    Currently, there are no items in the system. When item are created, they will appear here.
-                  </p>
+              {paginatedData.length == 0 && (
+                <div className="w-full mt-16 flex items-center justify-center">
+                  <div className="text-center max-w-md">
+                    <div className="text-5xl mb-3 text-[#94a3b8]">📦</div>
+                    <h3 className="text-2xl font-semibold text-[#0f172a] mb-2">
+                      No items found
+                    </h3>
+                    <p className="text-[#64748b] text-base">
+                      Try adjusting your search or filters. New items will appear here once created.
+                    </p>
+                  </div>
                 </div>
-              </div>}
+              )}
             </div>
           </div>
         </section>
