@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useUserQuery } from "../query/get/useUserQuery";
 import { FaUser, FaClock, FaPhone } from "react-icons/fa6";
 import { CiSettings } from "react-icons/ci";
@@ -14,12 +14,19 @@ import type { TUsers } from "../types/types";
 export default function Settings() {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [user, setUser] = useState<TUsers | null>(null);
   const {
-    data: userData,
+    data,
     isLoading,
     error,
     isError,
   } = useQuery(useUserQuery());
+
+  useEffect(() => {
+    if (data) {
+      setUser(data)
+    }
+  }, [data])
 
   if (isLoading) {
     return <SettingsSkeletonLoader />;
@@ -41,7 +48,6 @@ export default function Settings() {
     );
   }
 
-  const user: TUsers = userData;
   function handlePasswordSubmit(currentPassword: string, newPassword: string) {
     console.info("Password change submitted", { currentPasswordLength: currentPassword.length, newPasswordLength: newPassword.length });
   }
@@ -71,20 +77,20 @@ export default function Settings() {
                 <div className="relative">
                   <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center ring-2 ring-white/40 shadow-md">
                     <span className="text-2xl font-bold text-blue-700">
-                      {user.firstName?.charAt(0)?.toUpperCase() ||
-                        user.username?.charAt(0)?.toUpperCase() ||
+                      {user?.firstName?.charAt(0)?.toUpperCase() ||
+                        user?.username?.charAt(0)?.toUpperCase() ||
                         "U"}
                     </span>
                   </div>
                   <span className="absolute -bottom-5 -right-15 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/20 text-white ring-1 ring-white/40">
-                    {user.userRole || "User"}
+                    {user?.userRole || "User"}
                   </span>
                 </div>
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold text-white">
-                    {user.firstName && user.lastName
+                    {user?.firstName && user?.lastName
                       ? `${user.firstName} ${user.lastName}`
-                      : user.username || "User Profile"}
+                      : user?.username || "User Profile"}
                   </h2>
                   <p className="text-blue-100/90 text-sm">
                     Keep your profile up to date
@@ -125,7 +131,7 @@ export default function Settings() {
                     <div>
                       <p className="text-xs text-slate-500">First Name</p>
                       <p className="font-medium text-slate-900">
-                        {user.firstName || "Not provided"}
+                        {user?.firstName || "Not provided"}
                       </p>
                     </div>
                   </div>
@@ -137,7 +143,7 @@ export default function Settings() {
                     <div>
                       <p className="text-xs text-slate-500">Last Name</p>
                       <p className="font-medium text-slate-900">
-                        {user.lastName || "Not provided"}
+                        {user?.lastName || "Not provided"}
                       </p>
                     </div>
                   </div>
@@ -149,7 +155,7 @@ export default function Settings() {
                     <div>
                       <p className="text-xs text-slate-500">Middle Name</p>
                       <p className="font-medium text-slate-900">
-                        {user.middleName || "Not Provided"}
+                        {user?.middleName || "Not Provided"}
                       </p>
                     </div>
                   </div>
@@ -166,7 +172,7 @@ export default function Settings() {
                     <div>
                       <p className="text-xs text-slate-500">Username</p>
                       <p className="font-medium text-slate-900">
-                        {user.username || "Not provided"}
+                        {user?.username || "Not provided"}
                       </p>
                     </div>
                   </div>
@@ -178,7 +184,7 @@ export default function Settings() {
                     <div>
                       <p className="text-xs text-slate-500">Email</p>
                       <p className="font-medium text-slate-900">
-                        {user.email || user?.email || "Not provided"}
+                        {user?.email || "Not provided"}
                       </p>
                     </div>
                   </div>
@@ -191,13 +197,13 @@ export default function Settings() {
                       <p className="text-xs text-slate-500">Role</p>
                       <p className="font-medium text-slate-900">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200">
-                          {user.userRole || "User"}
+                          {user?.userRole || "User"}
                         </span>
                       </p>
                     </div>
                   </div>
 
-                  {user.phoneNumber && (
+                  {user?.phoneNumber && (
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-teal-50 text-teal-700 rounded-lg flex items-center justify-center">
                         <FaPhone />
@@ -222,7 +228,7 @@ export default function Settings() {
                 </div>
                 <div className="inline-flex items-center gap-2">
                   <span className="w-2.5 h-2.5 bg-green-500 rounded-full"></span>
-                  <span className="text-sm font-medium text-green-700">{user.status}</span>
+                  <span className="text-sm font-medium text-green-700">{user?.status}</span>
                 </div>
               </div>
 
@@ -252,13 +258,13 @@ export default function Settings() {
         {showEditProfile && (
           <EditProfileModal
             initialValues={{
-              id: user.id,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              middleName: user.middleName,
-              username: user.username,
-              email: user.email,
-              phoneNumber: user.phoneNumber,
+              id: user?.id,
+              firstName: user?.firstName,
+              lastName: user?.lastName,
+              middleName: user?.middleName,
+              username: user?.username,
+              email: user?.email,
+              phoneNumber: user?.phoneNumber,
             }}
             onClose={() => setShowEditProfile(false)}
             onSubmit={handleProfileSubmit}
