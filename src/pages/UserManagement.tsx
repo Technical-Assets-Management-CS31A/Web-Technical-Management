@@ -17,12 +17,10 @@ export const UserManagement = () => {
   const [isEditUserOpen, setIsEditUserOpen] = useState<boolean>(false);
   const [searchUser, setSearchUser] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedRole, setSelectedRole] = useState<string>("all");
   const [editUserId, setEditUserId] = useState<string>("");
-  // const [editUserFirstName, setUserFirstName] = useState<string>("");
-  // const [editUserLastName, setUserLastName] = useState<string>("");
-  // const [editUserMiddleName, setUserMiddleName] = useState<string>("");
-  // const [editUserPosition, setUserPosition] = useState<string>("");
   const [users, setUsers] = useState<TUsers[]>([]);
+
   const selectedUser = useMemo(() => {
     return users.find((u) => u.id === editUserId);
   }, [users, editUserId]);
@@ -31,15 +29,21 @@ export const UserManagement = () => {
     () =>
       users.filter((user) => {
         const userStatus = user.status.toLowerCase();
+        const userRole = user.userRole.toLowerCase();
         const searchValue = searchUser.toLowerCase();
-        const selected = selectedStatus.toLowerCase();
+        const selectedStatusFilter = selectedStatus.toLowerCase();
+        const selectedRoleFilter = selectedRole.toLowerCase();
 
         const matchesStatus =
-          selected === "all" ? true : userStatus === selected;
+          selectedStatusFilter === "all" ? true : userStatus === selectedStatusFilter;
 
-        if (selected !== "all") {
+        const matchesRole =
+          selectedRoleFilter === "all" ? true : userRole === selectedRoleFilter;
+
+        if (selectedStatusFilter !== "all" || selectedRoleFilter !== "all") {
           return (
             matchesStatus &&
+            matchesRole &&
             (user.username.toLowerCase().includes(searchValue) ||
               user.userRole.toLowerCase().includes(searchValue) ||
               userStatus.includes(searchValue))
@@ -52,7 +56,7 @@ export const UserManagement = () => {
           userStatus.includes(searchValue)
         );
       }),
-    [searchUser, selectedStatus, users],
+    [searchUser, selectedStatus, selectedRole, users],
   );
 
   const { data, isPending, isError } = useQuery(useAllUsersQuery());
@@ -94,6 +98,36 @@ export const UserManagement = () => {
             <Button onClick={() => setIsAddUserOpen(true)} name={"New User"} />
           </div>
           <div className="order-1 md:order-2 flex w-full md:w-auto flex-col sm:flex-row sm:items-center gap-2">
+            {/* Role Filter Buttons */}
+            <div className="-mt-5 flex flex-row gap-2">
+              <button
+                onClick={() => setSelectedRole("all")}
+                className={` px-6 py-3.5 rounded-md font-medium transition-all duration-200 ${selectedRole === "all"
+                  ? " bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white shadow-md"
+                  : "bg-white text-[#64748b] border border-[#e5e7eb] hover:bg-[#f8fafc] hover:border-[#d1d5db]"
+                  }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setSelectedRole("admin")}
+                className={` px-6 py-3.5 rounded-md font-medium transition-all duration-200 ${selectedRole === "admin"
+                  ? " bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white shadow-md"
+                  : "bg-white text-[#64748b] border border-[#e5e7eb] hover:bg-[#f8fafc] hover:border-[#d1d5db]"
+                  }`}
+              >
+                Admin
+              </button>
+              <button
+                onClick={() => setSelectedRole("staff")}
+                className={` px-6 py-3.5 rounded-md font-medium transition-all duration-200 ${selectedRole === "staff"
+                  ? " bg-gradient-to-r from-[#2563eb] to-[#38bdf8] text-white shadow-md"
+                  : "bg-white text-[#64748b] border border-[#e5e7eb] hover:bg-[#f8fafc] hover:border-[#d1d5db]"
+                  }`}
+              >
+                Staff
+              </button>
+            </div>
             {/* Select Component */}
             <div className="sm:min-w-[200px] -mr-12">
               <SelectUserStatus onChangeStatus={setSelectedStatus} />
@@ -182,7 +216,7 @@ export const UserManagement = () => {
 
         {/* Description */}
         <p className="mt-6 text-[#64748b] text-sm text-center">
-          <span className="font-semibold">Tip:</span> Use filters and search to quickly locate staff.
+          <span className="font-semibold">Tip:</span> Use role filters, status filters, and search to quickly locate users.
         </p>
       </div>
       {isAddUserOpen && <AddUsers onClose={() => setIsAddUserOpen(false)} />}
