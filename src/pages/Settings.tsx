@@ -34,7 +34,7 @@ export default function Settings() {
             Error Loading Profile
           </h2>
           <p className="text-gray-600">
-            {error instanceof Error ? error.message : "Something went wrong"}
+            {error instanceof Error ? error.message : "Failed to load."}
           </p>
         </div>
       </div>
