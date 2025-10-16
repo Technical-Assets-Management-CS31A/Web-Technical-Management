@@ -1,32 +1,29 @@
 import { useState, useMemo, useEffect } from "react";
-import { AddUsers } from "./AddUser";
 import { AddTeacher } from "./AddTeacher";
 import { AddStudent } from "./AddStudent";
 import EditUser from "./EditUser";
 import SearchBar from "./SearchBar";
-import type { TUsers, TStudent, TTeacher } from "../types/types";
+import type { TStudent, TTeacher } from "../types/types";
 import { useQuery } from "@tanstack/react-query";
-import { useAllUsersQuery } from "../query/get/useAllUsersQuery";
+// import { useAllUsersQuery } from "../query/get/useAllUsersQuery";
 import { useAllStudentsQuery } from "../query/get/useAllStudentsQuery";
 import { useArchiveStudentMutation } from "../query/delete/useArchiveStudentMutation";
 import { useArchiveTeacherMutation } from "../query/delete/useArchiveTeacherMutation";
 import UserTable from "./UserTable";
 import StudentTable from "./StudentTable";
-import { FaChalkboardTeacher, FaGraduationCap, FaUsers } from "react-icons/fa";
+import { FaChalkboardTeacher, FaGraduationCap } from "react-icons/fa";
 import Button from "./Button";
 import { useAllTeachersQuery } from "../query/get/useAllTeachersQuery";
 
 export const RegistrationModule = () => {
-    const [isAddUserOpen, setIsAddUserOpen] = useState<boolean>(false);
     const [isAddTeacherOpen, setIsAddTeacherOpen] = useState<boolean>(false);
     const [isAddStudentOpen, setIsAddStudentOpen] = useState<boolean>(false);
     const [isEditStudentOpen, setIsEditStudentOpen] = useState<boolean>(false);
     const [isEditTeacherOpen, setIsEditTeacherOpen] = useState<boolean>(false);
     const [searchUser, setSearchUser] = useState<string>("");
-    const [selectedRole, setSelectedRole] = useState<string>("all");
+    const [selectedRole, setSelectedRole] = useState<string>("Teacher");
     const [editStudentId, setEditStudentId] = useState<string>("");
     const [editTeacherId, setEditTeacherId] = useState<string>("");
-    const [users, setUsers] = useState<TUsers[]>([]);
     const [students, setStudents] = useState<TStudent[]>([]);
     const [teachers, setTeachers] = useState<TTeacher[]>([]);
 
@@ -39,16 +36,12 @@ export const RegistrationModule = () => {
         return teachers.find((t) => t.id === editTeacherId);
     }, [teachers, editTeacherId]);
 
-    const { data } = useQuery(useAllUsersQuery());
     const { data: studentsData } = useQuery(useAllStudentsQuery());
     const { data: teachersData } = useQuery(useAllTeachersQuery());
     const { mutate: archiveStudent } = useArchiveStudentMutation();
     const { mutate: archiveTeacher } = useArchiveTeacherMutation();
-    useEffect(() => {
-        if (data && Array.isArray(data)) {
-            setUsers(data);
-        }
-    }, [data]);
+
+
 
     useEffect(() => {
         if (studentsData && Array.isArray(studentsData)) {
@@ -61,28 +54,6 @@ export const RegistrationModule = () => {
             setTeachers(teachersData);
         }
     }, [teachersData]);
-
-    const filteredUser = useMemo(() => {
-        let filtered = users;
-
-        // Filter by role
-        if (selectedRole !== "all") {
-            filtered = filtered.filter((user) => user.userRole === selectedRole);
-        }
-
-        // Filter by search term
-        if (searchUser) {
-            filtered = filtered.filter(
-                (user) =>
-                    user.firstName.toLowerCase().includes(searchUser.toLowerCase()) ||
-                    user.lastName.toLowerCase().includes(searchUser.toLowerCase()) ||
-                    user.username.toLowerCase().includes(searchUser.toLowerCase()) ||
-                    user.email.toLowerCase().includes(searchUser.toLowerCase())
-            );
-        }
-
-        return filtered;
-    }, [users, selectedRole, searchUser]);
 
     const filteredStudents = useMemo(() => {
         let filtered = students;
@@ -161,15 +132,6 @@ export const RegistrationModule = () => {
                         <div className="flex flex-wrap gap-2">
                             <span className="text-[#64748b] font-semibold mr-2">Filter by Role:</span>
                             <button
-                                onClick={() => setSelectedRole("all")}
-                                className={`px-4 py-2 rounded-lg font-medium transition-all duration-150 ${selectedRole === "all"
-                                    ? "bg-[#2563eb] text-white shadow-md"
-                                    : "bg-[#f1f5f9] text-[#64748b] hover:bg-[#e2e8f0]"
-                                    }`}
-                            >
-                                All
-                            </button>
-                            <button
                                 onClick={() => setSelectedRole("Teacher")}
                                 className={`px-4 py-2 rounded-lg font-medium transition-all duration-150 ${selectedRole === "Teacher"
                                     ? "bg-[#059669] text-white shadow-md"
@@ -208,9 +170,7 @@ export const RegistrationModule = () => {
                             </div>
                             <div className="ml-3">
                                 <p className="text-sm font-medium text-[#64748b]">Teachers</p>
-                                <p className="text-2xl font-bold text-[#1e293b]">
-                                    {users.filter((user) => user.userRole === "Teacher").length}
-                                </p>
+                                <p className="text-2xl font-bold text-[#1e293b]">{teachers.length}</p>
                             </div>
                         </div>
                     </div>
@@ -221,9 +181,7 @@ export const RegistrationModule = () => {
                             </div>
                             <div className="ml-3">
                                 <p className="text-sm font-medium text-[#64748b]">Students</p>
-                                <p className="text-2xl font-bold text-[#1e293b]">
-                                    {selectedRole === "Student" ? students.length : users.filter((user) => user.userRole === "Student").length}
-                                </p>
+                                <p className="text-2xl font-bold text-[#1e293b]">{students.length}</p>
                             </div>
                         </div>
                     </div>
@@ -233,9 +191,9 @@ export const RegistrationModule = () => {
                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                     <div className="p-6 border-b border-[#e2e8f0]">
                         <h2 className="text-2xl font-bold text-[#1e293b]">
-                            {selectedRole === "all" ? "All Users" : selectedRole === "Student" ? "Students" : `${selectedRole}s`}
+                            {selectedRole === "Student" ? "Students" : "Teachers"}
                             <span className="text-[#64748b] font-normal ml-2">
-                                ({selectedRole === "Student" ? filteredStudents.length : filteredUser.length} {selectedRole === "Student" ? (filteredStudents.length === 1 ? "student" : "students") : (filteredUser.length === 1 ? "user" : "users")})
+                                ({selectedRole === "Student" ? filteredStudents.length : filteredTeachers.length} {selectedRole === "Student" ? (filteredStudents.length === 1 ? "student" : "students") : (filteredTeachers.length === 1 ? "teacher" : "teachers")})
                             </span>
                         </h2>
                     </div>
@@ -307,19 +265,18 @@ export const RegistrationModule = () => {
                             </div>
                         )
                     ) : (
-                        filteredUser.length === 0 ? (
+                        filteredTeachers.length === 0 ? (
                             <div className="p-12 text-center">
                                 <div className="text-6xl text-[#cbd5e1] mb-4">
-                                    {selectedRole === "Teacher" ? <div className="flex items-center justify-center"><FaChalkboardTeacher className="text-center" /></div> :
-                                        <div className="flex items-center justify-center"><FaUsers className="text-center" /></div>}
+                                    <div className="flex items-center justify-center"><FaChalkboardTeacher className="text-center" /></div>
                                 </div>
                                 <h3 className="text-xl font-semibold text-[#64748b] mb-2">
-                                    No {selectedRole === "all" ? "users" : selectedRole.toLowerCase() + "s"} found
+                                    No teachers found
                                 </h3>
                                 <p className="text-[#94a3b8]">
                                     {searchUser
                                         ? "Try adjusting your search criteria"
-                                        : "No users match the current filters"}
+                                        : "No teachers match the current filters"}
                                 </p>
                             </div>
                         ) : (
@@ -354,44 +311,25 @@ export const RegistrationModule = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {selectedRole === "Teacher" && (
-                                            filteredTeachers.length === 0 ? (
-                                                <div className="p-12 text-center">
-                                                    <div className="text-6xl text-[#cbd5e1] mb-4">
-                                                        <div className="flex items-center justify-center"><FaChalkboardTeacher className="text-center" /></div>
-                                                    </div>
-                                                    <h3 className="text-xl font-semibold text-[#64748b] mb-2">
-                                                        No teachers found
-                                                    </h3>
-                                                    <p className="text-[#94a3b8]">
-                                                        {searchUser
-                                                            ? "Try adjusting your search criteria"
-                                                            : "No teachers match the current filters"}
-                                                    </p>
-                                                </div>
-                                            ) : (
-                                                filteredTeachers.map((teacher) => (
-                                                    <tr
-                                                        key={teacher.id}
-                                                        className="hover:bg-[#f1f5f9] transition-colors odd:bg-white even:bg-[#f8fafc]"
-                                                    >
-                                                        <UserTable
-                                                            id={teacher.id}
-                                                            firstName={teacher.firstName}
-                                                            lastName={teacher.lastName}
-                                                            username={teacher.username}
-                                                            email={teacher.email}
-                                                            userRole="Teacher"
-                                                            status="Active"
-                                                            onSetEditUserId={() => setEditTeacherId(teacher.id)}
-                                                            onSetIsEditUserOpen={() => setIsEditTeacherOpen(true)}
-                                                            onMutate={() => archiveTeacher(teacher.id)}
-                                                        />
-                                                    </tr>
-                                                ))
-                                            )
-                                        )
-                                        }
+                                        {filteredTeachers.map((teacher) => (
+                                            <tr
+                                                key={teacher.id}
+                                                className="hover:bg-[#f1f5f9] transition-colors odd:bg-white even:bg-[#f8fafc]"
+                                            >
+                                                <UserTable
+                                                    id={teacher.id}
+                                                    firstName={teacher.firstName}
+                                                    lastName={teacher.lastName}
+                                                    username={teacher.username}
+                                                    email={teacher.email}
+                                                    userRole="Teacher"
+                                                    status="Active"
+                                                    onSetEditUserId={() => setEditTeacherId(teacher.id)}
+                                                    onSetIsEditUserOpen={() => setIsEditTeacherOpen(true)}
+                                                    onMutate={() => archiveTeacher(teacher.id)}
+                                                />
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
                             </div>
@@ -406,11 +344,6 @@ export const RegistrationModule = () => {
             </div>
 
             {/* Modals */}
-            {isAddUserOpen && (
-                <AddUsers
-                    onClose={() => setIsAddUserOpen(false)}
-                />
-            )}
             {isAddTeacherOpen && (
                 <AddTeacher
                     onClose={() => setIsAddTeacherOpen(false)}
