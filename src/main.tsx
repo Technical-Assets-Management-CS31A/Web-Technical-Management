@@ -11,6 +11,7 @@ import Settings from "./pages/Settings.tsx";
 import ViewItem from "./components/ViewItem.tsx";
 import Archive from "./pages/Archive.tsx";
 import BorrowItem from "./pages/BorrowItem.tsx";
+import { Registration } from "./pages/Registration.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ProtectedRoute } from "./utils/middleware/accessAuth.tsx";
@@ -36,7 +37,7 @@ const routes = createBrowserRouter([
     path: "/home",
     element: (
       <ProtectedRoute>
-        <Home />
+        < Home />
       </ProtectedRoute>
     ),
     children: [
@@ -47,6 +48,7 @@ const routes = createBrowserRouter([
       { path: "archive-table", element: <Archive /> },
       { path: "borrow-item", element: <BorrowItem /> },
       { path: "settings", element: <Settings /> },
+      { path: "registration-module", element: <Registration /> }
     ],
   },
 
