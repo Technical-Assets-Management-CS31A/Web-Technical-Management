@@ -134,7 +134,7 @@ export const RegistrationModule = () => {
                             <button
                                 onClick={() => setSelectedRole("Teacher")}
                                 className={`px-4 py-2 rounded-lg font-medium transition-all duration-150 ${selectedRole === "Teacher"
-                                    ? "bg-[#059669] text-white shadow-md"
+                                    ? "bg-[#1827f9] text-white shadow-md"
                                     : "bg-[#f1f5f9] text-[#64748b] hover:bg-[#e2e8f0]"
                                     }`}
                             >
@@ -143,7 +143,7 @@ export const RegistrationModule = () => {
                             <button
                                 onClick={() => setSelectedRole("Student")}
                                 className={`px-4 py-2 rounded-lg font-medium transition-all duration-150 ${selectedRole === "Student"
-                                    ? "bg-[#7c3aed] text-white shadow-md"
+                                    ? "bg-[#ed3a3a] text-white shadow-md"
                                     : "bg-[#f1f5f9] text-[#64748b] hover:bg-[#e2e8f0]"
                                     }`}
                             >
