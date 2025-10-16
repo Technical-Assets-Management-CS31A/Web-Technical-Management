@@ -6,5 +6,5 @@ export const getToken = (): string | undefined => {
 };
 export const removeToken = () => {
     const key = import.meta.env.VITE_ACCESS_TOKEN_KEY;
-    Cookies.remove(key);
+    return Cookies.remove(key);
 };
