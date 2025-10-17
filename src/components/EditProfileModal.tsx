@@ -11,6 +11,7 @@ export type EditableUser = {
     username?: string | null;
     email?: string | null;
     phoneNumber?: string | null;
+    position?: string | null;
 };
 
 type EditProfileModalProps = {
@@ -21,7 +22,6 @@ type EditProfileModalProps = {
 
 export default function EditProfileModal({ initialValues, onClose, onSubmit }: EditProfileModalProps) {
     const [values, setValues] = useState<EditableUser>({});
-    const [id, setId] = useState<string>("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
@@ -37,7 +37,6 @@ export default function EditProfileModal({ initialValues, onClose, onSubmit }: E
             email: initialValues.email ?? "",
             phoneNumber: initialValues.phoneNumber ?? "",
         });
-        setId(initialValues.id!)
     }, [initialValues]);
 
     function update<K extends keyof EditableUser>(key: K, value: NonNullable<EditableUser[K]>) {
@@ -60,9 +59,13 @@ export default function EditProfileModal({ initialValues, onClose, onSubmit }: E
             firstName: values.firstName ?? "",
             lastName: values.lastName ?? "",
             middleName: values.middleName ?? "",
+            username: values.username ?? "",
+            email: values.email ?? "",
+            phoneNumber: values.phoneNumber ?? "",
+            position: values.position ?? ""
         }
         try {
-            mutate({ id, formData: PatchUserProps }, {
+            mutate({ formData: PatchUserProps }, {
                 onSuccess: () => {
                     onSubmit?.(values);
                     setIsSubmitting(true);
