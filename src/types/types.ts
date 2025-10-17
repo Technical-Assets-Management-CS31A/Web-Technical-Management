@@ -24,6 +24,32 @@ export type TUserFormData = {
   confirmPassword: string;
 };
 
+export type TTeacherFormData = {
+  username: string;
+  lastName: string;
+  middleName: string;
+  firstName: string;
+  email: string;
+  phoneNumber: string;
+  department?: string;
+  subject?: string;
+};
+
+export type TStudentFormData = {
+  FirstName: string;
+  MiddleName: string;
+  LastName: string;
+  StudentIdNumber: string;
+  Course: string;
+  Section: string;
+  Year: string;
+  Street: string;
+  Province: string;
+  PostalCode: string;
+  CityMunicipality: string;
+  ProfilePicture?: string;
+};
+
 export type TUsers = {
   id: string;
   username: string;
@@ -38,10 +64,13 @@ export type TUsers = {
 
 export type TUpdateUsers = {
   id: string;
-  lastName: string;
-  middleName: string;
-  firstName: string;
-  position: string;
+  firstName: string,
+  lastName: string,
+  middleName: string,
+  username: string,
+  email: string,
+  phoneNumber: string,
+  position: string,
 };
 
 export type TForgotPasswordUser = {
@@ -142,4 +171,36 @@ export type TBorrowItemForm = {
   subjectTimeSchedule: string;
   remarks: string | null;
   studentIdNumber: string | null;
+};
+
+export type TStudent = {
+  id: string;
+  FirstName: string;
+  MiddleName: string;
+  LastName: string;
+  StudentIdNumber: string;
+  Course: string;
+  Section: string;
+  Year: string;
+  Street: string;
+  Province: string;
+  PostalCode: string;
+  CityMunicipality: string;
+  ProfilePicture?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type TTeacher = {
+  id: string;
+  username: string;
+  lastName: string;
+  middleName: string;
+  firstName: string;
+  email: string;
+  phoneNumber: string;
+  department: string;
+  subject: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
