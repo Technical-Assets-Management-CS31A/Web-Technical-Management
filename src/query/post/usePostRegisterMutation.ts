@@ -2,23 +2,32 @@ import { useMutation } from "@tanstack/react-query";
 import type { TRegisterUser } from "../../types/types";
 
 const RegisterUser = async (formData: TRegisterUser) => {
-  const BASE_URL = import.meta.env.VITE_REGISTER_USER_API;
-  const newUserData = JSON.stringify(formData)
-  const res = await fetch(BASE_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: newUserData,
-  });
+  try {
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+    const END_POINT = "/api/v1/auth/register";
 
-  const data = await res.json();
+    const newUserData = JSON.stringify(formData)
+    const res = await fetch(`${BASE_URL}${END_POINT}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: newUserData,
+    });
 
-  if (!res.ok) {
-    throw new Error(data.message || "Failed to register user");
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to register user");
+    }
+
+    return data;
+    
+  } catch (error) {
+    console.error(error)
   }
 
-  return data;
+
 };
 
 export const usePostRegisterMutation = () => {
