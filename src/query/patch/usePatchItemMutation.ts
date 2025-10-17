@@ -19,7 +19,8 @@ type PatchItemProps = {
 };
 
 const PatchItem = async ({ id, formData }: PatchItemProps) => {
-  const BASE_URL = import.meta.env.VITE_ITEM_PATCH_API;
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const END_POINT = "/api/v1/items";
 
   const body = new FormData();
   body.append("ItemMake", formData.itemMake);
@@ -34,7 +35,7 @@ const PatchItem = async ({ id, formData }: PatchItemProps) => {
     body.append("Image", formData.image);
   }
 
-  const res = await fetch(`${BASE_URL}/${id}`, {
+  const res = await fetch(`${BASE_URL}${END_POINT}/${id}`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${getToken()}`,
