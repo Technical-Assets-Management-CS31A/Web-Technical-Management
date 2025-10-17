@@ -2,20 +2,22 @@ import { useMutation } from "@tanstack/react-query";
 import { getToken } from "../../utils/token";
 
 type PathUserCredentials = {
+  username: string,
+  email: string,
+  phoneNumber: string,
   lastName: string,
   middleName: string,
-  firstName: string
+  firstName: string,
+  position: string
 }
 
 type PatchUserProps = {
-  id: string;
   formData: PathUserCredentials
 }
 
-const PatchUser = async ({ id, formData }: PatchUserProps) => {
-  if (!id || typeof id !== "string" || id.trim().length === 0) {
-    throw new Error("User id is required");
-  }
+const PatchUser = async ({ formData }: PatchUserProps) => {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const END_POINT = "/api/v1/users/profile/technical";
 
   const token = getToken();
   if (!token) {
@@ -24,7 +26,7 @@ const PatchUser = async ({ id, formData }: PatchUserProps) => {
 
   const updatedUser = JSON.stringify(formData);
 
-  const res = await fetch(`http://localhost:5278/api/v1/users/admin/${id}/profile`, {
+  const res = await fetch(`${BASE_URL}${END_POINT}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
