@@ -3,6 +3,7 @@ import CloseButton from "./CloseButton";
 import type { TUpdateUsers } from "../types/types";
 import { useAllUsersQuery } from "../query/get/useAllUsersQuery";
 import { useQuery } from "@tanstack/react-query";
+import { usePatchUserMutation } from "../query/patch/usePatchUserMutation";
 
 type EditItemProps = {
   onClose(): void;
@@ -10,21 +11,28 @@ type EditItemProps = {
   firstName: string;
   lastName: string;
   middleName: string;
+  username: string,
+  email: string,
+  phoneNumber: string,
   position: string;
 };
 
-export default function EditUser({ onClose, Id, firstName, lastName, middleName, position }: EditItemProps) {
+export default function EditUser({ onClose, Id, firstName, lastName, middleName, username, email, phoneNumber, position }: EditItemProps) {
   const [firstnameError, setFirstnameError] = useState<string>("");
   const [lastnameError, setLastnameError] = useState<string>("");
   const [middlenameError, setMiddlenameError] = useState<string>("");
   const [roleError, setPositionError] = useState<string>("");
+  const { mutate } = usePatchUserMutation()
 
   const [formData, setFormData] = useState<TUpdateUsers>({
     id: Id,
-    lastName: lastName,
-    middleName: middleName,
-    firstName: firstName,
-    position: position
+    firstName,
+    lastName,
+    middleName,
+    username,
+    email,
+    phoneNumber,
+    position,
   });
 
   const { data } = useQuery(useAllUsersQuery());
@@ -46,10 +54,27 @@ export default function EditUser({ onClose, Id, firstName, lastName, middleName,
     if (name === "position") return setPositionError("");
   };
 
+  const PathUserProps = {
+    firstName: formData.firstName,
+    lastName: formData.lastName,
+    middleName: formData.middleName,
+    username: formData.username,
+    email: formData.email,
+    phoneNumber: formData.phoneNumber,
+    position: formData.position
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle update logic here
-    onClose();
+    mutate({ formData: PathUserProps }, {
+      onSuccess: () => {
+        alert("Success");
+        onClose();
+      },
+      onError: (error) => {
+        console.log(error.message)
+      }
+    })
   };
 
   return (
@@ -133,77 +158,73 @@ export default function EditUser({ onClose, Id, firstName, lastName, middleName,
               )}
             </div>
           </div>
-
           <div className="flex flex-col md:flex-row gap-4">
-            {/* <div className="flex-1">
+            <div className="flex-1">
               <label
                 htmlFor="username"
                 className="block text-[#2563eb] font-semibold mb-1"
               >
-                Username <span className="text-red-500">*</span>
+                Username <span className="text-gray-400/50">(Optional)</span>
               </label>
               <input
                 type="text"
                 id="username"
                 name="username"
-                className={`w-full px-4 py-3 rounded-xl border ${
-                  usernameError ? "border-red-500" : "border-[#e0e7ef]"
-                } bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg`}
+                className={`w-full px-4 py-3 rounded-xl border ${middlenameError ? "border-red-500" : "border-[#e0e7ef]"
+                  } bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg`}
                 value={formData.username}
                 onChange={handleInputChange}
                 placeholder="Enter username"
               />
-              {usernameError && (
-                <p className="text-red-500 text-sm mt-1">{usernameError}</p>
+              {middlenameError && (
+                <p className="text-red-500 text-sm mt-1">{middlenameError}</p>
               )}
-            </div> */}
+            </div>
 
-            {/* <div className="flex-1">
+            <div className="flex-1">
               <label
-                htmlFor="email"
+                htmlFor="username"
                 className="block text-[#2563eb] font-semibold mb-1"
               >
-                Email <span className="text-red-500">*</span>
+                Email <span className="text-gray-400/50">(Optional)</span>
               </label>
               <input
-                type="text"
+                type="email"
                 id="email"
                 name="email"
-                className={`w-full px-4 py-3 rounded-xl border ${
-                  emailError ? "border-red-500" : "border-[#e0e7ef]"
-                } bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg`}
+                className={`w-full px-4 py-3 rounded-xl border ${middlenameError ? "border-red-500" : "border-[#e0e7ef]"
+                  } bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg`}
                 value={formData.email}
                 onChange={handleInputChange}
-                placeholder="example@example.com"
+                placeholder="Enter Email"
               />
-              {emailError && (
-                <p className="text-red-500 text-sm mt-1">{emailError}</p>
+              {middlenameError && (
+                <p className="text-red-500 text-sm mt-1">{middlenameError}</p>
               )}
-            </div> */}
+            </div>
 
-            {/* <div className="flex-1">
+            <div className="flex-1">
               <label
-                htmlFor="phoneNumber"
+                htmlFor="username"
                 className="block text-[#2563eb] font-semibold mb-1"
               >
-                Phone Number <span className="text-red-500">*</span>
+                Phone Number <span className="text-gray-400/50">(Optional)</span>
               </label>
               <input
                 type="tel"
                 id="phoneNumber"
                 name="phoneNumber"
-                maxLength={11}
-                className={`w-full px-4 py-3 rounded-xl border ${
-                  phoneNumberError ? "border-red-500" : "border-[#e0e7ef]"
-                } bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg`}
+                className={`w-full px-4 py-3 rounded-xl border ${middlenameError ? "border-red-500" : "border-[#e0e7ef]"
+                  } bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-[#2563eb] text-lg`}
                 value={formData.phoneNumber}
                 onChange={handleInputChange}
-                placeholder="09XXXXXXXXX"
+                placeholder="9XXXXXXXXX"
               />
-              {phoneNumberError && (
-                <p className="text-red-500 text-sm mt-1">{phoneNumberError}</p>
+              {middlenameError && (
+                <p className="text-red-500 text-sm mt-1">{middlenameError}</p>
               )}
-            </div> */}
+            </div>
+
           </div>
 
           <div className="flex flex-col md:flex-row gap-4">
