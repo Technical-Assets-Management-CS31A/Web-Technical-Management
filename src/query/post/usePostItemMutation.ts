@@ -14,7 +14,8 @@ type ItemData = {
 };
 
 const PostItem = async (formData: ItemData) => {
-  const BASE_URL = import.meta.env.VITE_CREATE_ITEM_API;
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const END_POINT = "/api/v1/items";
 
   const body = new FormData();
   body.append("SerialNumber", formData.serialNumber);
@@ -30,7 +31,7 @@ const PostItem = async (formData: ItemData) => {
     body.append("Image", formData.image);
   }
 
-  const res = await fetch(BASE_URL, {
+  const res = await fetch(`${BASE_URL}${END_POINT}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${getToken()}`,
