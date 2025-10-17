@@ -265,6 +265,7 @@ export default function Settings() {
               username: user?.username,
               email: user?.email,
               phoneNumber: user?.phoneNumber,
+              position: user?.userRole
             }}
             onClose={() => setShowEditProfile(false)}
             onSubmit={handleProfileSubmit}
