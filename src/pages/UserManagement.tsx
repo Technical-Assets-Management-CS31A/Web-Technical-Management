@@ -227,6 +227,9 @@ export const UserManagement = () => {
           firstName={selectedUser.firstName}
           lastName={selectedUser.lastName}
           middleName={selectedUser.middleName}
+          username={selectedUser.username}
+          email={selectedUser.email}
+          phoneNumber={selectedUser.phoneNumber}
           position={selectedUser.userRole}
         />
       )}
