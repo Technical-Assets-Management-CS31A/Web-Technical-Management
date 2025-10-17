@@ -174,21 +174,26 @@ export type TBorrowItemForm = {
 };
 
 export type TStudent = {
-  id: string;
-  FirstName: string;
-  MiddleName: string;
-  LastName: string;
-  StudentIdNumber: string;
-  Course: string;
-  Section: string;
-  Year: string;
-  Street: string;
-  Province: string;
-  PostalCode: string;
-  CityMunicipality: string;
-  ProfilePicture?: string;
-  createdAt?: string;
-  updatedAt?: string;
+  frontStudentIdPicture: null,
+  backStudentIdPicture: null,
+  studentIdNumber: string,
+  phoneNumber: string,
+  course: string,
+  section: string,
+  year: string,
+  profilePicture: null,
+  street: string,
+  cityMunicipality: string,
+  province: string,
+  postalCode: string,
+  id: string,
+  username: string,
+  email: string,
+  userRole: string,
+  status: string,
+  lastName: string,
+  middleName: string,
+  firstName: string
 };
 
 export type TTeacher = {
@@ -201,6 +206,8 @@ export type TTeacher = {
   phoneNumber: string;
   department: string;
   subject: string;
+  userRole: string;
+  status: string;
   createdAt?: string;
   updatedAt?: string;
 };
