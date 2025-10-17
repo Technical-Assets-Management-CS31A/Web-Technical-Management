@@ -2,9 +2,10 @@ import { queryOptions } from "@tanstack/react-query";
 import { getToken } from "../../utils/token";
 
 const GetItemDetails = async (id: string) => {
-  const BASE_URL = import.meta.env.VITE_ITEM_DETAILS_API;
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL
+  const END_POINT = "/api/v1/items";
 
-  const res = await fetch(`${BASE_URL}/${id}`, {
+  const res = await fetch(`${BASE_URL}${END_POINT}/${id}`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${getToken()}`,
