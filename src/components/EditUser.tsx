@@ -68,7 +68,6 @@ export default function EditUser({ onClose, Id, firstName, lastName, middleName,
     e.preventDefault();
     mutate({ formData: PathUserProps }, {
       onSuccess: () => {
-        alert("Success");
         onClose();
       },
       onError: (error) => {
