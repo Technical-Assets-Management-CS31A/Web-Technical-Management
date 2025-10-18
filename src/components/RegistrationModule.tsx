@@ -1,40 +1,53 @@
 import { useState, useMemo, useEffect } from "react";
 import { AddTeacher } from "./AddTeacher";
 import { AddStudent } from "./AddStudent";
-import EditUser from "./EditUser";
+import { EditTeacher } from "./EditTeacher";
+import { EditStudent } from "./EditStudent";
 import SearchBar from "./SearchBar";
 import type { TStudent, TTeacher } from "../types/types";
 import { useQuery } from "@tanstack/react-query";
-// import { useAllUsersQuery } from "../query/get/useAllUsersQuery";
 import { useAllStudentsQuery } from "../query/get/useAllStudentsQuery";
 import { useArchiveStudentMutation } from "../query/delete/useArchiveStudentMutation";
 import { useArchiveTeacherMutation } from "../query/delete/useArchiveTeacherMutation";
-import UserTable from "./UserTable";
 import StudentTable from "./StudentTable";
+import TeacherTable from "./TeacherTable";
+import ViewStudentCredentials from "./ViewStudentCredentials";
+import ViewTeacherCredentials from "./ViewTeacherCredentials";
 import { FaChalkboardTeacher, FaGraduationCap } from "react-icons/fa";
-import Button from "./Button";
+// import Button from "./Button";
 import { useAllTeachersQuery } from "../query/get/useAllTeachersQuery";
 
 export const RegistrationModule = () => {
     const [isAddTeacherOpen, setIsAddTeacherOpen] = useState<boolean>(false);
     const [isAddStudentOpen, setIsAddStudentOpen] = useState<boolean>(false);
-    const [isEditStudentOpen, setIsEditStudentOpen] = useState<boolean>(false);
     const [isEditTeacherOpen, setIsEditTeacherOpen] = useState<boolean>(false);
+    const [isEditStudentOpen, setIsEditStudentOpen] = useState<boolean>(false);
+    const [isViewStudentOpen, setIsViewStudentOpen] = useState<boolean>(false);
+    const [isViewTeacherOpen, setIsViewTeacherOpen] = useState<boolean>(false);
     const [searchUser, setSearchUser] = useState<string>("");
     const [selectedRole, setSelectedRole] = useState<string>("Teacher");
-    const [editStudentId, setEditStudentId] = useState<string>("");
     const [editTeacherId, setEditTeacherId] = useState<string>("");
+    const [editStudentId, setEditStudentId] = useState<string>("");
+    const [viewStudentId, setViewStudentId] = useState<string>("");
+    const [viewTeacherId, setViewTeacherId] = useState<string>("");
     const [students, setStudents] = useState<TStudent[]>([]);
     const [teachers, setTeachers] = useState<TTeacher[]>([]);
 
+    const selectedViewStudent = useMemo(() => {
+        return students.find((s) => s.id === viewStudentId);
+    }, [students, viewStudentId]);
 
-    const selectedStudent = useMemo(() => {
-        return students.find((s) => s.id === editStudentId);
-    }, [students, editStudentId]);
+    const selectedViewTeacher = useMemo(() => {
+        return teachers.find((t) => t.id === viewTeacherId);
+    }, [teachers, viewTeacherId]);
 
-    const selectedTeacher = useMemo(() => {
+    const selectedEditTeacher = useMemo(() => {
         return teachers.find((t) => t.id === editTeacherId);
     }, [teachers, editTeacherId]);
+
+    const selectedEditStudent = useMemo(() => {
+        return students.find((s) => s.id === editStudentId);
+    }, [students, editStudentId]);
 
     const { data: studentsData } = useQuery(useAllStudentsQuery());
     const { data: teachersData } = useQuery(useAllTeachersQuery());
@@ -62,11 +75,9 @@ export const RegistrationModule = () => {
         if (searchUser) {
             filtered = filtered.filter(
                 (student) =>
-                    student.FirstName.toLowerCase().includes(searchUser.toLowerCase()) ||
-                    student.LastName.toLowerCase().includes(searchUser.toLowerCase()) ||
-                    student.StudentIdNumber.toLowerCase().includes(searchUser.toLowerCase()) ||
-                    student.Course.toLowerCase().includes(searchUser.toLowerCase()) ||
-                    student.Section.toLowerCase().includes(searchUser.toLowerCase())
+                    student.firstName.toLowerCase().includes(searchUser.toLowerCase()) ||
+                    student.lastName.toLowerCase().includes(searchUser.toLowerCase()) ||
+                    student.course.toLowerCase().includes(searchUser.toLowerCase())
             );
         }
 
@@ -81,28 +92,24 @@ export const RegistrationModule = () => {
             filtered = filtered.filter(
                 (teacher) =>
                     teacher.firstName.toLowerCase().includes(searchUser.toLowerCase()) ||
-                    teacher.lastName.toLowerCase().includes(searchUser.toLowerCase()) ||
-                    teacher.username.toLowerCase().includes(searchUser.toLowerCase()) ||
-                    teacher.email.toLowerCase().includes(searchUser.toLowerCase()) ||
-                    teacher.department.toLowerCase().includes(searchUser.toLowerCase()) ||
-                    teacher.subject.toLowerCase().includes(searchUser.toLowerCase())
+                    teacher.lastName.toLowerCase().includes(searchUser.toLowerCase())
             );
         }
 
         return filtered;
     }, [teachers, searchUser]);
 
-    const handleAddTeacher = () => {
-        setIsAddTeacherOpen(true);
-    };
+    // const handleAddTeacher = () => {
+    //     setIsAddTeacherOpen(true);
+    // };
 
-    const handleAddStudent = () => {
-        setIsAddStudentOpen(true);
-    };
+    // const handleAddStudent = () => {
+    //     setIsAddStudentOpen(true);
+    // };
 
     return (
         <div className="w-full min-h-screen bg-gradient-to-br from-[#f8fafc] to-[#e2e8f0] p-6">
-            <div className="w-full max-w-7xl mx-auto">
+            <div className="w-full max-w-8xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold text-[#1e293b] mb-2">
@@ -114,7 +121,7 @@ export const RegistrationModule = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-wrap gap-4 mb-6">
+                {/* <div className="flex flex-wrap gap-4 mb-6">
                     <Button
                         onClick={handleAddTeacher}
                         name="New Teacher"
@@ -123,7 +130,7 @@ export const RegistrationModule = () => {
                         onClick={handleAddStudent}
                         name="New Student"
                     />
-                </div>
+                </div> */}
 
                 {/* Filters */}
                 <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
@@ -234,6 +241,9 @@ export const RegistrationModule = () => {
                                                 Year
                                             </th>
                                             <th className="py-4 px-6 text-left text-sm font-semibold text-[#64748b] uppercase tracking-wider">
+                                                Role
+                                            </th>
+                                            <th className="py-4 px-6 text-left text-sm font-semibold text-[#64748b] uppercase tracking-wider">
                                                 Actions
                                             </th>
                                         </tr>
@@ -246,16 +256,29 @@ export const RegistrationModule = () => {
                                             >
                                                 <StudentTable
                                                     id={student.id}
-                                                    FirstName={student.FirstName}
-                                                    MiddleName={student.MiddleName}
-                                                    LastName={student.LastName}
-                                                    StudentIdNumber={student.StudentIdNumber}
-                                                    Course={student.Course}
-                                                    Section={student.Section}
-                                                    Year={student.Year}
-                                                    ProfilePicture={student.ProfilePicture}
-                                                    onSetEditStudentId={() => setEditStudentId(student.id)}
-                                                    onSetIsEditStudentOpen={() => setIsEditStudentOpen(true)}
+                                                    frontStudentIdPicture={student.frontStudentIdPicture}
+                                                    backStudentIdPicture={student.backStudentIdPicture}
+                                                    phoneNumber={student.phoneNumber}
+                                                    street={student.street}
+                                                    cityMunicipality={student.cityMunicipality}
+                                                    province={student.province}
+                                                    postalCode={student.postalCode}
+                                                    username={student.username}
+                                                    email={student.email}
+                                                    userRole={student.userRole}
+                                                    status={student.status}
+                                                    firstName={student.firstName}
+                                                    middleName={student.middleName}
+                                                    lastName={student.lastName}
+                                                    studentIdNumber={student.studentIdNumber}
+                                                    course={student.course}
+                                                    section={student.section}
+                                                    year={student.year}
+                                                    profilePicture={student.profilePicture}
+                                                    onSetIsEditStudentrOpen={() => setIsEditStudentOpen(true)}
+                                                    onSetEditUserId={() => setEditStudentId(student.id)}
+                                                    onSetViewStudentId={() => setViewStudentId(student.id)}
+                                                    onSetIsViewStudentOpen={() => setIsViewStudentOpen(true)}
                                                     onMutate={() => archiveStudent(student.id)}
                                                 />
                                             </tr>
@@ -280,7 +303,7 @@ export const RegistrationModule = () => {
                                 </p>
                             </div>
                         ) : (
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto h-[22rem]">
                                 <table className="w-full">
                                     <thead className="bg-[#f8fafc]">
                                         <tr>
@@ -288,16 +311,10 @@ export const RegistrationModule = () => {
                                                 ID
                                             </th>
                                             <th className="py-4 px-6 text-left text-sm font-semibold text-[#64748b] uppercase tracking-wider">
-                                                First Name
-                                            </th>
-                                            <th className="py-4 px-6 text-left text-sm font-semibold text-[#64748b] uppercase tracking-wider">
-                                                Last Name
+                                                Full Name
                                             </th>
                                             <th className="py-4 px-6 text-left text-sm font-semibold text-[#64748b] uppercase tracking-wider">
                                                 Username
-                                            </th>
-                                            <th className="py-4 px-6 text-left text-sm font-semibold text-[#64748b] uppercase tracking-wider">
-                                                Email
                                             </th>
                                             <th className="py-4 px-6 text-left text-sm font-semibold text-[#64748b] uppercase tracking-wider">
                                                 Role
@@ -316,16 +333,19 @@ export const RegistrationModule = () => {
                                                 key={teacher.id}
                                                 className="hover:bg-[#f1f5f9] transition-colors odd:bg-white even:bg-[#f8fafc]"
                                             >
-                                                <UserTable
+                                                <TeacherTable
                                                     id={teacher.id}
                                                     firstName={teacher.firstName}
                                                     lastName={teacher.lastName}
+                                                    middleName={teacher.middleName}
                                                     username={teacher.username}
                                                     email={teacher.email}
-                                                    userRole="Teacher"
-                                                    status="Active"
+                                                    userRole={teacher.userRole}
+                                                    status={teacher.status}
                                                     onSetEditUserId={() => setEditTeacherId(teacher.id)}
                                                     onSetIsEditUserOpen={() => setIsEditTeacherOpen(true)}
+                                                    onSetViewUserId={() => setViewTeacherId(teacher.id)}
+                                                    onSetIsViewUserOpen={() => setIsViewTeacherOpen(true)}
                                                     onMutate={() => archiveTeacher(teacher.id)}
                                                 />
                                             </tr>
@@ -354,24 +374,53 @@ export const RegistrationModule = () => {
                     onClose={() => setIsAddStudentOpen(false)}
                 />
             )}
-            {isEditStudentOpen && selectedStudent && (
-                <EditUser
-                    onClose={() => setIsEditStudentOpen(false)}
-                    Id={editStudentId}
-                    firstName={selectedStudent.FirstName}
-                    lastName={selectedStudent.LastName}
-                    middleName={selectedStudent.MiddleName}
-                    position="Student"
+            {isViewStudentOpen && selectedViewStudent && (
+                <ViewStudentCredentials
+                    student={selectedViewStudent}
+                    isOpen={isViewStudentOpen}
+                    onClose={() => setIsViewStudentOpen(false)}
                 />
             )}
-            {isEditTeacherOpen && selectedTeacher && (
-                <EditUser
+            {isViewTeacherOpen && selectedViewTeacher && (
+                <ViewTeacherCredentials
+                    teacher={selectedViewTeacher}
+                    isOpen={isViewTeacherOpen}
+                    onClose={() => setIsViewTeacherOpen(false)}
+                />
+            )}
+            {isEditTeacherOpen && selectedEditTeacher && (
+                <EditTeacher
+                    id={selectedEditTeacher.id}
+                    firstName={selectedEditTeacher.firstName}
+                    middleName={selectedEditTeacher.middleName}
+                    lastName={selectedEditTeacher.lastName}
+                    department={selectedEditTeacher.department}
                     onClose={() => setIsEditTeacherOpen(false)}
-                    Id={editTeacherId}
-                    firstName={selectedTeacher.firstName}
-                    lastName={selectedTeacher.lastName}
-                    middleName={selectedTeacher.middleName}
-                    position="Teacher"
+                />
+            )}
+            {isEditStudentOpen && selectedEditStudent && (
+                <EditStudent
+                    id={selectedEditStudent.id}
+                    firstName={selectedEditStudent.firstName}
+                    middleName={selectedEditStudent.middleName}
+                    lastName={selectedEditStudent.lastName}
+                    frontStudentIdPicture={selectedEditStudent.frontStudentIdPicture}
+                    backStudentIdPicture={selectedEditStudent.backStudentIdPicture}
+                    studentIdNumber={selectedEditStudent.studentIdNumber}
+                    phoneNumber={selectedEditStudent.phoneNumber}
+                    course={selectedEditStudent.course}
+                    section={selectedEditStudent.section}
+                    year={selectedEditStudent.year}
+                    profilePicture={selectedEditStudent.profilePicture}
+                    street={selectedEditStudent.street}
+                    cityMunicipality={selectedEditStudent.cityMunicipality}
+                    province={selectedEditStudent.province}
+                    postalCode={selectedEditStudent.postalCode}
+                    username={selectedEditStudent.username}
+                    email={selectedEditStudent.email}
+                    userRole={selectedEditStudent.userRole}
+                    status={selectedEditStudent.status}
+                    onClose={() => setIsEditStudentOpen(false)}
                 />
             )}
         </div>
