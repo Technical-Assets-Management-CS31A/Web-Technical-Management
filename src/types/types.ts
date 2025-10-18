@@ -211,3 +211,10 @@ export type TTeacher = {
   createdAt?: string;
   updatedAt?: string;
 };
+export type TUpdatedTeacher = {
+  lastName: string,
+  middleName: string,
+  firstName: string,
+  department: string
+}
+export type TUpdatedStudents = TStudent & {}
