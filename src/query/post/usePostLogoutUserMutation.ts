@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { getToken, removeToken } from './../../utils/token/index';
+import { removeToken } from './../../utils/token/index';
 
 const LogoutUser = async () => {
     try {
@@ -8,9 +8,6 @@ const LogoutUser = async () => {
         
         const res = await fetch(`${BASE_URL}${END_POINT}`, {
             method: "POST",
-            headers: {
-                Authorization: `Bearer ${getToken()}`,
-            },
             credentials: "include"
         });
 
