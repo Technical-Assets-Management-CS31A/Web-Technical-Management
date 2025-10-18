@@ -3,7 +3,7 @@ import { getToken } from "../../utils/token";
 
 const archiveStudent = async (studentId: string) => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  const END_POINT = "/api/v1/users";
+  const END_POINT = "/api/v1/users/archive";
 
   const res = await fetch(`${BASE_URL}${END_POINT}/${studentId}`, {
     method: "DELETE",
