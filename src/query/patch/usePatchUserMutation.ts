@@ -17,7 +17,7 @@ type PatchUserProps = {
 
 const PatchUser = async ({ formData }: PatchUserProps) => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  const END_POINT = "/api/v1/users/profile/technical";
+  const END_POINT = "/api/v1/users/profile/admin-or-staff";
 
   const token = getToken();
   if (!token) {
@@ -72,7 +72,7 @@ const PatchUser = async ({ formData }: PatchUserProps) => {
 
 export const usePatchUserMutation = () => {
   return useMutation({
-    mutationKey: ["profile"],
+    mutationKey: ["admin-or-staff"],
     mutationFn: PatchUser
   })
 }
