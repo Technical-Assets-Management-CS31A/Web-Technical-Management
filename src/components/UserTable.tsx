@@ -1,6 +1,7 @@
 import { UserData } from "../utils/usersData/userData";
-import { MdOutlineGridView } from "react-icons/md";
+import { MdVisibility } from "react-icons/md";
 import { IoArchive } from "react-icons/io5";
+import { CiEdit } from "react-icons/ci";
 import type { FC } from "react";
 
 type UserTableProps = {
@@ -13,6 +14,8 @@ type UserTableProps = {
   status: string;
   onSetEditUserId: (value: string) => void;
   onSetIsEditUserOpen: (value: boolean) => void;
+  onSetViewUserId?: (value: string) => void;
+  onSetIsViewUserOpen?: (value: boolean) => void;
   onMutate: (value: string) => void;
 };
 
@@ -26,9 +29,10 @@ export default function UserTable({
   status,
   onSetEditUserId,
   onSetIsEditUserOpen,
+  onSetViewUserId,
+  onSetIsViewUserOpen,
   onMutate,
 }: UserTableProps) {
-
   const data = UserData()
 
   const UserStatus = (status: string) => {
@@ -44,9 +48,16 @@ export default function UserTable({
     }
   }
 
-  const handleEditUser = (id: string) => {
+  const handleEditTeacher = (id: string) => {
     onSetEditUserId(id);
     onSetIsEditUserOpen(true);
+  }
+
+  const handleViewUser = (id: string) => {
+    if (onSetViewUserId && onSetIsViewUserOpen) {
+      onSetViewUserId(id);
+      onSetIsViewUserOpen(true);
+    }
   }
 
   type showButtonIfUserAdminProps = {
@@ -85,11 +96,21 @@ export default function UserTable({
         </span>
       </td>
       <td className="py-3 px-6 flex flex-row">
+        {onSetViewUserId && onSetIsViewUserOpen && (
+          <button
+            className="mr-2 text-green-500 text-2xl hover:text-green-700 transition-colors"
+            onClick={() => handleViewUser(id)}
+            title="View user credentials"
+          >
+            <MdVisibility />
+          </button>
+        )}
         <button
-          className="mr-2 text-blue-500 text-2xl"
-          onClick={() => handleEditUser(id)}
+          className="mr-2 text-blue-500 text-2xl hover:text-blue-700 transition-colors"
+          onClick={() => handleEditTeacher(id)}
+          title="Edit user"
         >
-          <MdOutlineGridView />
+          <CiEdit />
         </button>
         <ShowButtonIfUserAdmin userRole={data.userRole} onHandleArchiveUser={handleArchiveUser} />
       </td>
