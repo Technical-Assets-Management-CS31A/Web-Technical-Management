@@ -31,29 +31,29 @@ export default function ArchiveTeacherTable({
 
     type checkIfUserAdminProps = {
         userRole?: string,
-        onHandleRestoreItem: () => void,
-        onHandleDeleteItem: () => void
+        onHandleRestoreTeacher: () => void,
+        onHandleDeleteTeacher: () => void
     }
     const data = UserData()
 
 
-    const ShowButtonIfUserAdmin = ({ userRole, onHandleRestoreItem, onHandleDeleteItem }:checkIfUserAdminProps) => {
+    const ShowButtonIfUserAdmin = ({ userRole, onHandleRestoreTeacher, onHandleDeleteTeacher }:checkIfUserAdminProps) => {
         if (userRole !== "Admin") return null;
         return (
             <>
                 <button
-                    onClick={onHandleDeleteItem}
+                    onClick={onHandleDeleteTeacher}
                     disabled={isDeleting}
-                    title="Delete item"
+                    title="Delete Teacher"
                     className="text-red-600 text-2xl cursor-pointer mr-2"
                 >
                     <FaTrash />
                 </button>
 
                 <button
-                    onClick={onHandleRestoreItem}
+                    onClick={onHandleRestoreTeacher}
                     disabled={isRestoring}
-                    title="Restore item"
+                    title="Restore Teacher"
                     className="text-orange-300 text-2xl cursor-pointer"
                 >
                     <FaTrashRestore />
@@ -91,8 +91,8 @@ export default function ArchiveTeacherTable({
             <td className="py-4 px-4 border-b border-[#e6e6e6] text-[#1e293b] font-medium">
                 <ShowButtonIfUserAdmin
                     userRole={data.userRole}
-                    onHandleDeleteItem={() => onDelete(id)}
-                    onHandleRestoreItem={() => onRestore(id)}
+                    onHandleDeleteTeacher={() => onDelete(id)}
+                    onHandleRestoreTeacher={() => onRestore(id)}
                 />
             </td>
         </>
