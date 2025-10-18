@@ -1,48 +1,69 @@
-import { MdOutlineGridView } from "react-icons/md";
+import { MdVisibility } from "react-icons/md";
 import { IoArchive } from "react-icons/io5";
 import type { FC } from "react";
-import { useAllStudentsQuery } from "../query/get/useAllStudentsQuery";
-import { useQuery } from "@tanstack/react-query";
+import { CiEdit } from "react-icons/ci";
+import { UserData } from "../utils/usersData/userData";
 
 type StudentTableProps = {
-    id: string;
-    FirstName: string;
-    MiddleName: string;
-    LastName: string;
-    StudentIdNumber: string;
-    Course: string;
-    Section: string;
-    Year: string;
-    ProfilePicture?: string;
-    onSetEditStudentId: (value: string) => void;
-    onSetIsEditStudentOpen: (value: boolean) => void;
+    frontStudentIdPicture?: null,
+    backStudentIdPicture?: null,
+    studentIdNumber: string,
+    phoneNumber: string,
+    course: string,
+    section: string,
+    year: string,
+    profilePicture?: null,
+    street: string,
+    cityMunicipality: string,
+    province: string,
+    postalCode: string,
+    id: string,
+    username: string,
+    email: string,
+    userRole: string,
+    status: string,
+    lastName: string,
+    middleName: string,
+    firstName: string
+    onSetEditUserId: (value: string) => void,
+    onSetIsEditStudentrOpen: (value: boolean) => void;
+    onSetViewStudentId: (value: string) => void;
+    onSetIsViewStudentOpen: (value: boolean) => void;
     onMutate: (value: string) => void;
 };
 
 export default function StudentTable({
     id,
-    FirstName,
-    MiddleName,
-    LastName,
-    StudentIdNumber,
-    Course,
-    Section,
-    Year,
-    onSetEditStudentId,
-    onSetIsEditStudentOpen,
+    studentIdNumber,
+    course,
+    section,
+    year,
+    userRole,
+    lastName,
+    middleName,
+    firstName,
+    onSetIsEditStudentrOpen,
+    onSetEditUserId,
+    onSetViewStudentId,
+    onSetIsViewStudentOpen,
     onMutate,
 }: StudentTableProps) {
-    const { data } = useQuery(useAllStudentsQuery());
+
+    const data = UserData()
 
     const handleArchiveStudent = () => {
-        if (window.confirm(`Are you sure you want to archive this Student ${StudentIdNumber}?`)) {
+        if (window.confirm(`Are you sure you want to archive this Student ${studentIdNumber}?`)) {
             onMutate(id);
         }
     };
 
     const handleEditStudent = (id: string) => {
-        onSetEditStudentId(id);
-        onSetIsEditStudentOpen(true);
+        onSetEditUserId(id);
+        onSetIsEditStudentrOpen(true);
+    }
+    const handleViewStudent = (id: string) => {
+        onSetViewStudentId(id);
+        onSetIsViewStudentOpen(true);
     };
 
     type ShowButtonIfUserAdminProps = {
@@ -67,24 +88,32 @@ export default function StudentTable({
     };
 
     const getFullName = () => {
-        const middleInitial = MiddleName ? `${MiddleName.charAt(0)}.` : "";
-        return `${FirstName} ${middleInitial} ${LastName}`.replace(/\s+/g, " ").trim();
+        const middleInitial = middleName ? `${middleName.charAt(0)}.` : "";
+        return `${firstName} ${middleInitial} ${lastName}`.replace(/\s+/g, " ").trim();
     };
 
     return (
         <>
-            <td className="py-3 px-6">{StudentIdNumber}</td>
+            <td className="py-3 px-6">{studentIdNumber}</td>
             <td className="py-3 px-6">{getFullName()}</td>
-            <td className="py-3 px-6">{Course}</td>
-            <td className="py-3 px-6">{Section}</td>
-            <td className="py-3 px-6">{Year}</td>
+            <td className="py-3 px-6">{course}</td>
+            <td className="py-3 px-6">{section}</td>
+            <td className="py-3 px-6">{year}</td>
+            <td className="py-3 px-6">{userRole}</td>
             <td className="py-3 px-6 flex flex-row">
+                <button
+                    className="mr-2 text-green-500 text-2xl hover:text-green-700 transition-colors"
+                    onClick={() => handleViewStudent(id)}
+                    title="View student credentials"
+                >
+                    <MdVisibility />
+                </button>
                 <button
                     className="mr-2 text-blue-500 text-2xl hover:text-blue-700 transition-colors"
                     onClick={() => handleEditStudent(id)}
-                    title="Edit student"
+                    title="Edit user"
                 >
-                    <MdOutlineGridView />
+                    <CiEdit />
                 </button>
                 <ShowButtonIfUserAdmin
                     userRole={data.userRole}
