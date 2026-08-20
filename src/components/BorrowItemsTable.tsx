@@ -67,12 +67,7 @@ export const BorrowItemsTable = ({
     },
     [selectedCategory],
   );
-
-  const handleShowAll = useCallback(() => {
-    setSelectedCategory("");
-    setCurrentPage(1);
-  }, []);
-
+  
   const handleRowClick = (item: TItemList) => {
     setSelectedItem(item);
   };
@@ -125,9 +120,9 @@ export const BorrowItemsTable = ({
                 <Pagination
                   totalPages={totalPages}
                   currentPage={currentPage}
+                  totalItems={filteredItems.length}
+                  itemsPerPage={itemsPerPage}
                   handlePageChange={handlePageChange}
-                  selectedCategory={selectedCategory}
-                  handleShowAll={handleShowAll}
                 />
               )}
               <SearchBar
