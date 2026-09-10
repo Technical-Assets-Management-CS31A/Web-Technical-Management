@@ -258,7 +258,7 @@ export default function Login() {
             </form>
 
             {/* Divider */}
-            <div className="border-t border-slate-100" />
+            <div className="border-t border-slate-100" /> 
 
             {/* Footer */}
             <div className="space-y-1 text-center">
