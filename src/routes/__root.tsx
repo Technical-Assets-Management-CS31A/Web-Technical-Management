@@ -31,7 +31,7 @@ const indexRoute = createRoute({
     path: "/",
     component: () => (
         <PublicRoute>
-            <Login />,
+            <Login />
         </PublicRoute>
     )
 });
