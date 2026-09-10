@@ -258,12 +258,12 @@ export default function Login() {
             </form>
 
             {/* Divider */}
-            <div className="border-t border-slate-100" />
+            <div className="border-t border-slate-100" /> 
 
             {/* Footer */}
             <div className="space-y-1 text-center">
               <p className="text-xs text-slate-400 font-medium">
-                © {new Date().getFullYear()} ACLC College of Mandaue. All rights reserved.
+                © 2025 ACLC College of Mandaue. All rights reserved.
               </p>
               <p className="text-xs text-slate-300 leading-relaxed">
                 Official internal tool. Unauthorized access is strictly prohibited.
