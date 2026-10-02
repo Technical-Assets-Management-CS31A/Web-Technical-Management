@@ -15,6 +15,7 @@ import { showToast } from "../components/AppToast";
 import { useAllUsersManagement, useFilteredUser } from "../data/user-management-data";
 import { useAllUsersManagementState } from "../states/user-management-state";
 import RegistrationModule from "../components/RegistrationModule";
+import { USER_MANAGEMENT_CONTENT as T } from "../constants/userManagementContent";
 import {
   Users,
   Sparkles,
@@ -66,12 +67,12 @@ export default function UserManagement() {
       onSuccess: (d) => {
         setIsArchiveModalOpen(false);
         setArchiveUserId("");
-        showToast.success("User Archived", d.message);
+        showToast.success(T.toast.archivedTitle, d.message);
       },
       onError: () => {
         setIsArchiveModalOpen(false);
         setArchiveUserId("");
-        showToast.error("Action Failed", "You cannot archive the logged-in user!");
+        showToast.error(T.toast.actionFailed, T.toast.cannotArchiveSelf);
       },
     });
   }, [archiveUserId, mutate, setIsArchiveModalOpen, setArchiveUserId]);
@@ -94,10 +95,10 @@ export default function UserManagement() {
   const handleUnblockUser = (id: string) => {
     unblockUser(id, {
       onSuccess: () => {
-        showToast.success("User Unblocked", "User has been unblocked successfully.");
+        showToast.success(T.toast.unblockedTitle, T.toast.unblockedMessage);
       },
       onError: (error: any) => {
-        showToast.error("Action Failed", error?.response?.data?.message || "Failed to unblock user.");
+        showToast.error(T.toast.actionFailed, error?.response?.data?.message || T.toast.unblockFailed);
       },
     });
   };
@@ -109,12 +110,12 @@ export default function UserManagement() {
         onSuccess: () => {
           setIsBlockModalOpen(false);
           setBlockUserId("");
-          showToast.success("User Blocked", "User has been blocked successfully.");
+          showToast.success(T.toast.blockedTitle, T.toast.blockedMessage);
         },
         onError: (error: any) => {
           setIsBlockModalOpen(false);
           setBlockUserId("");
-          showToast.error("Action Failed", error?.response?.data?.message || "Failed to block user.");
+          showToast.error(T.toast.actionFailed, error?.response?.data?.message || T.toast.blockFailed);
         },
       },
     );
@@ -144,13 +145,13 @@ export default function UserManagement() {
         <div>
           <div className="inline-flex mt-12 md:mt-0 items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-semibold mb-4">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>User directory</span>
+            <span>{T.badge}</span>
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">
-            User Management
+            {T.title}
           </h1>
           <p className="text-slate-500 font-medium text-base max-w-xl leading-relaxed">
-            Manage all system users — staff accounts, teachers, and students — from one place.
+            {T.description}
           </p>
         </div>
       </div>
@@ -167,7 +168,7 @@ export default function UserManagement() {
             }`}
           >
             <ShieldCheck className="h-4 w-4" />
-            Staff & Admins
+            {T.tabs.staff}
           </button>
           <button
             onClick={() => setActiveTab("registered")}
@@ -178,12 +179,12 @@ export default function UserManagement() {
             }`}
           >
             <GraduationCap className="h-4 w-4" />
-            Teachers & Students
+            {T.tabs.registered}
           </button>
         </div>
 
         <div className="flex items-center gap-3">
-          <Button onClick={() => setIsAddUserOpen(true)} name="New User" />
+          <Button onClick={() => setIsAddUserOpen(true)} name={T.newUser} />
         </div>
       </div>
 
@@ -199,26 +200,26 @@ export default function UserManagement() {
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200">
                   <Users className="h-3.5 w-3.5 text-slate-500" />
                   <span className="text-sm font-semibold text-slate-700">{tableUsers.length}</span>
-                  <span className="text-xs text-slate-500">total</span>
+                  <span className="text-xs text-slate-500">{T.stats.total}</span>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-50 border border-violet-200">
                   <ShieldCheck className="h-3.5 w-3.5 text-violet-600" />
                   <span className="text-sm font-semibold text-violet-700">{staffUsers.length}</span>
-                  <span className="text-xs text-violet-600">staff</span>
-                  <span className="text-xs text-violet-500">({staffOnlineCount} online)</span>
+                  <span className="text-xs text-violet-600">{T.stats.staff}</span>
+                  <span className="text-xs text-violet-500">{T.stats.online(staffOnlineCount)}</span>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200">
                   <ShieldCheck className="h-3.5 w-3.5 text-amber-600" />
                   <span className="text-sm font-semibold text-amber-700">{adminUsers.length}</span>
-                  <span className="text-xs text-amber-600">admins</span>
-                  <span className="text-xs text-amber-500">({adminOnlineCount} online)</span>
+                  <span className="text-xs text-amber-600">{T.stats.admins}</span>
+                  <span className="text-xs text-amber-500">{T.stats.online(adminOnlineCount)}</span>
                 </div>
               </div>
 
               {/* Right side - Filters and Search */}
               <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 lg:justify-end">
                 <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl shrink-0">
-                  {["all", "admin", "staff"].map((role) => (
+                  {T.roleFilters.map(({ value: role, label }) => (
                     <button
                       key={role}
                       onClick={() => setSelectedRole(role)}
@@ -228,7 +229,7 @@ export default function UserManagement() {
                           : "text-slate-500 hover:text-slate-700"
                       }`}
                     >
-                      {role.charAt(0).toUpperCase() + role.slice(1)}
+                      {label}
                     </button>
                   ))}
                 </div>
@@ -238,8 +239,8 @@ export default function UserManagement() {
                 <div className="grow sm:grow-0 sm:w-auto">
                   <SearchBar
                     onChangeValue={(value) => setSearchUser(value)}
-                    name="Search Users"
-                    placeholder="Search by name, role, or status"
+                    name={T.searchName}
+                    placeholder={T.searchPlaceholder}
                   />
                 </div>
               </div>
@@ -256,16 +257,16 @@ export default function UserManagement() {
                   <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center mb-4 border border-slate-100 shadow-sm">
                     <Search className="h-8 w-8 text-slate-300" />
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-1">No users found</h3>
+                  <h3 className="text-lg font-bold text-slate-900 mb-1">{T.empty.title}</h3>
                   <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
-                    Try adjusting your filters or search query, or add a new user.
+                    {T.empty.description}
                   </p>
                 </div>
               ) : (
                 <table className="w-full text-left text-sm whitespace-nowrap">
                   <thead>
                     <tr className="border-b border-slate-100">
-                      {["First Name", "Last Name", "Username", "Email", "Role", "Status"].map((col) => (
+                      {T.tableHeaders.map((col) => (
                         <th
                           key={col}
                           className="sticky top-0 bg-slate-50/80 backdrop-blur-sm px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400"
@@ -315,7 +316,7 @@ export default function UserManagement() {
           {/* Footer hint */}
           <div className="px-8 py-4 border-t border-slate-100 bg-slate-50/50">
             <p className="text-xs text-slate-400 font-medium">
-              <span className="font-semibold text-slate-500">Tip:</span> Click any row to view user credentials. Use role and status filters to narrow results.
+              <span className="font-semibold text-slate-500">{T.tip.label}</span> {T.tip.text}
             </p>
           </div>
         </div>
@@ -340,10 +341,10 @@ export default function UserManagement() {
 
       {isArchiveModalOpen && (
         <PopUpModal
-          title="Archive User"
-          label="archive"
-          noun="user"
-          destination="archive"
+          title={T.archiveModal.title}
+          label={T.archiveModal.label}
+          noun={T.archiveModal.noun}
+          destination={T.archiveModal.destination}
           onHandleCancelAction={cancelArchiveUser}
           onHandleConfirmAction={confirmArchiveUser}
           isLoading={isArchiving}
