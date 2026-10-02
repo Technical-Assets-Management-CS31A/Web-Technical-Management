@@ -4,6 +4,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import logo from "../../assets/newAclcLogo.webp";
 import type { TLoginUser } from "../../@types/types";
 import { useLogin } from "../../hooks/authHooks";
+import { LOGIN_CONTENT as T } from "../../constants/loginContent";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -29,8 +30,8 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     let hasError = false;
-    if (!submitForm.identifier) { setUsernameError("Username is required"); hasError = true; }
-    if (!submitForm.password) { setPasswordError("Password is required"); hasError = true; }
+    if (!submitForm.identifier) { setUsernameError(T.fields.identifier.required); hasError = true; }
+    if (!submitForm.password) { setPasswordError(T.fields.password.required); hasError = true; }
     if (hasError) return;
 
     mutate(submitForm, {
@@ -39,12 +40,12 @@ export default function Login() {
         // Check if it's a blocked user error (403 Forbidden)
         if (error?.response?.status === 403) {
           // Extract the block message from the API response
-          const blockMessage = error?.response?.data?.message || "Your account has been blocked.";
+          const blockMessage = error?.response?.data?.message || T.errors.blocked;
           setErrorMessage(blockMessage);
           setIsBlockedError(true);
         } else {
           // For all other errors (401, 500, etc.), show generic message
-          setErrorMessage("Invalid username or password.");
+          setErrorMessage(T.errors.invalid);
           setIsBlockedError(false);
         }
       },
@@ -70,15 +71,15 @@ export default function Login() {
 
         {/* Logo */}
         <a
-          href="https://www.facebook.com/aclcmandaueph"
+          href={T.logo.href}
           target="_blank"
           rel="noreferrer"
-          title="Go to ACLC Page"
+          title={T.logo.title}
           className="relative z-10 w-fit"
         >
           <img
             src={logo}
-            alt="ACLC Logo"
+            alt={T.logo.alt}
             className="w-30 h-30 rounded-full object-cover hover:ring-white/40 transition-all duration-300"
           />
         </a>
@@ -87,13 +88,13 @@ export default function Login() {
         <div className="relative z-10 flex items-center">
           <div className="max-w-2xl">
             <h1 className="text-6xl font-extrabold text-white leading-tight tracking-tight drop-shadow-md">
-              Technical Equipment<br />Borrowing System
+              {T.hero.titleLines[0]}<br />{T.hero.titleLines[1]}
             </h1>
             <p className="text-xl text-blue-100/75 font-medium leading-relaxed">
-              Managing resources, tracking items and borrowers. Ensures smooth lifecycle management.
+              {T.hero.description}
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
-              {["Inventory", "Borrow Logs", "User Roles", "Activity Logs"].map((tag) => (
+              {T.hero.tags.map((tag) => (
                 <span
                   key={tag}
                   className="px-3 py-1 rounded-full bg-white/10 border border-white/15 text-white/70 text-xs font-semibold"
@@ -118,7 +119,7 @@ export default function Login() {
 
         {/* Mobile logo */}
         <div className="pt-10 px-10 lg:hidden relative z-10">
-          <img src={logo} alt="ACLC Logo" className="w-12 h-12 rounded-full shadow-lg mx-auto" />
+          <img src={logo} alt={T.logo.alt} className="w-12 h-12 rounded-full shadow-lg mx-auto" />
         </div>
 
         {/* Centered content */}
@@ -129,10 +130,10 @@ export default function Login() {
             <div className="space-y-4">
               <div>
                 <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                  Welcome back!
+                  {T.heading.title}
                 </h2>
                 <p className="text-slate-400 text-sm font-medium mt-1">
-                  Access the Technical Equipment Borrowing System.
+                  {T.heading.subtitle}
                 </p>
               </div>
             </div>
@@ -167,13 +168,13 @@ export default function Login() {
                   htmlFor="identifier"
                   className="block text-xs font-bold uppercase tracking-widest text-slate-400"
                 >
-                  Username
+                  {T.fields.identifier.label}
                 </label>
                 <input
                   id="identifier"
                   type="text"
                   name="identifier"
-                  placeholder="Enter your username"
+                  placeholder={T.fields.identifier.placeholder}
                   value={submitForm.identifier}
                   onChange={handleChange}
                   autoFocus
@@ -200,14 +201,14 @@ export default function Login() {
                   htmlFor="password"
                   className="block text-xs font-bold uppercase tracking-widest text-slate-400"
                 >
-                  Password
+                  {T.fields.password.label}
                 </label>
                 <div className="relative">
                   <input
                     id="password"
                     type={isShowPassword ? "text" : "password"}
                     name="password"
-                    placeholder="Enter your password"
+                    placeholder={T.fields.password.placeholder}
                     value={submitForm.password}
                     onChange={handleChange}
                     disabled={isPending}
@@ -224,7 +225,7 @@ export default function Login() {
                     <button
                       type="button"
                       onClick={() => setIsShowPassword((p) => !p)}
-                      aria-label={isShowPassword ? "Hide password" : "Show password"}
+                      aria-label={isShowPassword ? T.fields.password.hide : T.fields.password.show}
                       tabIndex={-1}
                       className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-400 hover:text-slate-600 transition-colors"
                     >
@@ -249,10 +250,10 @@ export default function Login() {
                 {isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Signing in...
+                    {T.submit.pending}
                   </>
                 ) : (
-                  "Sign In"
+                  T.submit.idle
                 )}
               </button>
             </form>
@@ -263,10 +264,10 @@ export default function Login() {
             {/* Footer */}
             <div className="space-y-1 text-center">
               <p className="text-xs text-slate-400 font-medium">
-                © 2025 ACLC College of Mandaue. All rights reserved.
+                {T.footer.copyright}
               </p>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Official internal tool. Unauthorized access is strictly prohibited.
+                {T.footer.notice}
               </p>
             </div>
           </div>
