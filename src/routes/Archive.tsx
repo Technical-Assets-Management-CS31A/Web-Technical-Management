@@ -27,6 +27,7 @@ import {
   useFilteredUsers,
 } from "../data/archive-data.ts";
 import { useArchiveState } from "../states/archive-state.ts";
+import { ARCHIVE_CONTENT as T } from "../constants/archiveContent";
 import {
   Archive as ArchiveIcon,
   Package,
@@ -51,10 +52,10 @@ type checkIfUserAdminProps = {
 type FilterKey = "items" | "users" | "teachers" | "students";
 
 const filterTabs: { key: FilterKey; label: string; icon: typeof Package }[] = [
-  { key: "items", label: "Items", icon: Package },
-  { key: "users", label: "Users", icon: Users },
-  { key: "teachers", label: "Teachers", icon: BookOpen },
-  { key: "students", label: "Students", icon: GraduationCap },
+  { key: "items", label: T.tabs.items, icon: Package },
+  { key: "users", label: T.tabs.users, icon: Users },
+  { key: "teachers", label: T.tabs.teachers, icon: BookOpen },
+  { key: "students", label: T.tabs.students, icon: GraduationCap },
 ];
 
 const itemsPerPage = 10;
@@ -136,7 +137,7 @@ export default function Archive() {
       onSuccess: (data) => {
         setIsRestoreConfirmOpen(false);
         setRestoreSelectedItemId(null);
-        showToast.success("Item Restored", data.message);
+        showToast.success(T.toast.itemRestored, data.message);
       },
     });
   }, [restoreItemMutation, restoreSelectedItemId, setIsRestoreConfirmOpen, setRestoreSelectedItemId]);
@@ -147,7 +148,7 @@ export default function Archive() {
       onSuccess: (data) => {
         setIsDeleteItemConfirmOpen(false);
         setDeleteSelectedId(null);
-        showToast.success("Item Deleted", data.message);
+        showToast.success(T.toast.itemDeleted, data.message);
       },
     });
   }, [deleteItemMutation, deleteSelectedId, setIsDeleteItemConfirmOpen, setDeleteSelectedId]);
@@ -158,7 +159,7 @@ export default function Archive() {
       onSuccess: (data) => {
         setIsUserRestoreConfirmOpen(false);
         setUserRestoreSelectedId(null);
-        showToast.success("User Restored", data.message);
+        showToast.success(T.toast.userRestored, data.message);
       },
     });
   }, [restoreUserMutation, userRestoreSelectedId, setIsUserRestoreConfirmOpen, setUserRestoreSelectedId]);
@@ -169,7 +170,7 @@ export default function Archive() {
       onSuccess: (data) => {
         setIsUserDeleteConfirmOpen(false);
         setUserDeleteSelectedId(null);
-        showToast.success("User Deleted", data.message);
+        showToast.success(T.toast.userDeleted, data.message);
       },
     });
   }, [deleteUserMutation, userDeleteSelectedId, setIsUserDeleteConfirmOpen, setUserDeleteSelectedId]);
@@ -213,7 +214,7 @@ export default function Archive() {
         <button
           onClick={(e) => { e.stopPropagation(); setIsMenuOpen(!isMenuOpen); }}
           className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
-          title="More actions"
+          title={T.userMenu.moreActions}
         >
           <MoreVertical className="h-5 w-5" />
         </button>
@@ -225,7 +226,7 @@ export default function Archive() {
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-amber-700 hover:bg-amber-50 transition-colors"
             >
               <LuArchiveRestore className="h-4 w-4" />
-              <span className="font-medium">Restore User</span>
+              <span className="font-medium">{T.userMenu.restore}</span>
             </button>
 
             {isAdminOrSuper && (
@@ -236,7 +237,7 @@ export default function Archive() {
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-700 hover:bg-rose-50 transition-colors"
                 >
                   <RiDeleteBin6Line className="h-4 w-4" />
-                  <span className="font-medium">Delete User</span>
+                  <span className="font-medium">{T.userMenu.delete}</span>
                 </button>
               </>
             )}
@@ -249,10 +250,10 @@ export default function Archive() {
   const activeCount = activeFilter === "items" ? filteredItems.length : filteredUsers.length;
   const activeLabel = filterTabs.find((t) => t.key === activeFilter)?.label ?? "";
 
-  const itemHeaders = ["Serial No.", "Image", "Name", "Category", "Condition", "Archived At"];
-  const userHeaders = ["User ID", "Full Name", "Username", "Email", "Phone", "Role", "Status", ""];
-  const teacherHeaders = ["Teacher ID", "Full Name", "Username", "Role", "Status"];
-  const studentHeaders = ["Student ID", "Full Name", "Course", "Section", "Year", "Role", "Status"];
+  const itemHeaders = T.headers.items;
+  const userHeaders = T.headers.users;
+  const teacherHeaders = T.headers.teachers;
+  const studentHeaders = T.headers.students;
 
   const emptyIcon = activeFilter === "items" ? Package : activeFilter === "users" ? Users : activeFilter === "teachers" ? BookOpen : GraduationCap;
   const EmptyIcon = emptyIcon;
@@ -265,19 +266,19 @@ export default function Archive() {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100 text-amber-600 text-xs font-semibold mb-4">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>Archive vault</span>
+            <span>{T.badge}</span>
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">
-            Archive
+            {T.title}
           </h1>
           <p className="text-slate-500 font-medium text-base max-w-xl leading-relaxed">
-            View and manage archived {activeLabel.toLowerCase()}. Restore records back to the system or permanently delete them.
+            {T.description(activeLabel.toLowerCase())}
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white border border-slate-200 shadow-sm text-sm font-medium text-slate-600 flex-shrink-0">
           <ArchiveIcon className="h-4 w-4 text-slate-400" />
-          <span>{activeCount} archived {activeLabel.toLowerCase()}</span>
+          <span>{T.archivedCount(activeCount, activeLabel.toLowerCase())}</span>
         </div>
       </div>
 
@@ -325,7 +326,7 @@ export default function Archive() {
             <SearchBar
               onChangeValue={(value) => setSearchItem(value)}
               name="search"
-              placeholder={`Search archived ${activeLabel.toLowerCase()}...`}
+              placeholder={T.searchPlaceholder(activeLabel.toLowerCase())}
             />
           </div>
         </div>
@@ -534,21 +535,21 @@ export default function Archive() {
 
       {/* Modals */}
       {isRestoreConfirmOpen && (
-        <PopUpModal title="Restore Item" label="restore" noun="item" destination="inventory list"
+        <PopUpModal {...T.modals.restoreItem}
           onHandleCancelAction={handleCancelRestore} onHandleConfirmAction={handleConfirmRestoreItem}
           isLoading={restoreItemMutation.isPending} />
       )}
       {isDeleteConfirmOpen && (
-        <PopUpModalDelete title="Delete Item" label="delete"
+        <PopUpModalDelete {...T.modals.deleteItem}
           onHandleCancelAction={handleCancelDeleteItem} onHandleConfirmAction={handleConfirmDeleteItem} />
       )}
       {isUserRestoreConfirmOpen && (
-        <PopUpModal title="Restore User" label="restore" noun="user" destination="Registration Module"
+        <PopUpModal {...T.modals.restoreUser}
           onHandleCancelAction={handleCancelUserRestore} onHandleConfirmAction={handleConfirmRestoreUser}
           isLoading={restoreUserMutation.isPending} />
       )}
       {isUserDeleteConfirmOpen && (
-        <PopUpModalDelete title="Delete User" label="delete"
+        <PopUpModalDelete {...T.modals.deleteUser}
           onHandleCancelAction={handleCancelUserDelete} onHandleConfirmAction={handleConfirmDeleteUser} />
       )}
       {isStudentCredentialsOpen && selectedStudentId && (
@@ -574,12 +575,12 @@ function EmptyState({ icon: Icon, label, isEmpty }: { icon: any; label: string; 
         {isEmpty ? <Icon className="h-8 w-8 text-slate-300" /> : <Search className="h-8 w-8 text-slate-300" />}
       </div>
       <h3 className="text-lg font-bold text-slate-900 mb-1">
-        No Archived {label}
+        {T.empty.title(label)}
       </h3>
       <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
         {isEmpty
-          ? `When ${label.toLowerCase()} are archived, they will appear here.`
-          : `No archived ${label.toLowerCase()} match your search. Try adjusting your query.`}
+          ? T.empty.noRecords(label.toLowerCase())
+          : T.empty.noMatches(label.toLowerCase())}
       </p>
     </div>
   );
