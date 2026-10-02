@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import type { TForgotPasswordUser } from "../../@types/types";
 import CloseButton from "../../components/CloseButton";
+import { FORGOT_PASSWORD_CONTENT as T } from "../../constants/forgotPasswordContent";
 
 type ForgotPasswordProps = {
   onClose(): void;
@@ -37,7 +38,7 @@ export default function ForgotPassword({ onClose }: ForgotPasswordProps) {
     setSuccessMessage("");
 
     if (submitForm.username === "") {
-      setEmailError("Email is required");
+      setEmailError(T.errors.required);
       setIsSubmitting(false);
       return;
     }
@@ -57,9 +58,9 @@ export default function ForgotPassword({ onClose }: ForgotPasswordProps) {
 
       if (!response.ok) {
         if (response.status === 404) {
-          setEmailError("Email not found in our system");
+          setEmailError(T.errors.notFound);
         } else {
-          setEmailError("Something went wrong. Please try again.");
+          setEmailError(T.errors.generic);
         }
         setIsSubmitting(false);
         return;
@@ -67,16 +68,12 @@ export default function ForgotPassword({ onClose }: ForgotPasswordProps) {
 
       const data = await response.json();
       if (data) {
-        setSuccessMessage(
-          "Password reset instructions have been sent to your email.",
-        );
+        setSuccessMessage(T.success);
         setSubmitForm({ username: "" });
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
-        setEmailError(
-          "Network error. Please check your connection and try again.",
-        );
+        setEmailError(T.errors.network);
       }
     } finally {
       setIsSubmitting(false);
@@ -97,11 +94,10 @@ export default function ForgotPassword({ onClose }: ForgotPasswordProps) {
             </div>
             <div className="forgot-password-title text-center mb-[2rem]">
               <h1 className="text-black text-3xl font-extrabold mb-2">
-                Forgot Password
+                {T.title}
               </h1>
               <p className="text-gray-700 text-md font-[400]">
-                Enter your username and we'll send you instructions to reset
-                your password.
+                {T.description}
               </p>
             </div>
 
@@ -117,7 +113,7 @@ export default function ForgotPassword({ onClose }: ForgotPasswordProps) {
               type="text"
               name="username"
               value={submitForm.username}
-              placeholder="Enter your username"
+              placeholder={T.placeholder}
               onChange={handleChange}
             />
             {emailError && (
@@ -139,19 +135,19 @@ export default function ForgotPassword({ onClose }: ForgotPasswordProps) {
                     <div className="w-5 h-5 rounded-full border-2 border-blue-600 border-t-white animate-spin"></div>
                   </div>
                 ) : (
-                  "Send Reset Instructions"
+                  T.submit
                 )}
               </button>
             </div>
 
             <div className="back-to-login text-center mt-4">
               <p className="text-gray-600 text-sm">
-                Remember your password?
+                {T.rememberPassword}
                 <span
                   className="text-blue-600 cursor-pointer hover:underline ml-1"
                   onClick={onClose}
                 >
-                  Back to Login
+                  {T.backToLogin}
                 </span>
               </p>
             </div>
