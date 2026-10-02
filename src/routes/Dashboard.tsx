@@ -25,18 +25,9 @@ import {
   Wifi,
 } from "lucide-react";
 import { FormattedDateTime } from "../components/FormattedDateTime";
+import { DASHBOARD_CONTENT as T } from "../constants/dashboardContent";
 
-const TABLE_HEADERS = [
-  "Serial No.",
-  "Image",
-  "Item",
-  "Occupied By",
-  "Room",
-  "Lent At",
-  "Status",
-  "Remarks",
-  "",
-];
+const TABLE_HEADERS = T.tableHeaders;
 
 const badgeIcons = [
   <Package className="h-5 w-5" />,
@@ -72,10 +63,10 @@ export default function Dashboard() {
   const returnItemMutation = useReturnItem();
 
   const badges = [
-    { name: "Total Items", data: dataSummary.totalItems, link: "/home/inventory-list" },
-    { name: "Categories", data: dataSummary.totalItemsCategories, link: "/home/inventory-list" },
-    { name: "Active Users", data: dataSummary.totalActiveUsers, link: "/home/user-management" },
-    { name: "Total Borrowed", data: dataSummary.totalLentItems, link: "/home/history-list" },
+    { name: T.badges.totalItems, data: dataSummary.totalItems, link: "/home/inventory-list" },
+    { name: T.badges.categories, data: dataSummary.totalItemsCategories, link: "/home/inventory-list" },
+    { name: T.badges.activeUsers, data: dataSummary.totalActiveUsers, link: "/home/user-management" },
+    { name: T.badges.totalBorrowed, data: dataSummary.totalLentItems, link: "/home/history-list" },
   ];
 
   const recentBorrows = useMemo(
@@ -95,15 +86,15 @@ export default function Dashboard() {
   const handleReturnSubmit = async () => {
     setReturnError("");
     const barcode = returnBarcode.trim();
-    if (!barcode) { setReturnError("Please enter a barcode"); return; }
+    if (!barcode) { setReturnError(T.errors.barcodeRequired); return; }
     try {
       await returnItemMutation.mutateAsync(barcode);
       setShowReturnModal(false);
       setReturnBarcode("");
       setReturnError("");
-      showToast.success("Item Returned", "Item returned successfully!");
+      showToast.success(T.toast.returnedTitle, T.toast.returnedMessage);
     } catch (error: any) {
-      showToast.error("Return Failed", error.message || "Failed to return item");
+      showToast.error(T.toast.returnFailedTitle, error.message || T.toast.returnFailed);
       setShowReturnModal(false);
       setReturnBarcode("");
     }
@@ -112,9 +103,9 @@ export default function Dashboard() {
   const handleScanSubmit = async () => {
     setScanError("");
     const lentItemBarcode = scannedBarcode.trim();
-    if (!lentItemBarcode) { setScanError("Please enter a lent item barcode"); return; }
+    if (!lentItemBarcode) { setScanError(T.errors.lentBarcodeRequired); return; }
     if (!/^LENT-\d{8}-\d{3}$/.test(lentItemBarcode)) {
-      setScanError("Invalid lent item barcode format. Expected format: LENT-YYYYMMDD-XXX");
+      setScanError(T.errors.invalidLentBarcode);
       return;
     }
     try {
@@ -131,7 +122,7 @@ export default function Dashboard() {
       const contentType = response.headers.get("content-type");
       const hasJson = contentType?.includes("application/json");
       if (!response.ok) {
-        let msg = "Lent item not found";
+        let msg: string = T.errors.lentItemNotFound;
         if (hasJson) {
           try { const err = await response.json(); msg = err.message || msg; } catch { /* ignore */ }
         } else {
@@ -139,15 +130,15 @@ export default function Dashboard() {
         }
         throw new Error(msg);
       }
-      if (!hasJson) throw new Error("Invalid response format from server");
+      if (!hasJson) throw new Error(T.errors.invalidResponseFormat);
       const { data: lentItem } = await response.json();
-      if (!lentItem) throw new Error("Invalid response structure from server");
+      if (!lentItem) throw new Error(T.errors.invalidResponseStructure);
       setShowScanModal(false);
       setScannedBarcode("");
       setScanError("");
       setScannedLentItemId(lentItem.id);
     } catch (error: any) {
-      setScanError(error.message || "Failed to fetch lent item details");
+      setScanError(error.message || T.errors.fetchLentItemFailed);
     }
   };
 
@@ -159,10 +150,10 @@ export default function Dashboard() {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-indigo-500 mb-1">Overview</p>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Dashboard</h1>
+          <p className="text-xs font-semibold uppercase tracking-widest text-indigo-500 mb-1">{T.eyebrow}</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">{T.title}</h1>
           <p className="text-slate-500 text-sm mt-1 font-medium">
-            Monitor inventory, users, and borrowing activity at a glance.
+            {T.description}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -177,10 +168,10 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-2 text-xs font-medium bg-white border border-slate-200 rounded-xl px-4 py-2.5 shadow-sm">
             <Wifi className="h-3.5 w-3.5 text-green-500" />
-            <span className="text-slate-700">Notifications</span>
+            <span className="text-slate-700">{T.notifications}</span>
             <div className="flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-slate-600 font-semibold">Online</span>
+              <span className="text-slate-600 font-semibold">{T.online}</span>
             </div>
           </div>
         </div>
@@ -205,10 +196,10 @@ export default function Dashboard() {
           <div>
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-blue-500 inline-block" />
-              Recently Borrowed Items
+              {T.recentBorrows.title}
             </h2>
             <p className="text-xs text-slate-400 font-medium mt-0.5">
-              Showing the 5 most recent active borrows
+              {T.recentBorrows.description}
             </p>
           </div>
         </div>
@@ -273,8 +264,8 @@ export default function Dashboard() {
                     <td colSpan={TABLE_HEADERS.length} className="px-8 py-20 text-center">
                       <div className="flex flex-col items-center gap-3 text-slate-400">
                         <BookOpen className="h-10 w-10 text-slate-200" />
-                        <p className="font-semibold text-slate-500">No borrowed items</p>
-                        <p className="text-xs">There are no active borrows at the moment.</p>
+                        <p className="font-semibold text-slate-500">{T.recentBorrows.empty.title}</p>
+                        <p className="text-xs">{T.recentBorrows.empty.description}</p>
                       </div>
                     </td>
                   </tr>
@@ -299,7 +290,7 @@ export default function Dashboard() {
         isOpen={!!scannedLentItemId}
         onClose={() => setScannedLentItemId(null)}
         fromScan
-        onProceedToScan={() => showToast.success("Item Borrowed", "Item borrowed successfully!")}
+        onProceedToScan={() => showToast.success(T.toast.borrowedTitle, T.toast.borrowedMessage)}
       />
 
       {/* ── Return Modal ── */}
@@ -317,7 +308,7 @@ export default function Dashboard() {
                 <div className="h-9 w-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center">
                   <RotateCcw className="h-4.5 w-4.5 text-slate-500" />
                 </div>
-                <h2 className="text-base font-bold text-slate-900">Return Item</h2>
+                <h2 className="text-base font-bold text-slate-900">{T.returnModal.title}</h2>
               </div>
               <button
                 onClick={() => setShowReturnModal(false)}
@@ -328,7 +319,9 @@ export default function Dashboard() {
             </div>
             <div className="p-6 space-y-4">
               <p className="text-sm text-slate-500 leading-relaxed">
-                Scan the <span className="font-semibold text-slate-700">item barcode</span> to mark it as returned.
+                {T.returnModal.instructions.prefix}{" "}
+                <span className="font-semibold text-slate-700">{T.returnModal.instructions.highlight}</span>{" "}
+                {T.returnModal.instructions.suffix}
               </p>
               <div>
                 <input
@@ -337,7 +330,7 @@ export default function Dashboard() {
                   value={returnBarcode}
                   onChange={(e) => { setReturnBarcode(e.target.value); setReturnError(""); }}
                   onKeyDown={(e) => { if (e.key === "Enter") handleReturnSubmit(); }}
-                  placeholder="Scan or enter item barcode"
+                  placeholder={T.returnModal.placeholder}
                   className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-4 transition-all ${returnError
                     ? "border-rose-300 focus:ring-rose-500/10 focus:border-rose-500"
                     : "border-slate-200 focus:ring-indigo-500/10 focus:border-indigo-500"
@@ -351,7 +344,7 @@ export default function Dashboard() {
                   onClick={() => setShowReturnModal(false)}
                   className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors"
                 >
-                  Cancel
+                  {T.returnModal.cancel}
                 </button>
                 <button
                   type="button"
@@ -359,7 +352,7 @@ export default function Dashboard() {
                   disabled={returnItemMutation.isPending}
                   className="flex-1 px-4 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {returnItemMutation.isPending ? "Processing..." : "Confirm Return"}
+                  {returnItemMutation.isPending ? T.returnModal.processing : T.returnModal.confirm}
                 </button>
               </div>
             </div>
@@ -382,7 +375,7 @@ export default function Dashboard() {
                 <div className="h-9 w-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center">
                   <ScanLine className="h-4.5 w-4.5 text-slate-500" />
                 </div>
-                <h2 className="text-base font-bold text-slate-900">Scan Lent Item</h2>
+                <h2 className="text-base font-bold text-slate-900">{T.scanModal.title}</h2>
               </div>
               <button
                 onClick={() => setShowScanModal(false)}
@@ -393,7 +386,9 @@ export default function Dashboard() {
             </div>
             <div className="p-6 space-y-4">
               <p className="text-sm text-slate-500 leading-relaxed">
-                Scan the <span className="font-semibold text-slate-700">lent item barcode</span> to view its details.
+                {T.scanModal.instructions.prefix}{" "}
+                <span className="font-semibold text-slate-700">{T.scanModal.instructions.highlight}</span>{" "}
+                {T.scanModal.instructions.suffix}
               </p>
               <div>
                 <input
@@ -402,7 +397,7 @@ export default function Dashboard() {
                   value={scannedBarcode}
                   onChange={(e) => { setScannedBarcode(e.target.value); setScanError(""); }}
                   onKeyDown={(e) => { if (e.key === "Enter") handleScanSubmit(); }}
-                  placeholder="Scan or enter lent item barcode"
+                  placeholder={T.scanModal.placeholder}
                   className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-4 transition-all ${scanError
                     ? "border-rose-300 focus:ring-rose-500/10 focus:border-rose-500"
                     : "border-slate-200 focus:ring-indigo-500/10 focus:border-indigo-500"
@@ -416,14 +411,14 @@ export default function Dashboard() {
                   onClick={() => setShowScanModal(false)}
                   className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors"
                 >
-                  Cancel
+                  {T.scanModal.cancel}
                 </button>
                 <button
                   type="button"
                   onClick={handleScanSubmit}
                   className="flex-1 px-4 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 text-white text-sm font-semibold transition-colors"
                 >
-                  Confirm
+                  {T.scanModal.confirm}
                 </button>
               </div>
             </div>
