@@ -1,0 +1,33 @@
+export const ACTIVE_BORROWED_ITEMS_CONTENT = {
+  eyebrow: "Manage Borrow Items",
+  title: "Active Borrowed Items",
+  description: "All items currently borrowed and not yet returned.",
+  tableTitle: "Active Borrowed Items",
+  countLabel: (count: number) => `${count} active borrow${count !== 1 ? "s" : ""}`,
+  searchPlaceholder: "Search items...",
+  tableHeaders: [
+    "Serial No.",
+    "Image",
+    "Item",
+    "Occupied By",
+    "Room",
+    "Lent At",
+    "Status",
+    "Remarks",
+    "Actions",
+  ],
+  returnButton: "Return",
+  returnButtonTitle: "Manually return this item",
+  empty: {
+    title: "No active borrowed items",
+    description: 'Items with "Borrowed" status will appear here.',
+  },
+  toast: {
+    errorTitle: "Error",
+    idNotFound: "Lent item ID not found",
+    returnedTitle: "Item Returned",
+    returnedMessage: (itemName: string) => `${itemName} has been returned successfully`,
+    returnFailedTitle: "Return Failed",
+    returnFailed: "Failed to return item",
+  },
+} as const;
