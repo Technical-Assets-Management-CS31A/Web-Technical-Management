@@ -7,6 +7,8 @@ import HistoryTable from "../components/HistoryTable";
 import ErrorTable from "../components/ErrorTables";
 import Pagination from "../components/Pagination";
 import { useRecentlyBorrowItems } from "../hooks/itemHooks";
+import { HISTORY_LIST_CONTENT as T } from "../constants/historyListContent";
+
 type StatusTab =
   | "all"
   | "pending"
@@ -16,8 +18,8 @@ type StatusTab =
   | "denied"
 
 export default function HistoryList({
-  title = "Borrowing History",
-  description = "This table lists item borrowing events, including the condition reported and the current status.",
+  title = T.title,
+  description = T.description,
 }) {
   const [searchItem, setSearchItem] = useState("");
   const [borrowedItem, setBorrowedItem] = useState<THistoryBorrwedItems[]>([]);
@@ -113,7 +115,7 @@ export default function HistoryList({
                 : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
           >
-            All
+            {T.tabs.all}
             {statusCounts.all > 0 && (
               <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded-full">
                 {statusCounts.all}
@@ -127,7 +129,7 @@ export default function HistoryList({
                 : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
           >
-            Pending
+            {T.tabs.pending}
             {statusCounts.pending > 0 && (
               <span className="ml-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-600 rounded-full">
                 {statusCounts.pending}
@@ -141,7 +143,7 @@ export default function HistoryList({
                 : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
           >
-            Approved
+            {T.tabs.approved}
             {statusCounts.approved > 0 && (
               <span className="ml-2 px-2 py-1 text-xs bg-emerald-100 text-emerald-600 rounded-full">
                 {statusCounts.approved}
@@ -155,7 +157,7 @@ export default function HistoryList({
                 : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
           >
-            Borrowed
+            {T.tabs.borrowed}
             {statusCounts.borrowed > 0 && (
               <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded-full">
                 {statusCounts.borrowed}
@@ -169,7 +171,7 @@ export default function HistoryList({
                 : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
           >
-            Returned
+            {T.tabs.returned}
             {statusCounts.returned > 0 && (
               <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-600 rounded-full">
                 {statusCounts.returned}
@@ -183,7 +185,7 @@ export default function HistoryList({
                 : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
           >
-            Denied
+            {T.tabs.denied}
             {statusCounts.denied > 0 && (
               <span className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-600 rounded-full">
                 {statusCounts.denied}
@@ -205,8 +207,8 @@ export default function HistoryList({
           )}
           <SearchBar
             onChangeValue={setSearchItem}
-            name="Search History"
-            placeholder="Search by borrower name"
+            name={T.searchName}
+            placeholder={T.searchPlaceholder}
           />
         </div>
 
@@ -218,17 +220,7 @@ export default function HistoryList({
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr>
-                  {[
-                    "Serial Number",
-                    "Image",
-                    "Item",
-                    "Occupied By",
-                    "Teacher",
-                    "Room",
-                    "Remarks",
-                    "DateTime",
-                    "Status",
-                  ].map((header) => (
+                  {T.tableHeaders.map((header) => (
                     <th
                       key={header}
                       className="sticky bg-white  top-0 py-4 px-6 text-sm font-semibold tracking-wider text-left uppercase text-[#64748b]"
@@ -241,8 +233,8 @@ export default function HistoryList({
               <tbody>
                 {filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-8 text-center text-gray-500">
-                      No items found for this status.
+                    <td colSpan={T.tableHeaders.length} className="py-8 text-center text-gray-500">
+                      {T.empty}
                     </td>
                   </tr>
                 ) : (
@@ -254,11 +246,10 @@ export default function HistoryList({
         </div>
 
         <p className="mt-6 text-sm text-center text-[#64748b]">
-          <span className="font-semibold">Description:</span> Each row
-          represents one history event. <em>Event Date</em> shows when it
-          occurred. <em>Condition</em> is the item state reported at that time.{" "}
-          <em>Status</em> reflects the latest known state for that borrow
-          record.
+          <span className="font-semibold">{T.footer.label}</span>{" "}
+          {T.footer.intro} <em>{T.footer.eventDate}</em> {T.footer.eventDateDesc}{" "}
+          <em>{T.footer.condition}</em> {T.footer.conditionDesc}{" "}
+          <em>{T.footer.status}</em> {T.footer.statusDesc}
         </p>
       </div>
     </div>
