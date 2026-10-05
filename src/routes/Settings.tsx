@@ -8,6 +8,7 @@ import InventorySettings from "../components/InventorySettings";
 import type { TUsers } from "../@types/types";
 import ErrorTable from "../components/ErrorTables";
 import { useSettingsState } from "../states/settings-state";
+import { SETTINGS_CONTENT as T } from "../constants/settingsContent";
 import {
   User,
   Mail,
@@ -50,7 +51,7 @@ export default function Settings() {
   const fullName =
     user?.firstName && user?.lastName
       ? [user.firstName, user.middleName, user.lastName].filter(Boolean).join(" ")
-      : user?.username ?? "User Profile";
+      : user?.username ?? T.fallbackName;
 
   const isOnline = user?.status?.toLowerCase() === "online";
 
@@ -60,15 +61,15 @@ export default function Settings() {
 
         {/* Page title + tabs */}
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Settings</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">{T.title}</h1>
           <p className="text-slate-500 text-sm font-medium mt-1">
-            Manage your account and system configuration.
+            {T.description}
           </p>
           <div className="flex gap-1 mt-4 border-b border-slate-200">
             {(
               [
-                { key: "profile", label: "Profile", icon: <CircleUserRound className="h-4 w-4" /> },
-                { key: "inventory", label: "Inventory", icon: <Package className="h-4 w-4" /> },
+                { key: "profile", label: T.tabs.profile, icon: <CircleUserRound className="h-4 w-4" /> },
+                { key: "inventory", label: T.tabs.inventory, icon: <Package className="h-4 w-4" /> },
               ] as { key: SettingsTab; label: string; icon: React.ReactNode }[]
             ).map((tab) => (
               <button
@@ -116,10 +117,10 @@ export default function Settings() {
                 {/* Role + status pills */}
                 <div className="flex flex-wrap justify-center gap-1.5">
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
-                    {user?.userRole ?? "User"}
+                    {user?.userRole ?? T.fallbackRole}
                   </span>
                   <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${isOnline ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-slate-100 text-slate-500 border-slate-200"}`}>
-                    {user?.status ?? "Offline"}
+                    {user?.status ?? T.fallbackStatus}
                   </span>
                 </div>
 
@@ -130,7 +131,7 @@ export default function Settings() {
                   className="mt-1 w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-sm font-semibold transition-colors"
                 >
                   <Pencil className="h-3.5 w-3.5" />
-                  Edit Profile
+                  {T.editProfile}
                 </button>
               </div>
 
@@ -160,13 +161,13 @@ export default function Settings() {
             <div className="flex-1 space-y-4">
 
               {/* Personal information */}
-              <Section title="Personal Information" icon={<CircleUserRound className="h-4 w-4 text-blue-500" />}>
+              <Section title={T.personalInfo.title} icon={<CircleUserRound className="h-4 w-4 text-blue-500" />}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-slate-100 rounded-xl overflow-hidden border border-slate-100">
-                  <Field label="First Name" value={user?.firstName} icon={<User className="h-3.5 w-3.5 text-slate-400" />} />
-                  <Field label="Last Name" value={user?.lastName} icon={<User className="h-3.5 w-3.5 text-slate-400" />} />
-                  <Field label="Middle Name" value={user?.middleName} icon={<User className="h-3.5 w-3.5 text-slate-400" />} />
+                  <Field label={T.personalInfo.firstName} value={user?.firstName} icon={<User className="h-3.5 w-3.5 text-slate-400" />} />
+                  <Field label={T.personalInfo.lastName} value={user?.lastName} icon={<User className="h-3.5 w-3.5 text-slate-400" />} />
+                  <Field label={T.personalInfo.middleName} value={user?.middleName} icon={<User className="h-3.5 w-3.5 text-slate-400" />} />
                   <Field
-                    label="Phone Number"
+                    label={T.personalInfo.phoneNumber}
                     value={user?.phoneNumber ? FormattedPhoneNumber(user.phoneNumber) : null}
                     icon={<Phone className="h-3.5 w-3.5 text-slate-400" />}
                   />
@@ -174,25 +175,25 @@ export default function Settings() {
               </Section>
 
               {/* Account information */}
-              <Section title="Account Information" icon={<BadgeCheck className="h-4 w-4 text-indigo-500" />}>
+              <Section title={T.accountInfo.title} icon={<BadgeCheck className="h-4 w-4 text-indigo-500" />}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-slate-100 rounded-xl overflow-hidden border border-slate-100">
-                  <Field label="Username" value={user?.username} icon={<AtSign className="h-3.5 w-3.5 text-slate-400" />} />
-                  <Field label="Email" value={user?.email} icon={<Mail className="h-3.5 w-3.5 text-slate-400" />} />
-                  <Field label="Role" value={user?.userRole} icon={<BadgeCheck className="h-3.5 w-3.5 text-slate-400" />} badge />
-                  <Field label="Position" value={user?.position} icon={<Briefcase className="h-3.5 w-3.5 text-slate-400" />} badge />
+                  <Field label={T.accountInfo.username} value={user?.username} icon={<AtSign className="h-3.5 w-3.5 text-slate-400" />} />
+                  <Field label={T.accountInfo.email} value={user?.email} icon={<Mail className="h-3.5 w-3.5 text-slate-400" />} />
+                  <Field label={T.accountInfo.role} value={user?.userRole} icon={<BadgeCheck className="h-3.5 w-3.5 text-slate-400" />} badge />
+                  <Field label={T.accountInfo.position} value={user?.position} icon={<Briefcase className="h-3.5 w-3.5 text-slate-400" />} badge />
                 </div>
               </Section>
 
               {/* Account status */}
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm px-5 py-4 flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-bold text-slate-900">Account Status</p>
-                  <p className="text-xs text-slate-400 mt-0.5">Your account is active and verified.</p>
+                  <p className="text-sm font-bold text-slate-900">{T.accountStatus.title}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{T.accountStatus.description}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${isOnline ? "bg-emerald-500 ring-2 ring-emerald-200" : "bg-slate-300"}`} />
                   <span className={`text-sm font-semibold ${isOnline ? "text-emerald-600" : "text-slate-500"}`}>
-                    {user?.status ?? "Offline"}
+                    {user?.status ?? T.fallbackStatus}
                   </span>
                 </div>
               </div>
@@ -263,11 +264,11 @@ function Field({
       </div>
       {badge ? (
         <span className="inline-flex w-fit items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-          {value ?? "N/A"}
+          {value ?? T.notAvailable}
         </span>
       ) : (
         <p className="text-sm font-semibold text-slate-900">
-          {value ?? <span className="text-slate-400 font-normal italic text-xs">Not provided</span>}
+          {value ?? <span className="text-slate-400 font-normal italic text-xs">{T.notProvided}</span>}
         </p>
       )}
     </div>
