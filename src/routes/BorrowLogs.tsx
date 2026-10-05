@@ -18,6 +18,7 @@ import BorrowLogsSkeletonLoader from "../loader/BorrowLogsSkeletonLoader";
 import BorrowLogsDetailModal from "../components/BorrowLogsDetailModal";
 import { useBorrowLogsState } from "../states/borrow-logs-state";
 import { truncateRemarks } from "../components/truncateRemarks";
+import { BORROW_LOGS_CONTENT as T } from "../constants/borrowLogsContent";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -58,7 +59,7 @@ const getRoleBadge = (role: string) => {
     if (r === "student") {
         return (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-violet-50 text-violet-700 border border-violet-100">
-                Student
+                {T.roles.student}
             </span>
         );
     }
@@ -200,15 +201,15 @@ export default function BorrowLogs() {
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 mb-6">
                         <BookOpen className="h-8 w-8 text-rose-500" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">Connection Issue</h3>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">{T.error.title}</h3>
                     <p className="text-slate-500 mb-6 leading-relaxed">
-                        We couldn't fetch the borrow logs. Please check your connection and try again.
+                        {T.error.description}
                     </p>
                     <button
                         onClick={() => window.location.reload()}
                         className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-slate-900 text-white font-medium text-sm hover:bg-slate-800 transition-colors focus:ring-4 focus:ring-slate-200"
                     >
-                        Refresh Page
+                        {T.error.refresh}
                     </button>
                 </div>
             </div>
@@ -223,10 +224,10 @@ export default function BorrowLogs() {
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div>
                     <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">
-                        Borrow Logs
+                        {T.title}
                     </h1>
                     <p className="text-slate-500 font-medium text-base max-w-xl leading-relaxed">
-                        Track every item borrowing event — who borrowed what, when it was returned, and the full status trail.
+                        {T.description}
                     </p>
                 </div>
 
@@ -237,7 +238,7 @@ export default function BorrowLogs() {
                     </div>
                     <input
                         type="text"
-                        placeholder="Search by borrower, item, serial no..."
+                        placeholder={T.searchPlaceholder}
                         value={searchTerm}
                         onChange={(e) => handleSearch(e.target.value)}
                         className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm hover:border-slate-300 hover:shadow-md"
@@ -271,13 +272,13 @@ export default function BorrowLogs() {
                         <thead>
                             <tr className="border-b border-slate-100">
                                 {[
-                                    { icon: User, label: "Borrower" },
-                                    { icon: Package, label: "Item" },
-                                    { icon: Hash, label: "Serial No." },
-                                    { icon: ArrowRight, label: "Status" },
-                                    { icon: Clock, label: "Borrowed At" },
-                                    { icon: Clock, label: "Returned At" },
-                                    { icon: MessageSquare, label: "Remarks" },
+                                    { icon: User, label: T.tableHeaders.borrower },
+                                    { icon: Package, label: T.tableHeaders.item },
+                                    { icon: Hash, label: T.tableHeaders.serialNo },
+                                    { icon: ArrowRight, label: T.tableHeaders.status },
+                                    { icon: Clock, label: T.tableHeaders.borrowedAt },
+                                    { icon: Clock, label: T.tableHeaders.returnedAt },
+                                    { icon: MessageSquare, label: T.tableHeaders.remarks },
                                 ].map(({ icon: Icon, label }) => (
                                     <th
                                         key={label}
@@ -330,7 +331,7 @@ export default function BorrowLogs() {
                                             </p>
                                             {log.reservedFor && (
                                                 <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[160px]">
-                                                    Reserved for: {log.reservedFor}
+                                                    {T.reservedFor} {log.reservedFor}
                                                 </p>
                                             )}
                                         </td>
@@ -390,7 +391,7 @@ export default function BorrowLogs() {
                                                 </div>
                                             ) : (
                                                 <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-50 text-amber-600 text-xs font-medium border border-amber-100">
-                                                    Not returned
+                                                    {T.notReturned}
                                                 </span>
                                             )}
                                         </td>
@@ -402,21 +403,21 @@ export default function BorrowLogs() {
                                                     {truncateRemarks(log.remarks)}
                                                 </p>
                                             ) : (
-                                                <span className="text-slate-300 text-xs italic">No remarks</span>
+                                                <span className="text-slate-300 text-xs italic">{T.noRemarks}</span>
                                             )}
                                         </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={7} className="px-8 py-20">
+                                    <td colSpan={Object.keys(T.tableHeaders).length} className="px-8 py-20">
                                         <div className="flex flex-col items-center justify-center text-center max-w-sm mx-auto">
                                             <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center mb-4 border border-slate-100 shadow-sm">
                                                 <Search className="h-8 w-8 text-slate-300" />
                                             </div>
-                                            <h3 className="text-lg font-bold text-slate-900 mb-1">No logs found</h3>
+                                            <h3 className="text-lg font-bold text-slate-900 mb-1">{T.empty.title}</h3>
                                             <p className="text-sm text-slate-500 leading-relaxed">
-                                                No borrow logs match your current search or filter. Try adjusting your criteria.
+                                                {T.empty.description}
                                             </p>
                                         </div>
                                     </td>
@@ -429,14 +430,14 @@ export default function BorrowLogs() {
                 {/* Footer / Pagination */}
                 <div className="bg-slate-50/50 border-t border-slate-100 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
                     <span className="text-slate-500 font-medium">
-                        Showing{" "}
+                        {T.pagination.showing}{" "}
                         <span className="font-bold text-slate-900">
                             {filtered.length === 0 ? 0 : (safePage - 1) * ITEMS_PER_PAGE + 1}–
                             {Math.min(safePage * ITEMS_PER_PAGE, filtered.length)}
                         </span>{" "}
-                        of{" "}
+                        {T.pagination.of}{" "}
                         <span className="font-bold text-slate-900">{filtered.length}</span>{" "}
-                        entries
+                        {T.pagination.entries}
                     </span>
 
                     <div className="flex items-center gap-1">
@@ -446,7 +447,7 @@ export default function BorrowLogs() {
                             className="flex items-center gap-1 px-3 py-2 rounded-xl text-slate-500 font-medium hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all disabled:opacity-40 disabled:pointer-events-none"
                         >
                             <ChevronLeft className="h-4 w-4" />
-                            Prev
+                            {T.pagination.prev}
                         </button>
 
                         {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -486,7 +487,7 @@ export default function BorrowLogs() {
                             disabled={safePage === totalPages}
                             className="flex items-center gap-1 px-3 py-2 rounded-xl text-slate-500 font-medium hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all disabled:opacity-40 disabled:pointer-events-none"
                         >
-                            Next
+                            {T.pagination.next}
                             <ChevronRight className="h-4 w-4" />
                         </button>
                     </div>
