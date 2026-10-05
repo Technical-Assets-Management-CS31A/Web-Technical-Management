@@ -19,6 +19,7 @@ import SelectItemFilters from "../components/SelectItemFilters";
 import { InventoryTable } from "../components/InventoryTable";
 import { useAllInventoryItems, useFilteredItems } from "../data/inventory-data";
 import { useInventoryListState } from "../states/inventory-list-state";
+import { INVENTORY_LIST_CONTENT as T } from "../constants/inventoryListContent";
 import {
   Package,
   Upload,
@@ -141,14 +142,14 @@ export default function InventoryList() {
       "application/vnd.ms-excel",
     ];
     if (!validTypes.includes(file.type)) {
-      showToast.error("Invalid File", "Please upload a valid Excel file (.xlsx or .xls).");
+      showToast.error(T.toast.invalidFileTitle, T.toast.invalidFile);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
-      showToast.error("File Too Large", "File size must be under 5 MB.");
+      showToast.error(T.toast.fileTooLargeTitle, T.toast.fileTooLarge);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -172,12 +173,12 @@ export default function InventoryList() {
     importItem(form, {
       onSuccess: () => {
         setIsImporting(false);
-        showToast.success("Import Successful", "Items have been imported successfully.");
+        showToast.success(T.toast.importSuccessTitle, T.toast.importSuccess);
       },
       onError: (error) => {
         setIsImporting(false);
         console.error(error.message);
-        showToast.error("Import Failed", "Please check your file format and try again.");
+        showToast.error(T.toast.importFailedTitle, T.toast.importFailed);
       },
     });
 
@@ -186,7 +187,7 @@ export default function InventoryList() {
 
   const handleExportItems = async () => {
     if (filteredItems.length === 0) {
-      showToast.warning("Nothing to Export", "No items to export. Please add items to your inventory first.");
+      showToast.warning(T.toast.nothingToExportTitle, T.toast.nothingToExport);
       return;
     }
 
@@ -214,21 +215,21 @@ export default function InventoryList() {
       ];
 
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory Items");
+      XLSX.utils.book_append_sheet(workbook, worksheet, T.exportSheetName);
 
       const date = new Date().toISOString().split("T")[0];
       const filename = `inventory_export_${date}.xlsx`;
       XLSX.writeFile(workbook, filename);
 
       showToast.success(
-        "Export Successful",
-        `Exported ${exportData.length} item${exportData.length !== 1 ? "s" : ""} to ${filename}`,
+        T.toast.exportSuccessTitle,
+        T.toast.exportSuccess(exportData.length, filename),
       );
     } catch (error) {
       console.error("Export error:", error);
       showToast.error(
-        "Export Failed",
-        error instanceof Error ? error.message : "Unknown error",
+        T.toast.exportFailedTitle,
+        error instanceof Error ? error.message : T.toast.unknownError,
       );
     } finally {
       setIsExporting(false);
@@ -256,19 +257,19 @@ export default function InventoryList() {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-semibold mb-4">
               <Sparkles className="h-3.5 w-3.5" />
-              <span>Asset management</span>
+              <span>{T.badge}</span>
             </div>
             <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">
-              Inventory List
+              {T.title}
             </h1>
             <p className="text-slate-500 font-medium text-base max-w-xl leading-relaxed">
-              Overview of assets and availability. Track counts by category, condition, and borrow status.
+              {T.description}
             </p>
           </div>
 
           {/* Action buttons */}
           <div className="flex items-center gap-3 flex-shrink-0">
-            <Button onClick={() => setIsAddItemFormOpen(true)} name="New Item" />
+            <Button onClick={() => setIsAddItemFormOpen(true)} name={T.newItem} />
 
             {/* More menu */}
             <div className="relative" ref={moreMenuRef}>
@@ -279,7 +280,7 @@ export default function InventoryList() {
                     ? "bg-indigo-50 border-indigo-300 text-indigo-600 shadow-sm"
                     : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50"
                 }`}
-                aria-label="More options"
+                aria-label={T.moreOptions}
               >
                 <MoreHorizontal className={`h-4.5 w-4.5 transition-transform duration-200 ${isMoreMenuOpen ? "rotate-90" : ""}`} />
               </button>
@@ -297,7 +298,7 @@ export default function InventoryList() {
                         ? <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
                         : <Upload className="h-4 w-4 text-slate-400" />
                       }
-                      <span className="font-medium">{isImporting ? "Importing..." : "Import Items"}</span>
+                      <span className="font-medium">{isImporting ? T.menu.importing : T.menu.import}</span>
                     </button>
                     <div className="h-px bg-slate-100 mx-1" />
 
@@ -312,7 +313,7 @@ export default function InventoryList() {
                         : <Download className="h-4 w-4 text-slate-400" />
                       }
                       <span className="font-medium">
-                        {isExporting ? "Exporting..." : `Export Items${filteredItems.length > 0 ? ` (${filteredItems.length})` : ""}`}
+                        {isExporting ? T.menu.exporting : T.menu.export(filteredItems.length)}
                       </span>
                     </button>
                   </div>
@@ -360,18 +361,18 @@ export default function InventoryList() {
             <div>
               <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <Package className="h-4 w-4 text-indigo-500" />
-                Items
+                {T.table.title}
               </h2>
               <p className="text-xs text-slate-400 font-medium mt-0.5">
-                {filteredItems.length} item{filteredItems.length !== 1 ? "s" : ""}
-                {selectedCategory && ` in ${selectedCategory}`}
+                {T.table.count(filteredItems.length)}
+                {selectedCategory && T.table.inCategory(selectedCategory)}
               </p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <SearchBar
                 onChangeValue={(value) => setSearchItem(value)}
                 name="search"
-                placeholder="Search items..."
+                placeholder={T.table.searchPlaceholder}
               />
             </div>
           </div>
@@ -386,16 +387,16 @@ export default function InventoryList() {
                   <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center mb-4 border border-slate-100 shadow-sm">
                     <Package className="h-8 w-8 text-slate-300" />
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-1">No items found</h3>
+                  <h3 className="text-lg font-bold text-slate-900 mb-1">{T.empty.title}</h3>
                   <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
-                    Try adjusting your search or filters. New items will appear here once created.
+                    {T.empty.description}
                   </p>
                   {(selectedCategory || selectedStatus || selectedCondition) && (
                     <button
                       onClick={handleShowAll}
                       className="mt-4 text-xs font-semibold text-indigo-600 hover:text-indigo-700 underline underline-offset-2"
                     >
-                      Clear all filters
+                      {T.empty.clearFilters}
                     </button>
                   )}
                 </div>
@@ -432,11 +433,11 @@ export default function InventoryList() {
               <div>
                 <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-semibold mb-2">
                   <Printer className="h-3 w-3" />
-                  <span>Barcode export</span>
+                  <span>{T.printModal.badge}</span>
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">Generate Barcode PDF</h2>
+                <h2 className="text-xl font-bold text-slate-900">{T.printModal.title}</h2>
                 <p className="text-sm text-slate-400 font-medium mt-0.5">
-                  {filteredItems.length} item{filteredItems.length !== 1 ? "s" : ""} ready to export
+                  {T.printModal.readyToExport(filteredItems.length)}
                 </p>
               </div>
               <button
@@ -497,17 +498,17 @@ export default function InventoryList() {
                       disabled={printCurrentPage === 1}
                       className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
-                      Previous
+                      {T.printModal.previous}
                     </button>
                     <span className="text-xs text-slate-500 font-medium px-1">
-                      Page {printCurrentPage} of {Math.ceil(filteredItems.length / itemsPerPrintPage)}
+                      {T.printModal.pageOf(printCurrentPage, Math.ceil(filteredItems.length / itemsPerPrintPage))}
                     </span>
                     <button
                       onClick={() => setPrintCurrentPage(Math.min(Math.ceil(filteredItems.length / itemsPerPrintPage), printCurrentPage + 1))}
                       disabled={printCurrentPage === Math.ceil(filteredItems.length / itemsPerPrintPage)}
                       className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
-                      Next
+                      {T.printModal.next}
                     </button>
                   </div>
                 )}
@@ -518,7 +519,7 @@ export default function InventoryList() {
                   onClick={() => { setShowPrintBarcodeModal(false); setPrintCurrentPage(1); }}
                   className="px-4 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
                 >
-                  Cancel
+                  {T.printModal.cancel}
                 </button>
               </div>
             </div>
