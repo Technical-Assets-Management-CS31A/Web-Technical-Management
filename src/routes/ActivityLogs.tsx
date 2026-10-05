@@ -4,6 +4,7 @@ import { Search, Activity, Calendar, User, Tag, ArrowRight, ChevronLeft, Chevron
 import type { TActivityLogs } from "../@types/types";
 import ActivityLogsSkeletonLoader from "../loader/ActivityLogsSkeletonLoader";
 import { useActivityLogsState } from "../states/activity-logs-state";
+import { ACTIVITY_LOGS_CONTENT as T } from "../constants/activityLogsContent";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -71,13 +72,13 @@ export default function ActivityLogs() {
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 mb-6">
                         <Activity className="h-8 w-8 text-rose-500" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">Connection Issue</h3>
-                    <p className="text-slate-500 mb-6 leading-relaxed">We encountered a problem while trying to fetch the activity history. Please check your connection and try again.</p>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">{T.error.title}</h3>
+                    <p className="text-slate-500 mb-6 leading-relaxed">{T.error.description}</p>
                     <button
                         onClick={() => window.location.reload()}
                         className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-slate-900 text-white font-medium text-sm hover:bg-slate-800 transition-colors focus:ring-4 focus:ring-slate-200"
                     >
-                        Refresh Page
+                        {T.error.refresh}
                     </button>
                 </div>
             </div>
@@ -89,10 +90,10 @@ export default function ActivityLogs() {
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 relative">
                 <div className="relative z-10">
                     <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">
-                        Activity Logs
+                        {T.title}
                     </h1>
                     <p className="text-slate-500 font-medium text-base max-w-xl leading-relaxed">
-                        Monitor comprehensive system actions, track inventory movements, and audit user activity with complete visibility.
+                        {T.description}
                     </p>
                 </div>
 
@@ -103,7 +104,7 @@ export default function ActivityLogs() {
                         </div>
                         <input
                             type="text"
-                            placeholder="Search by actor, action, or item..."
+                            placeholder={T.searchPlaceholder}
                             value={searchTerm}
                             onChange={(e) => handleSearch(e.target.value)}
                             className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all shadow-sm hover:border-slate-300 hover:shadow-md"
@@ -119,11 +120,9 @@ export default function ActivityLogs() {
                     <table className="w-full whitespace-nowrap text-left text-sm">
                         <thead>
                             <tr className="border-b border-slate-100">
-                                <th className="px-8 py-5 text-xs uppercase tracking-wider font-bold text-slate-400 bg-slate-50/50">Actor Details</th>
-                                <th className="px-8 py-5 text-xs uppercase tracking-wider font-bold text-slate-400 bg-slate-50/50">Action Type</th>
-                                <th className="px-8 py-5 text-xs uppercase tracking-wider font-bold text-slate-400 bg-slate-50/50">Target Item</th>
-                                <th className="px-8 py-5 text-xs uppercase tracking-wider font-bold text-slate-400 bg-slate-50/50">Status Transition</th>
-                                <th className="px-8 py-5 text-xs uppercase tracking-wider font-bold text-slate-400 bg-slate-50/50">Timestamp</th>
+                                {T.tableHeaders.map((header) => (
+                                    <th key={header} className="px-8 py-5 text-xs uppercase tracking-wider font-bold text-slate-400 bg-slate-50/50">{header}</th>
+                                ))}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -178,7 +177,7 @@ export default function ActivityLogs() {
                                                             {log.previousStatus}
                                                         </span>
                                                     ) : (
-                                                        <span className="text-slate-300 italic">None</span>
+                                                        <span className="text-slate-300 italic">{T.none}</span>
                                                     )}
 
                                                     {log.previousStatus && log.newStatus && (
@@ -195,7 +194,7 @@ export default function ActivityLogs() {
                                                 </div>
                                             ) : (
                                                 <span className="inline-flex items-center text-slate-400 text-xs font-medium italic bg-slate-50 px-2 py-1 rounded-md">
-                                                    No status change
+                                                    {T.noStatusChange}
                                                 </span>
                                             )}
                                         </td>
@@ -214,14 +213,14 @@ export default function ActivityLogs() {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={5} className="px-8 py-20">
+                                    <td colSpan={T.tableHeaders.length} className="px-8 py-20">
                                         <div className="flex flex-col items-center justify-center text-center max-w-sm mx-auto">
                                             <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center mb-4 border border-slate-100 shadow-sm">
                                                 <Search className="h-8 w-8 text-slate-300" />
                                             </div>
-                                            <h3 className="text-lg font-bold text-slate-900 mb-1">No logs found</h3>
+                                            <h3 className="text-lg font-bold text-slate-900 mb-1">{T.empty.title}</h3>
                                             <p className="text-sm text-slate-500 leading-relaxed">
-                                                We couldn't find any activity logs matching your search criteria. Try adjusting your filters.
+                                                {T.empty.description}
                                             </p>
                                         </div>
                                     </td>
@@ -233,15 +232,15 @@ export default function ActivityLogs() {
 
                 <div className="bg-slate-50/50 border-t border-slate-100 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
                     <span className="text-slate-500 font-medium">
-                        Showing{" "}
+                        {T.pagination.showing}{" "}
                         <span className="font-bold text-slate-900">
                             {filteredLogs?.length === 0
                                 ? 0
                                 : (currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredLogs?.length ?? 0)}
                         </span>
-                        {" of "}
+                        {T.pagination.of}
                         <span className="font-bold text-slate-900">{filteredLogs?.length ?? 0}</span>
-                        {" entries"}
+                        {T.pagination.entries}
                     </span>
 
                     {totalPages > 1 && (
@@ -252,7 +251,7 @@ export default function ActivityLogs() {
                                 className="flex items-center gap-1 px-3 py-2 rounded-xl text-slate-500 font-medium hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all disabled:opacity-40 disabled:pointer-events-none"
                             >
                                 <ChevronLeft className="h-4 w-4" />
-                                Prev
+                                {T.pagination.prev}
                             </button>
 
                             {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -293,7 +292,7 @@ export default function ActivityLogs() {
                                 disabled={currentPage === totalPages}
                                 className="flex items-center gap-1 px-3 py-2 rounded-xl text-slate-500 font-medium hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all disabled:opacity-40 disabled:pointer-events-none"
                             >
-                                Next
+                                {T.pagination.next}
                                 <ChevronRight className="h-4 w-4" />
                             </button>
                         </div>
