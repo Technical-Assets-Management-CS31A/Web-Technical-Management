@@ -12,6 +12,7 @@ import { showToast } from "../components/AppToast";
 import { BorrowDetailDialog } from "../components/BorrowDetailDialog";
 import { useRecentlyBorrowItems } from "../hooks/itemHooks";
 import { usePendingReservationsState } from "../states/pending-reservations-state";
+import { PENDING_RESERVATIONS_CONTENT as T } from "../constants/pendingReservationsContent";
 
 export default function PendingReservations() {
   const {
@@ -85,7 +86,7 @@ export default function PendingReservations() {
 
   const handleConfirmApprove = () => {
     if (!selectedItem) {
-      showToast.error("Action Failed", "No item selected.");
+      showToast.error(T.toast.actionFailed, T.toast.noItemSelected);
       setIsApproveModalOpen(false);
       return;
     }
@@ -95,14 +96,14 @@ export default function PendingReservations() {
       {
         onSuccess: () => {
           showToast.success(
-            "Reservation Approved",
-            `Reservation approved for ${selectedItem.item.itemName}`,
+            T.toast.approvedTitle,
+            T.toast.approvedMessage(selectedItem.item.itemName),
           );
           setIsApproveModalOpen(false);
           setSelectedItem(null);
         },
         onError: (error) => {
-          showToast.error("Approval Failed", error.message || "Failed to approve reservation");
+          showToast.error(T.toast.approvalFailedTitle, error.message || T.toast.approvalFailed);
           setIsApproveModalOpen(false);
         },
       },
@@ -117,7 +118,7 @@ export default function PendingReservations() {
 
   const handleConfirmDeny = () => {
     if (!selectedItem) {
-      showToast.error("Action Failed", "No item selected.");
+      showToast.error(T.toast.actionFailed, T.toast.noItemSelected);
       setIsDenyModalOpen(false);
       return;
     }
@@ -130,17 +131,17 @@ export default function PendingReservations() {
         onSuccess: () => {
           const actionText =
             selectedItem.status === "Approved"
-              ? "canceled reservation"
-              : "denied borrow request";
+              ? T.toast.canceledReservation
+              : T.toast.deniedRequest;
           showToast.success(
-            "Request Processed",
-            `Successfully ${actionText} for ${selectedItem.item.itemName}`,
+            T.toast.processedTitle,
+            T.toast.processedMessage(actionText, selectedItem.item.itemName),
           );
           setIsDenyModalOpen(false);
           setSelectedItem(null);
         },
         onError: (error) => {
-          showToast.error("Action Failed", error.message || "Failed to process request");
+          showToast.error(T.toast.actionFailed, error.message || T.toast.processFailed);
           setIsDenyModalOpen(false);
         },
       },
@@ -155,7 +156,7 @@ export default function PendingReservations() {
 
   const handleConfirmMarkBorrowed = () => {
     if (!selectedItem) {
-      showToast.error("Action Failed", "No item selected.");
+      showToast.error(T.toast.actionFailed, T.toast.noItemSelected);
       setIsMarkBorrowedModalOpen(false);
       return;
     }
@@ -165,15 +166,15 @@ export default function PendingReservations() {
       {
         onSuccess: () => {
           showToast.success(
-            "Marked as Borrowed",
-            `${selectedItem.item.itemName} marked as borrowed for ${selectedItem.borrowerFullName}`,
+            T.toast.markedBorrowedTitle,
+            T.toast.markedBorrowedMessage(selectedItem.item.itemName, selectedItem.borrowerFullName),
           );
           setIsMarkBorrowedModalOpen(false);
           setSelectedItem(null);
           setActiveTab("reservations");
         },
         onError: (error) => {
-          showToast.error("Action Failed", error.message || "Failed to mark item as borrowed");
+          showToast.error(T.toast.actionFailed, error.message || T.toast.markBorrowedFailed);
           setIsMarkBorrowedModalOpen(false);
         },
       },
@@ -200,10 +201,10 @@ export default function PendingReservations() {
         <div className="flex flex-col gap-4 mb-8 md:flex-row md:justify-between md:items-center">
           <div>
             <h1 className="text-[#1e293b] text-3xl md:text-3xl mb-2 font-extrabold tracking-tight drop-shadow-lg">
-              Pending & Reservations
+              {T.title}
             </h1>
             <span className="text-lg font-medium text-[#64748b]">
-              Review and approve pending reservation requests and manage confirmed reservations.
+              {T.description}
             </span>
           </div>
         </div>
@@ -218,7 +219,7 @@ export default function PendingReservations() {
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
-            Pending Reservations
+            {T.tabs.pending}
             {pendingItems.length > 0 && (
               <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded-full">
                 {pendingItems.length}
@@ -233,7 +234,7 @@ export default function PendingReservations() {
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
-            Reservations
+            {T.tabs.reservations}
             {reservationItems.length > 0 && (
               <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">
                 {reservationItems.length}
