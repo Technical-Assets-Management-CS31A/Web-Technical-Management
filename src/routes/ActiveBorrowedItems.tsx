@@ -16,18 +16,9 @@ import ReturnConfirmationModal from "../components/ReturnConfirmationModal";
 import ActiveBorrowedItemsSkeletonLoader from "../loader/ActiveBorrowedItemsSkeletonLoader";
 import { useActiveBorrowedItemsState } from "../states/active-borrowed-items-state";
 import { truncateRemarks } from "../components/truncateRemarks.tsx";
+import { ACTIVE_BORROWED_ITEMS_CONTENT as T } from "../constants/activeBorrowedItemsContent";
 
-const tableHeaders = [
-  "Serial No.",
-  "Image",
-  "Item",
-  "Occupied By",
-  "Room",
-  "Lent At",
-  "Status",
-  "Remarks",
-  "Actions",
-] as const;
+const tableHeaders = T.tableHeaders;
 
 const itemsPerPage = 10;
 
@@ -76,7 +67,7 @@ export default function ActiveBorrowedItems() {
     (e: React.MouseEvent, item: TRecentBorrowItemProps) => {
       e.stopPropagation();
       if (!item.id) {
-        showToast.error("Error", "Lent item ID not found");
+        showToast.error(T.toast.errorTitle, T.toast.idNotFound);
         return;
       }
       setItemToReturn(item);
@@ -88,11 +79,11 @@ export default function ActiveBorrowedItems() {
     if (!itemToReturn?.id) return;
     try {
       await returnItemMutation.mutateAsync(itemToReturn.id);
-      showToast.success("Item Returned", `${itemToReturn.item.itemName} has been returned successfully`);
+      showToast.success(T.toast.returnedTitle, T.toast.returnedMessage(itemToReturn.item.itemName));
       setItemToReturn(null);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : "Failed to return item";
-      showToast.error("Return Failed", msg);
+      const msg = error instanceof Error ? error.message : T.toast.returnFailed;
+      showToast.error(T.toast.returnFailedTitle, msg);
     }
   }, [itemToReturn, returnItemMutation, setItemToReturn]);
 
@@ -103,10 +94,10 @@ export default function ActiveBorrowedItems() {
 
       {/* Header */}
       <div className="shrink-0">
-        <p className="text-xs font-semibold uppercase tracking-widest text-blue-500 mb-1">Manage Borrow Items</p>
-        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Active Borrowed Items</h1>
+        <p className="text-xs font-semibold uppercase tracking-widest text-blue-500 mb-1">{T.eyebrow}</p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">{T.title}</h1>
         <p className="text-slate-500 text-sm mt-1 font-medium">
-          All items currently borrowed and not yet returned.
+          {T.description}
         </p>
       </div>
 
@@ -118,10 +109,10 @@ export default function ActiveBorrowedItems() {
           <div>
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-blue-500 inline-block" />
-              Active Borrowed Items
+              {T.tableTitle}
             </h2>
             <p className="text-xs text-slate-400 font-medium mt-0.5">
-              {filteredData.length} active borrow{filteredData.length !== 1 ? "s" : ""}
+              {T.countLabel(filteredData.length)}
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -135,7 +126,7 @@ export default function ActiveBorrowedItems() {
             <SearchBar
               onChangeValue={(value) => { setSearchTerm(value); setCurrentPage(1); }}
               name="search"
-              placeholder="Search items..."
+              placeholder={T.searchPlaceholder}
             />
           </div>
         </div>
@@ -196,10 +187,10 @@ export default function ActiveBorrowedItems() {
                             <button
                               onClick={(e) => handleReturnClick(e, item)}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-white bg-amber-500 hover:bg-amber-500/80 active:bg-amber-700 shadow-sm transition-colors"
-                              title="Manually return this item"
+                              title={T.returnButtonTitle}
                             >
                               <RotateCcw className="h-3.5 w-3.5" />
-                              <span>Return</span>
+                              <span>{T.returnButton}</span>
                             </button>
                             <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-500 transition-colors" />
                           </div>
@@ -211,8 +202,8 @@ export default function ActiveBorrowedItems() {
                       <td colSpan={tableHeaders.length} className="px-8 py-20 text-center">
                         <div className="flex flex-col items-center gap-3 text-slate-400">
                           <BookOpen className="h-10 w-10 text-slate-200" />
-                          <p className="font-semibold text-slate-500">No active borrowed items</p>
-                          <p className="text-xs">Items with "Borrowed" status will appear here.</p>
+                          <p className="font-semibold text-slate-500">{T.empty.title}</p>
+                          <p className="text-xs">{T.empty.description}</p>
                         </div>
                       </td>
                     </tr>
