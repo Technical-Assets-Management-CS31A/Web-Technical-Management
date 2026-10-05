@@ -1,0 +1,37 @@
+export const HISTORY_LIST_CONTENT = {
+  title: "Borrowing History",
+  description:
+    "This table lists item borrowing events, including the condition reported and the current status.",
+  tabs: {
+    all: "All",
+    pending: "Pending",
+    approved: "Approved",
+    borrowed: "Borrowed",
+    returned: "Returned",
+    denied: "Denied",
+  },
+  searchName: "Search History",
+  searchPlaceholder: "Search by borrower name",
+  tableHeaders: [
+    "Serial Number",
+    "Image",
+    "Item",
+    "Occupied By",
+    "Teacher",
+    "Room",
+    "Remarks",
+    "DateTime",
+    "Status",
+  ],
+  empty: "No items found for this status.",
+  footer: {
+    label: "Description:",
+    intro: "Each row represents one history event.",
+    eventDate: "Event Date",
+    eventDateDesc: "shows when it occurred.",
+    condition: "Condition",
+    conditionDesc: "is the item state reported at that time.",
+    status: "Status",
+    statusDesc: "reflects the latest known state for that borrow record.",
+  },
+} as const;
