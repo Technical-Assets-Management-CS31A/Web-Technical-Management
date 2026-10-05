@@ -5,6 +5,7 @@ import { GuestBorrowWizard } from "../components/GuestBorrowWizard";
 import { BorrowDetailDialog } from "../components/BorrowDetailDialog";
 import { useQueryClient } from "@tanstack/react-query";
 import { useBorrowItemState } from "../states/borrow-item-state";
+import { BORROW_ITEM_CONTENT as T } from "../constants/borrowItemContent";
 
 export default function BorrowItem() {
   const {
@@ -32,7 +33,7 @@ export default function BorrowItem() {
     const barcode = returnBarcode.trim();
 
     if (!barcode) {
-      setReturnError("Please enter a barcode");
+      setReturnError(T.returnModal.barcodeRequired);
       return;
     }
 
@@ -41,10 +42,10 @@ export default function BorrowItem() {
       setShowReturnModal(false);
       setReturnBarcode("");
       setReturnError("");
-      showToast.success("Item Returned", "Item returned successfully!");
+      showToast.success(T.toast.returnedTitle, T.toast.returnedMessage);
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Failed to return item";
-      showToast.error("Return Failed", msg);
+      const msg = error instanceof Error ? error.message : T.toast.returnFailed;
+      showToast.error(T.toast.returnFailedTitle, msg);
       setShowReturnModal(false);
       setReturnBarcode("");
     }
@@ -65,7 +66,7 @@ export default function BorrowItem() {
           >
             {/* Modal Header */}
             <div className="border-b border-gray-200 px-6 py-4 flex justify-between items-center rounded-t-2xl">
-              <h2 className="text-xl font-bold text-gray-900">Return Item</h2>
+              <h2 className="text-xl font-bold text-gray-900">{T.returnModal.title}</h2>
               <button
                 onClick={() => setShowReturnModal(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -77,10 +78,9 @@ export default function BorrowItem() {
             {/* Modal Content */}
             <div className="p-6">
               <p className="text-sm text-gray-600 mb-4">
-                Scan the <strong>item barcode</strong> to mark it as returned.
-                The system will automatically find and update the active
-                borrowed record. If the scanner cannot read the barcode, you may
-                manually enter it below.
+                {T.returnModal.instructions.prefix}{" "}
+                <strong>{T.returnModal.instructions.highlight}</strong>{" "}
+                {T.returnModal.instructions.suffix}
               </p>
               <input
                 type="text"
@@ -93,7 +93,7 @@ export default function BorrowItem() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleReturnSubmit();
                 }}
-                placeholder="Scan or enter item barcode (e.g., ITEM-SN-12345)"
+                placeholder={T.returnModal.placeholder}
                 className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
                   returnError
                     ? "border-red-500 focus:ring-red-500"
@@ -111,7 +111,7 @@ export default function BorrowItem() {
                   onClick={() => setShowReturnModal(false)}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  Cancel
+                  {T.returnModal.cancel}
                 </button>
                 <button
                   type="button"
@@ -143,10 +143,10 @@ export default function BorrowItem() {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         />
                       </svg>
-                      Processing...
+                      {T.returnModal.processing}
                     </span>
                   ) : (
-                    "Confirm Return"
+                    T.returnModal.confirm
                   )}
                 </button>
               </div>
@@ -158,13 +158,13 @@ export default function BorrowItem() {
       {/* Header */}
       <header className="flex-shrink-0 pt-6 md:pt-8 px-4 md:px-8 pb-4 md:pb-6 bg-white/70 backdrop-blur-md shadow-sm border-b border-[#e5e9f2] flex flex-col items-center">
         <h1 className="text-[#1e293b] text-3xl md:text-3xl mb-2 font-extrabold tracking-tight drop-shadow-lg">
-          Borrow Item
+          {T.title}
         </h1>
         <p className="text-[#64748b] text-sm md:text-base lg:text-lg font-medium max-w-2xl text-center px-4">
-          Browse available items or submit a borrow request for technical equipment.
+          {T.description}
         </p>
         <p className="text-[#64748b] text-sm md:text-base lg:text-md font-medium max-w-2xl text-center px-4">
-          Note: If the item have <b>Defective</b> condition you cannot borrow it.
+          {T.note.prefix} <b>{T.note.highlight}</b> {T.note.suffix}
         </p>
 
         {/* Tabs */}
@@ -177,7 +177,7 @@ export default function BorrowItem() {
                 : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
             }`}
           >
-            Borrow as Guest
+            {T.tabs.guest}
           </button>
           <button
             onClick={() => setActiveTab("reserve")}
@@ -187,7 +187,7 @@ export default function BorrowItem() {
                 : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
             }`}
           >
-            Reserve as Guest
+            {T.tabs.reserve}
           </button>
         </div>
       </header>
@@ -219,7 +219,7 @@ export default function BorrowItem() {
           onClose={() => setScannedLentItem(null)}
           onReturnSuccess={() => {
             setScannedLentItem(null);
-            showToast.success("Item Returned", "Item returned successfully!");
+            showToast.success(T.toast.returnedTitle, T.toast.returnedMessage);
           }}
         />
       )}
@@ -246,7 +246,7 @@ export default function BorrowItem() {
                 : "translate-x-full opacity-0 pointer-events-none pr-0 pl-3"
             }`}
             style={{ borderRadius: "9999px 0 0 9999px" }}
-            title="Return Item"
+            title={T.floatingMenu.returnItem}
           >
             <svg className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -256,7 +256,7 @@ export default function BorrowItem() {
                 showFloatingMenu ? "opacity-100 max-w-xs" : "opacity-0 max-w-0"
               }`}
             >
-              Return Item
+              {T.floatingMenu.returnItem}
             </span>
           </button>
 
@@ -274,7 +274,7 @@ export default function BorrowItem() {
               }}
               className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-2xl transition-all duration-300 p-4 md:p-5"
               style={{ borderRadius: "50% 0 0 50%" }}
-              title="Quick Actions"
+              title={T.floatingMenu.quickActions}
             >
               <svg
                 className={`w-7 h-7 md:w-8 md:h-8 transition-transform duration-300 ${showFloatingMenu ? "rotate-45" : "rotate-0"}`}
