@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from "react";
 import { AddUsers } from "../components/AddUser";
-import Button from "../components/Button";
 import EditUser from "../components/EditUser";
 import SearchBar from "../components/SearchBar";
 import { SelectUserStatus } from "../components/SelectUserStatus";
@@ -18,10 +17,13 @@ import RegistrationModule from "../components/RegistrationModule";
 import { USER_MANAGEMENT_CONTENT as T } from "../constants/userManagementContent";
 import {
   Users,
-  Sparkles,
   Search,
+  Shield,
   ShieldCheck,
   GraduationCap,
+  Info,
+  UserPlus,
+  Wifi,
 } from "lucide-react";
 
 export default function UserManagement() {
@@ -132,98 +134,108 @@ export default function UserManagement() {
 
   const staffUsers = users.filter((u) => u.userRole === "Staff" && u.status?.toLowerCase() !== "archived");
   const adminUsers = users.filter((u) => u.userRole === "Admin" && u.status?.toLowerCase() !== "archived");
-  const staffOnlineCount = staffUsers.filter((u) => u.status.toLowerCase() === "online").length;
-  const adminOnlineCount = adminUsers.filter((u) => u.status.toLowerCase() === "online").length;
+  const staffOnlineCount = staffUsers.filter((u) => u.status?.toLowerCase() === "online").length;
+  const adminOnlineCount = adminUsers.filter((u) => u.status?.toLowerCase() === "online").length;
+  const totalAccounts = staffUsers.length + adminUsers.length;
+  const totalOnline = staffOnlineCount + adminOnlineCount;
+  const totalBlocked = [...staffUsers, ...adminUsers].filter((u) => u.isBlocked).length;
+
+  const stats = [
+    { label: T.stats.total, value: totalAccounts, sub: T.stats.blockedSub(totalBlocked), icon: Users },
+    { label: T.stats.admins, value: adminUsers.length, sub: T.stats.onlineSub(adminOnlineCount), icon: ShieldCheck },
+    { label: T.stats.staff, value: staffUsers.length, sub: T.stats.onlineSub(staffOnlineCount), icon: Shield },
+    {
+      label: T.stats.online,
+      value: totalOnline,
+      sub: T.stats.onlineShare(totalAccounts ? Math.round((totalOnline / totalAccounts) * 100) : 0),
+      icon: Wifi,
+    },
+  ];
+
+  const tabs = [
+    { id: "staff" as const, label: T.tabs.staff, icon: ShieldCheck },
+    { id: "registered" as const, label: T.tabs.registered, icon: GraduationCap },
+  ];
 
   if (isPending) return <UserSkeletonLoader />;
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
+    <div className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-8xl space-y-6 px-4 py-6 sm:px-6 md:px-8 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
 
-      {/* Page header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-        <div>
-          <div className="inline-flex mt-12 md:mt-0 items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-semibold mb-4">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>{T.badge}</span>
+        {/* Header */}
+        <header className="flex flex-col gap-4 mt-12 md:mt-0 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-blue-600">{T.badge}</p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{T.title}</h1>
+            <p className="mt-1 max-w-xl text-sm text-slate-500">{T.description}</p>
           </div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">
-            {T.title}
-          </h1>
-          <p className="text-slate-500 font-medium text-base max-w-xl leading-relaxed">
-            {T.description}
-          </p>
-        </div>
-      </div>
-
-      {/* Top-level tab switcher with stats and New User button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-1 p-1 bg-white border border-slate-200 rounded-2xl w-fit shadow-sm">
           <button
-            onClick={() => setActiveTab("staff")}
-            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-              activeTab === "staff"
-                ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/25"
-                : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-            }`}
+            type="button"
+            onClick={() => setIsAddUserOpen(true)}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-blue-600/20 transition-all hover:bg-blue-700 active:scale-[0.98]"
           >
-            <ShieldCheck className="h-4 w-4" />
-            {T.tabs.staff}
+            <UserPlus className="h-4 w-4" />
+            {T.newUser}
           </button>
-          <button
-            onClick={() => setActiveTab("registered")}
-            className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-              activeTab === "registered"
-                ? "bg-violet-600 text-white shadow-md shadow-violet-600/25"
-                : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-            }`}
-          >
-            <GraduationCap className="h-4 w-4" />
-            {T.tabs.registered}
-          </button>
+        </header>
+
+        {/* Summary */}
+        <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-sm"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm text-slate-500">{stat.label}</p>
+                <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">{stat.value}</p>
+                <p className="mt-0.5 truncate text-xs text-slate-400">{stat.sub}</p>
+              </div>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                <stat.icon className="h-5 w-5" />
+              </span>
+            </div>
+          ))}
+        </section>
+
+        {/* Tab switcher */}
+        <div className="inline-flex w-full rounded-lg bg-slate-200/60 p-1 sm:w-auto">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`inline-flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all sm:flex-none ${
+                  isActive ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                <tab.icon className="h-4 w-4" />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button onClick={() => setIsAddUserOpen(true)} name={T.newUser} />
-        </div>
-      </div>
+        {/* ── Staff & Admins tab ── */}
+        {activeTab === "staff" && (
+          <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
 
-      {/* ── Staff & Admins tab ── */}
-      {activeTab === "staff" && (
-        <div className="bg-white rounded-4xl border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-
-          {/* Toolbar */}
-          <div className="px-6 md:px-8 py-4 border-b border-slate-100">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              {/* Left side - Minimal Stats */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200">
-                  <Users className="h-3.5 w-3.5 text-slate-500" />
-                  <span className="text-sm font-semibold text-slate-700">{tableUsers.length}</span>
-                  <span className="text-xs text-slate-500">{T.stats.total}</span>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-50 border border-violet-200">
-                  <ShieldCheck className="h-3.5 w-3.5 text-violet-600" />
-                  <span className="text-sm font-semibold text-violet-700">{staffUsers.length}</span>
-                  <span className="text-xs text-violet-600">{T.stats.staff}</span>
-                  <span className="text-xs text-violet-500">{T.stats.online(staffOnlineCount)}</span>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200">
-                  <ShieldCheck className="h-3.5 w-3.5 text-amber-600" />
-                  <span className="text-sm font-semibold text-amber-700">{adminUsers.length}</span>
-                  <span className="text-xs text-amber-600">{T.stats.admins}</span>
-                  <span className="text-xs text-amber-500">{T.stats.online(adminOnlineCount)}</span>
-                </div>
+            {/* Toolbar */}
+            <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">{T.tableTitle}</h2>
+                <p className="mt-0.5 text-xs text-slate-500">{T.countLabel(tableUsers.length)}</p>
               </div>
 
-              {/* Right side - Filters and Search */}
-              <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 lg:justify-end">
-                <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl shrink-0">
+              <div className="flex flex-col flex-wrap items-stretch gap-2 sm:flex-row sm:items-center lg:justify-end">
+                <div className="inline-flex shrink-0 rounded-lg bg-slate-100 p-1">
                   {T.roleFilters.map(({ value: role, label }) => (
                     <button
                       key={role}
                       onClick={() => setSelectedRole(role)}
-                      className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                      className={`rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
                         selectedRole === role
                           ? "bg-white text-slate-900 shadow-sm"
                           : "text-slate-500 hover:text-slate-700"
@@ -236,96 +248,90 @@ export default function UserManagement() {
                 <div className="shrink-0">
                   <SelectUserStatus onChangeStatus={setSelectedStatus} />
                 </div>
-                <div className="grow sm:grow-0 sm:w-auto">
-                  <SearchBar
-                    onChangeValue={(value) => setSearchUser(value)}
-                    name={T.searchName}
-                    placeholder={T.searchPlaceholder}
-                  />
-                </div>
+                <SearchBar
+                  onChangeValue={(value) => setSearchUser(value)}
+                  name={T.searchName}
+                  placeholder={T.searchPlaceholder}
+                />
               </div>
             </div>
-          </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <div className="min-h-[55vh] max-h-[55vh] overflow-y-auto">
-              {isError ? (
-                <ErrorTable />
-              ) : tableUsers.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 text-center px-8">
-                  <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center mb-4 border border-slate-100 shadow-sm">
-                    <Search className="h-8 w-8 text-slate-300" />
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <div className="max-h-[60vh] min-h-[45vh] overflow-y-auto">
+                {isError ? (
+                  <ErrorTable />
+                ) : tableUsers.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
+                    <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                      <Search className="h-5 w-5 text-slate-400" />
+                    </span>
+                    <h3 className="text-sm font-semibold text-slate-900">{T.empty.title}</h3>
+                    <p className="mt-1 max-w-sm text-sm text-slate-500">{T.empty.description}</p>
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-1">{T.empty.title}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
-                    {T.empty.description}
-                  </p>
-                </div>
-              ) : (
-                <table className="w-full text-left text-sm whitespace-nowrap">
-                  <thead>
-                    <tr className="border-b border-slate-100">
-                      {T.tableHeaders.map((col) => (
-                        <th
-                          key={col}
-                          className="sticky top-0 bg-slate-50/80 backdrop-blur-sm px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400"
-                        >
-                          {col}
-                        </th>
-                      ))}
-                      <th className="sticky top-0 bg-slate-50/80 backdrop-blur-sm px-6 py-4 w-12" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {tableUsers.map((user) => (
-                      <tr
-                        key={user.id}
-                        onClick={() => handleViewUserCredentials(user.id)}
-                        className="group transition-all duration-200 hover:bg-indigo-50/30 cursor-pointer"
-                      >
-                        <UserTable
-                          id={user.id}
-                          firstName={user.firstName}
-                          lastName={user.lastName}
-                          username={user.username}
-                          email={user.email}
-                          userRole={user.userRole}
-                          status={user.status}
-                          isBlocked={user.isBlocked}
-                          onSetEditUserId={(userId) => {
-                            setSelectedUserId(userId);
-                            setIsEditUserOpen(true);
-                          }}
-                          onSetIsEditUserOpen={setIsEditUserOpen}
-                          onMutate={(userId) => {
-                            setArchiveUserId(userId);
-                            setIsArchiveModalOpen(true);
-                          }}
-                          onBlockUser={handleBlockUser}
-                          onUnblockUser={handleUnblockUser}
-                        />
+                ) : (
+                  <table className="w-full text-left text-sm whitespace-nowrap">
+                    <thead>
+                      <tr className="sticky top-0 z-10 bg-slate-50">
+                        {T.tableHeaders.map((col) => (
+                          <th key={col} className="border-b border-slate-200 px-5 py-3 font-medium text-slate-500">
+                            {col}
+                          </th>
+                        ))}
+                        <th className="w-12 border-b border-slate-200 px-5 py-3" />
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {tableUsers.map((user) => (
+                        <tr
+                          key={user.id}
+                          onClick={() => handleViewUserCredentials(user.id)}
+                          className={`group cursor-pointer transition-colors ${
+                            user.isBlocked ? "bg-rose-50/40 hover:bg-rose-50/70" : "hover:bg-slate-50"
+                          }`}
+                        >
+                          <UserTable
+                            id={user.id}
+                            firstName={user.firstName}
+                            lastName={user.lastName}
+                            username={user.username}
+                            email={user.email}
+                            userRole={user.userRole}
+                            status={user.status}
+                            isBlocked={user.isBlocked}
+                            onSetEditUserId={(userId) => {
+                              setSelectedUserId(userId);
+                              setIsEditUserOpen(true);
+                            }}
+                            onSetIsEditUserOpen={setIsEditUserOpen}
+                            onMutate={(userId) => {
+                              setArchiveUserId(userId);
+                              setIsArchiveModalOpen(true);
+                            }}
+                            onBlockUser={handleBlockUser}
+                            onUnblockUser={handleUnblockUser}
+                          />
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Footer hint */}
-          <div className="px-8 py-4 border-t border-slate-100 bg-slate-50/50">
-            <p className="text-xs text-slate-400 font-medium">
-              <span className="font-semibold text-slate-500">{T.tip.label}</span> {T.tip.text}
+            {/* Footer hint */}
+            <p className="flex items-start gap-2 border-t border-slate-200 px-5 py-3 text-xs text-slate-500">
+              <Info className="mt-px h-3.5 w-3.5 shrink-0 text-slate-400" />
+              <span>{T.tip.text}</span>
             </p>
-          </div>
-        </div>
-      )}
+          </section>
+        )}
 
-      {/* ── Registered Users tab ── */}
-      {activeTab === "registered" && (
-        <RegistrationModule embedded />
-      )}
+        {/* ── Registered Users tab ── */}
+        {activeTab === "registered" && (
+          <RegistrationModule embedded />
+        )}
+      </div>
 
       {/* Modals */}
       {isAddUserOpen && (
