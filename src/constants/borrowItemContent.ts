@@ -3,9 +3,9 @@ export const BORROW_ITEM_CONTENT = {
   description:
     "Browse available items or submit a borrow request for technical equipment.",
   note: {
-    prefix: "Note: If the item have",
+    prefix: "Items in",
     highlight: "Defective",
-    suffix: "condition you cannot borrow it.",
+    suffix: "condition can't be borrowed.",
   },
   tabs: {
     guest: "Borrow as Guest",
