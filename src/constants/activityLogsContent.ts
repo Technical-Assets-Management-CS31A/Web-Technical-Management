@@ -1,27 +1,36 @@
 export const ACTIVITY_LOGS_CONTENT = {
+  eyebrow: "Audit Trail",
   title: "Activity Logs",
-  description:
-    "Monitor comprehensive system actions, track inventory movements, and audit user activity with complete visibility.",
-  searchPlaceholder: "Search by actor, action, or item...",
-  tableHeaders: [
-    "Actor Details",
-    "Action Type",
-    "Target Item",
-    "Status Transition",
-    "Timestamp",
-  ],
+  description: "Track every system action, inventory movement, and user change in one place.",
+  searchPlaceholder: "Search actor, action, or item...",
+  tableTitle: "Recent activity",
+  countLabel: (count: number) => `${count} ${count === 1 ? "entry" : "entries"}`,
+  stats: {
+    total: "Total events",
+    today: "Today",
+    actors: "Active users",
+    movements: "Borrows & returns",
+  },
+  actionFilters: {
+    all: "All",
+    create: "Created",
+    update: "Updated",
+    remove: "Archived / Deleted",
+    borrow: "Borrowed",
+    return: "Returned",
+  },
+  tableHeaders: ["Actor", "Action", "Item", "Status change", "When"],
   none: "None",
   noStatusChange: "No status change",
+  footerHint: "Click any row to open the full log details.",
   empty: {
     title: "No logs found",
-    description:
-      "We couldn't find any activity logs matching your search criteria. Try adjusting your filters.",
+    description: "No activity matches your search or filter. Try a different term or filter.",
   },
   error: {
-    title: "Connection Issue",
-    description:
-      "We encountered a problem while trying to fetch the activity history. Please check your connection and try again.",
-    refresh: "Refresh Page",
+    title: "Couldn't load activity",
+    description: "There was a problem fetching the activity history. Check your connection and try again.",
+    refresh: "Try again",
   },
   pagination: {
     showing: "Showing",
