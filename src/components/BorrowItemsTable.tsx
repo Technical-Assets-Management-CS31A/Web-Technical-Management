@@ -147,11 +147,11 @@ export const BorrowItemsTable = ({
             {paginatedData.length === 0 && !isError && (
               <div className="w-full h-full flex items-center justify-center p-8">
                 <div className="text-center max-w-md">
-                  <div className="text-5xl mb-3 text-[#94a3b8]">📦</div>
+                  <div className="text-5xl mb-3 text-slate-400">📦</div>
                   <h3 className="text-xl md:text-2xl font-semibold text-[#0f172a] mb-2">
                     No items found
                   </h3>
-                  <p className="text-[#64748b] text-sm md:text-base">
+                  <p className="text-slate-500 text-sm md:text-base">
                     Try adjusting your search or filters. Items available for
                     borrowing will appear here.
                   </p>
