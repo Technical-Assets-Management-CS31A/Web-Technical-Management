@@ -3,13 +3,8 @@ import no_image_svg from "../assets/no-image-svgrepo-com.svg";
 import type { THistoryBorrwedItems } from "../@types/types";
 import { FormattedDateTime } from "./FormattedDateTime";
 import { SlugStatus } from "./SlugStatus";
-import SearchBar from "./SearchBar";
 import Pagination from "./Pagination";
-import { FiEdit } from "react-icons/fi";
-import { MdOutlineCancel } from "react-icons/md";
-import { FiCheckCircle } from "react-icons/fi";
-import { MdOutlineClose } from "react-icons/md";
-import { Clock10Icon } from "lucide-react";
+import { Check, ClipboardCheck, Clock, Info, PackageCheck, X } from "lucide-react";
 
 type PendingItemsTableProps = {
     items: THistoryBorrwedItems[];
@@ -17,11 +12,21 @@ type PendingItemsTableProps = {
     onDeny: (item: THistoryBorrwedItems) => void;
     onMarkBorrowed: (item: THistoryBorrwedItems) => void;
     onRowClick: (itemId: string) => void;
-    searchValue: string;
-    onSearchChange: (value: string) => void;
 };
 
 const ITEMS_PER_PAGE = 10;
+const PICKUP_SOON_MS = 60 * 60 * 1000;
+
+const HEADERS = ["Item", "Borrower", "Room", "Requested", "Reserved For", "Status", "Remarks", ""];
+
+const isPickupSoon = (item: THistoryBorrwedItems) => {
+    if (item.status !== "Approved" || !item.reservedFor) return false;
+    const diff = new Date(item.reservedFor).getTime() - Date.now();
+    return diff > 0 && diff <= PICKUP_SOON_MS;
+};
+
+const secondaryButton =
+    "inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600";
 
 export default function PendingItemsTable({
     items,
@@ -29,195 +34,161 @@ export default function PendingItemsTable({
     onDeny,
     onMarkBorrowed,
     onRowClick,
-    onSearchChange,
 }: PendingItemsTableProps) {
     const [currentPage, setCurrentPage] = useState(1);
 
     const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    const paginatedItems = useMemo(() => items.slice(startIndex, endIndex), [items, startIndex, endIndex]);
-
-    useMemo(() => {
-        if (currentPage > totalPages && totalPages > 0) setCurrentPage(1);
-    }, [items.length, currentPage, totalPages]);
+    const validCurrentPage = totalPages > 0 ? Math.min(currentPage, totalPages) : 1;
+    const paginatedItems = useMemo(
+        () => items.slice((validCurrentPage - 1) * ITEMS_PER_PAGE, validCurrentPage * ITEMS_PER_PAGE),
+        [items, validCurrentPage],
+    );
 
     return (
-        <div>
-            {/* Search Bar and Pagination */}
-            <div className="flex justify-end mb-4">
-                <div className="flex items-center gap-4">
-                    <Pagination
-                        totalPages={totalPages}
-                        currentPage={currentPage}
-                        totalItems={items.length}
-                        itemsPerPage={ITEMS_PER_PAGE}
-                        handlePageChange={setCurrentPage}
-                    />
-                    <SearchBar
-                        onChangeValue={onSearchChange}
-                        name="Search Pending"
-                        placeholder="Search by borrower or item"
-                    />
+        <>
+            <div className="overflow-x-auto">
+                <div className="max-h-[60vh] min-h-[45vh] overflow-y-auto">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
+                        <thead>
+                            <tr className="sticky top-0 z-10 bg-slate-50">
+                                {HEADERS.map((header, i) => (
+                                    <th
+                                        key={`${header}-${i}`}
+                                        className="border-b border-slate-200 px-5 py-3 font-medium text-slate-500"
+                                    >
+                                        {header}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {paginatedItems.length === 0 ? (
+                                <tr>
+                                    <td colSpan={HEADERS.length} className="px-8 py-20 text-center">
+                                        <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                                            <ClipboardCheck className="h-5 w-5 text-slate-400" />
+                                        </span>
+                                        <p className="text-sm font-semibold text-slate-900">Nothing to review</p>
+                                        <p className="mt-1 text-sm text-slate-500">New requests will appear here.</p>
+                                    </td>
+                                </tr>
+                            ) : (
+                                paginatedItems.map((item) => {
+                                    // "Approved" = reservation approved and awaiting pickup
+                                    const isApprovedReservation = item.status === "Approved";
+                                    const pickupSoon = isPickupSoon(item);
+
+                                    return (
+                                        <tr
+                                            key={item.id}
+                                            onClick={() => onRowClick(item.id)}
+                                            className={`cursor-pointer transition-colors ${
+                                                pickupSoon ? "bg-amber-50/60 hover:bg-amber-50" : "hover:bg-slate-50"
+                                            }`}
+                                        >
+                                            <td className="px-5 py-3">
+                                                <div className="flex items-center gap-3">
+                                                    <img
+                                                        src={typeof item.item.image === "string" ? item.item.image : no_image_svg}
+                                                        alt={item.item.itemName}
+                                                        className="h-10 w-10 shrink-0 rounded-lg border border-slate-200 bg-slate-50 object-cover"
+                                                        onError={(e) => { e.currentTarget.src = no_image_svg; }}
+                                                    />
+                                                    <div className="min-w-0">
+                                                        <p className="font-medium text-slate-900">{item.item.itemName}</p>
+                                                        <p className="text-xs text-slate-500">{item.item.serialNumber}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <p className="text-slate-900">{item.borrowerFullName}</p>
+                                                <p className="text-xs text-slate-500">
+                                                    {item.teacherFullName ? `Teacher: ${item.teacherFullName}` : "No teacher"}
+                                                </p>
+                                            </td>
+                                            <td className="px-5 py-3 text-slate-700">{item.room || "-"}</td>
+                                            <td className="px-5 py-3 text-slate-600">{FormattedDateTime(item.item.createdAt)}</td>
+
+                                            {/* Reserved For — with urgency indicator */}
+                                            <td className="px-5 py-3">
+                                                {item.reservedFor ? (
+                                                    <div>
+                                                        <p className="text-slate-700">{FormattedDateTime(item.reservedFor)}</p>
+                                                        {pickupSoon && (
+                                                            <p className="mt-0.5 inline-flex items-center gap-1 text-xs font-medium text-amber-700">
+                                                                <Clock className="h-3 w-3" /> Pickup soon
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-slate-400">-</span>
+                                                )}
+                                            </td>
+
+                                            <td className="px-5 py-3">
+                                                <span className={`rounded px-2 py-0.5 text-xs font-medium ${SlugStatus(item.status)}`}>
+                                                    {item.status}
+                                                </span>
+                                            </td>
+                                            <td className="max-w-48 truncate px-5 py-3 text-slate-500">{item.remarks || "-"}</td>
+
+                                            {/* Action buttons */}
+                                            <td className="px-5 py-3">
+                                                <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                                                    {isApprovedReservation ? (
+                                                        <>
+                                                            <button
+                                                                onClick={() => onMarkBorrowed(item)}
+                                                                title="Mark as borrowed manually (use when RFID scan is unavailable)"
+                                                                className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
+                                                            >
+                                                                <PackageCheck className="h-3.5 w-3.5" /> Mark Borrowed
+                                                            </button>
+                                                            <button onClick={() => onDeny(item)} title="Cancel reservation" className={secondaryButton}>
+                                                                <X className="h-3.5 w-3.5" /> Cancel
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <button
+                                                                onClick={() => onApprove(item)}
+                                                                title="Approve request"
+                                                                className="inline-flex items-center gap-1.5 rounded-md bg-emerald-600 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-700"
+                                                            >
+                                                                <Check className="h-3.5 w-3.5" /> Approve
+                                                            </button>
+                                                            <button onClick={() => onDeny(item)} title="Deny request" className={secondaryButton}>
+                                                                <X className="h-3.5 w-3.5" /> Deny
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto h-[50vh] md:h-[60vh] border border-gray-200 rounded-lg">
-                <table className="w-full text-left border-collapse">
-                    <thead>
-                        <tr className="border-b border-gray-200">
-                            {[
-                                "Serial Number",
-                                "Image",
-                                "Item",
-                                "Borrower",
-                                "Teacher",
-                                "Room",
-                                "Remarks",
-                                "Request Date",
-                                "Reserved For",
-                                "Status",
-                                "Action",
-                            ].map((header) => (
-                                <th
-                                    key={header}
-                                    className="sticky bg-white top-0 py-4 px-6 text-sm font-semibold tracking-wider text-left uppercase text-[#64748b] border-b border-gray-200"
-                                >
-                                    {header}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {paginatedItems.length === 0 ? (
-                            <tr>
-                                <td colSpan={11} className="py-8 text-center text-gray-500">
-                                    No items found.
-                                </td>
-                            </tr>
-                        ) : (
-                            paginatedItems.map((item) => {
-                                // "Approved" = reservation approved and awaiting pickup
-                                const isApprovedReservation = item.status === "Approved";
+            <Pagination
+                totalPages={totalPages}
+                currentPage={validCurrentPage}
+                totalItems={items.length}
+                itemsPerPage={ITEMS_PER_PAGE}
+                handlePageChange={setCurrentPage}
+            />
 
-                                // Highlight rows whose pickup time is approaching (within 1 hour)
-                                const isPickupSoon =
-                                    isApprovedReservation &&
-                                    item.reservedFor != null &&
-                                    (() => {
-                                        const diff = new Date(item.reservedFor!).getTime() - Date.now();
-                                        return diff > 0 && diff <= 60 * 60 * 1000;
-                                    })();
-
-                                return (
-                                    <tr
-                                        key={item.id}
-                                        onClick={() => onRowClick(item.id)}
-                                        className={`transition-colors border-b border-gray-100 cursor-pointer ${
-                                            isPickupSoon
-                                                ? "bg-amber-50 hover:bg-amber-100"
-                                                : "hover:bg-[#f1f5f9]"
-                                        }`}
-                                    >
-                                        <td className="py-3 px-6">{item.item.serialNumber}</td>
-                                        <td className="py-4 px-6">
-                                            <img
-                                                src={typeof item.item.image === "string" ? item.item.image : no_image_svg}
-                                                alt={item.borrowerFullName}
-                                                className="object-cover w-10 h-10 rounded-lg"
-                                                onError={(e) => (e.currentTarget.style.display = "none")}
-                                            />
-                                        </td>
-                                        <td className="py-4 px-6">{item.item.itemName}</td>
-                                        <td className="py-4 px-6">{item.borrowerFullName}</td>
-                                        <td className="py-4 px-6">{item.teacherFullName || "-"}</td>
-                                        <td className="py-4 px-6">{item.room || "-"}</td>
-                                        <td className="py-4 px-6">{item.remarks || "-"}</td>
-                                        <td className="py-4 px-6">{FormattedDateTime(item.item.createdAt)}</td>
-
-                                        {/* Reserved For — with urgency indicator */}
-                                        <td className="py-4 px-6">
-                                            {item.reservedFor ? (
-                                                <div className="flex flex-col">
-                                                    <span className="text-sm font-medium text-gray-900">
-                                                        {FormattedDateTime(item.reservedFor)}
-                                                    </span>
-                                                    <span className="text-xs text-gray-600">
-                                                        {new Date(item.reservedFor).toLocaleTimeString([], {
-                                                            hour: "2-digit",
-                                                            minute: "2-digit",
-                                                        })}
-                                                    </span>
-                                                    {isPickupSoon && (
-                                                        <span className="mt-0.5 text-[10px] font-bold text-amber-600 animate-pulse">
-                                                            <Clock10Icon /> Pickup soon
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-400">-</span>
-                                            )}
-                                        </td>
-
-                                        <td className="py-4 px-6">
-                                            <span className={`px-3 py-1 rounded-full text-sm ${SlugStatus(item.status)}`}>
-                                                {item.status}
-                                            </span>
-                                        </td>
-
-                                        {/* Action buttons */}
-                                        <td className="py-4 px-6">
-                                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                                                {isApprovedReservation ? (
-                                                    <>
-                                                        <button
-                                                            onClick={() => onMarkBorrowed(item)}
-                                                            title="Mark as borrowed manually (use when RFID scan is unavailable)"
-                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-white bg-blue-500 hover:bg-blue-600 active:bg-blue-700 shadow-sm transition-colors"
-                                                        >
-                                                            <FiEdit className="h-3.5 w-3.5" /> Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={() => onDeny(item)}
-                                                            title="Cancel reservation"
-                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 active:bg-rose-700 shadow-sm transition-colors"
-                                                        >
-                                                            <MdOutlineCancel className="h-3.5 w-3.5" /> Deny
-                                                        </button>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <button
-                                                            onClick={() => onApprove(item)}
-                                                            title="Approve reservation"
-                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-white bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 shadow-sm transition-colors"
-                                                        >
-                                                            <FiCheckCircle className="h-3.5 w-3.5" /> Approve
-                                                        </button>
-                                                        <button
-                                                            onClick={() => onDeny(item)}
-                                                            title="Deny reservation"
-                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 active:bg-rose-700 shadow-sm transition-colors"
-                                                        >
-                                                            <MdOutlineClose className="h-3.5 w-3.5" /> Deny
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })
-                        )}
-                    </tbody>
-                </table>
-            </div>
-
-            <p className="mt-4 text-sm text-center text-[#64748b]">
-                <span className="font-semibold">Note:</span> Use <em>Approve / Deny</em> for pending requests.
-                In the Reservations tab, use <em>Mark Borrowed</em> if the RFID scan didn't trigger, or <em>Cancel</em> to cancel the reservation.
+            <p className="flex items-start gap-2 border-t border-slate-200 px-5 py-3 text-xs text-slate-500">
+                <Info className="mt-px h-3.5 w-3.5 shrink-0 text-slate-400" />
+                <span>
+                    Use <span className="font-medium text-slate-700">Approve / Deny</span> for pending requests.
+                    For approved reservations, use <span className="font-medium text-slate-700">Mark Borrowed</span> if the
+                    RFID scan didn't trigger, or <span className="font-medium text-slate-700">Cancel</span> to cancel the reservation.
+                </span>
             </p>
-        </div>
+        </>
     );
 }
