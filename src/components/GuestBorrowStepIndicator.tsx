@@ -8,7 +8,7 @@ export const GuestBorrowStepIndicator = ({
   steps,
 }: GuestBorrowStepIndicatorProps) => {
   return (
-    <div className="flex items-start justify-center mb-8">
+    <div className="flex items-start justify-center mb-8 pb-6 border-b border-slate-100 overflow-x-auto">
       {steps.map((step, index) => {
         const stepNumber = index + 1;
         const isCompleted = stepNumber < currentStep;
@@ -19,12 +19,12 @@ export const GuestBorrowStepIndicator = ({
             {/* Step circle + label */}
             <div className="flex flex-col items-center">
               <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm transition-colors duration-200 ${
+                className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm transition-colors duration-200 ${
                   isCompleted
                     ? "bg-blue-600 text-white"
                     : isActive
-                    ? "bg-blue-600 text-white ring-4 ring-blue-100"
-                    : "bg-gray-200 text-gray-500"
+                    ? "bg-white text-blue-600 border-2 border-blue-600"
+                    : "bg-white text-slate-400 border border-slate-300"
                 }`}
               >
                 {isCompleted ? (
@@ -47,7 +47,7 @@ export const GuestBorrowStepIndicator = ({
               </div>
               <span
                 className={`mt-1.5 text-xs font-medium whitespace-nowrap ${
-                  isActive ? "text-blue-600" : isCompleted ? "text-blue-500" : "text-gray-400"
+                  isActive ? "text-slate-900" : isCompleted ? "text-slate-600" : "text-slate-400"
                 }`}
               >
                 {step.label}
@@ -57,8 +57,8 @@ export const GuestBorrowStepIndicator = ({
             {/* Connector line (not after last step) */}
             {index < steps.length - 1 && (
               <div
-                className={`w-16 md:w-24 h-0.5 mx-2 mt-4 shrink-0 transition-colors duration-200 ${
-                  isCompleted ? "bg-blue-600" : "bg-gray-200"
+                className={`w-10 sm:w-16 md:w-24 h-px mx-2 mt-4 shrink-0 transition-colors duration-200 ${
+                  isCompleted ? "bg-blue-600" : "bg-slate-200"
                 }`}
               />
             )}
