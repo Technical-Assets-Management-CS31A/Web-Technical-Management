@@ -1,9 +1,24 @@
 export const DASHBOARD_CONTENT = {
-  eyebrow: "Overview",
   title: "Dashboard",
-  description: "Monitor inventory, users, and borrowing activity at a glance.",
+  description: "Here's what's happening with your inventory today.",
   notifications: "Notifications",
   online: "Online",
+  greetings: {
+    morning: "Good morning",
+    afternoon: "Good afternoon",
+    evening: "Good evening",
+  },
+  activity: {
+    title: "Borrowing Activity",
+    description: "Items lent out over the last 7 days",
+    totalLabel: "this week",
+    today: "Today",
+  },
+  statusOverview: {
+    title: "Status Overview",
+    description: "borrow records by status",
+    empty: "No borrow records yet.",
+  },
   badges: {
     totalItems: "Total Items",
     categories: "Categories",
@@ -12,22 +27,20 @@ export const DASHBOARD_CONTENT = {
   },
   recentBorrows: {
     title: "Recently Borrowed Items",
-    description: "Showing the 5 most recent active borrows",
+    description: "The 5 most recent active borrows",
+    viewAll: "View all",
     empty: {
       title: "No borrowed items",
       description: "There are no active borrows at the moment.",
     },
   },
   tableHeaders: [
-    "Serial No.",
-    "Image",
     "Item",
-    "Occupied By",
+    "Borrower",
     "Room",
     "Lent At",
     "Status",
     "Remarks",
-    "",
   ],
   returnModal: {
     title: "Return Item",
