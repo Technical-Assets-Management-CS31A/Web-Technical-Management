@@ -90,7 +90,7 @@ export default function Login() {
             <h1 className="text-6xl font-extrabold text-white leading-tight tracking-tight drop-shadow-md">
               {T.hero.titleLines[0]}<br />{T.hero.titleLines[1]}
             </h1>
-            <p className="text-xl text-blue-100/75 font-medium leading-relaxed">
+            <p className="text-xl text-white font-medium leading-relaxed">
               {T.hero.description}
             </p>
             <div className="flex flex-wrap gap-2 pt-1">
