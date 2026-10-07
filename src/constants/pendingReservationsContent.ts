@@ -3,9 +3,14 @@ export const PENDING_RESERVATIONS_CONTENT = {
   description:
     "Review and approve pending reservation requests and manage confirmed reservations.",
   tabs: {
-    pending: "Pending Reservations",
-    reservations: "Reservations",
+    pending: "Pending Requests",
+    reservations: "Approved Reservations",
   },
+  stats: {
+    pending: "Awaiting Approval",
+    approved: "Approved Reservations",
+  },
+  searchPlaceholder: "Search by borrower or item",
   toast: {
     actionFailed: "Action Failed",
     noItemSelected: "No item selected.",
