@@ -1,7 +1,28 @@
 import { UserData } from "../utils/usersData/userData";
-import { ShieldAlert, MoreVertical, Pencil, Archive, Ban, CheckCircle } from "lucide-react";
+import { ShieldAlert, MoreVertical, Pencil, Archive, Ban, CheckCircle, Crown, ShieldCheck, Shield } from "lucide-react";
 import type { FC } from "react";
 import { useState, useRef, useEffect } from "react";
+
+const ROLE_STYLES: Record<string, { badge: string; icon: typeof Shield }> = {
+    superadmin: { badge: "bg-rose-50 text-rose-700 ring-rose-200", icon: Crown },
+    admin: { badge: "bg-amber-50 text-amber-700 ring-amber-200", icon: ShieldCheck },
+    staff: { badge: "bg-violet-50 text-violet-700 ring-violet-200", icon: Shield },
+    default: { badge: "bg-slate-50 text-slate-700 ring-slate-200", icon: Shield },
+};
+
+const AVATAR_COLORS = [
+    "bg-blue-100 text-blue-700",
+    "bg-violet-100 text-violet-700",
+    "bg-emerald-100 text-emerald-700",
+    "bg-amber-100 text-amber-700",
+    "bg-rose-100 text-rose-700",
+    "bg-cyan-100 text-cyan-700",
+];
+
+const getAvatarColor = (name: string) => {
+    const sum = [...name].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    return AVATAR_COLORS[sum % AVATAR_COLORS.length];
+};
 
 type UserTableProps = {
     id: string;
@@ -37,13 +58,6 @@ export default function UserTable({
     const data = UserData();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
-
-    const UserStatus = (status: string) => {
-        if (!status) return "bg-red-100 text-gray-700"
-        if (status === "Online") return "bg-green-100 text-green-700"
-        if (status === "Offline") return "bg-orange-100 text-gray-700"
-        return status
-    }
 
     const handleArchiveUser = () => {
         onMutate(id);
@@ -207,36 +221,74 @@ export default function UserTable({
         );
     };
 
+    const fullName = `${firstName ?? ""} ${lastName ?? ""}`.trim();
+    const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase() || "?";
+    const isOnline = status?.toLowerCase() === "online";
+    const roleStyle = ROLE_STYLES[userRole?.toLowerCase()] ?? ROLE_STYLES.default;
+
     return (
         <>
-            <td className="py-3 px-6 font-medium text-slate-900">{firstName}</td>
-            <td className="py-3 px-6 font-medium text-slate-900">{lastName}</td>
-            <td className="py-3 px-6 text-slate-600">{username}</td>
-            <td className="py-3 px-6 text-slate-600">{email}</td>
-            <td className="py-3 px-6">
-                <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700">
+            {/* User */}
+            <td className="px-5 py-3">
+                <div className="flex items-center gap-3">
+                    <div className="relative shrink-0">
+                        <span
+                            className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold ${getAvatarColor(fullName)} ${isBlocked ? "opacity-50 grayscale" : ""}`}
+                        >
+                            {initials}
+                        </span>
+                        <span
+                            className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-white ${isOnline ? "bg-emerald-500" : "bg-slate-300"}`}
+                        />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="font-medium text-slate-900">{fullName || "—"}</p>
+                        <p className="text-xs text-slate-500">@{username}</p>
+                    </div>
+                </div>
+            </td>
+
+            {/* Email */}
+            <td className="px-5 py-3 text-slate-600">{email}</td>
+
+            {/* Role */}
+            <td className="px-5 py-3">
+                <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${roleStyle.badge}`}>
+                    <roleStyle.icon className="h-3 w-3" />
                     {userRole}
                 </span>
             </td>
-            <td className="py-3 px-6">
+
+            {/* Status */}
+            <td className="px-5 py-3">
                 <div className="flex items-center gap-2">
                     <span
-                        className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${UserStatus(status)}`}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            isOnline ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
+                        }`}
                     >
-                        {status}
+                        <span className="relative flex h-1.5 w-1.5">
+                            {isOnline && (
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                            )}
+                            <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${isOnline ? "bg-emerald-500" : "bg-slate-400"}`} />
+                        </span>
+                        {status || "Unknown"}
                     </span>
                     {isBlocked && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-700 border border-rose-200">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700 ring-1 ring-inset ring-rose-200">
                             <ShieldAlert className="h-3 w-3" />
                             Blocked
                         </span>
                     )}
                 </div>
             </td>
-            <td className="py-3 px-6 text-right">
-                <ActionMenu 
-                    viewerRole={data.userRole} 
-                    targetRole={userRole} 
+
+            {/* Actions */}
+            <td className="px-5 py-3 text-right">
+                <ActionMenu
+                    viewerRole={data.userRole}
+                    targetRole={userRole}
                     targetStatus={status}
                     targetIsBlocked={isBlocked}
                 />
