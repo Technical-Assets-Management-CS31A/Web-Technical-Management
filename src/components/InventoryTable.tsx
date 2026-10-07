@@ -51,7 +51,7 @@ const ShowButtonIfUserAdmin: FC<ShowButtonIfUserAdminProps> = ({
                         ? `Cannot archive — item is currently ${itemStatus}`
                         : "Archive item"
             }
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 active:bg-rose-700 shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-slate-200 bg-white text-xs font-medium text-slate-600 hover:border-rose-200 hover:bg-rose-50 hover:text-orange-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
         >
             <IoArchive /> Archive
         </button>
@@ -94,50 +94,52 @@ export const InventoryTable = ({ item }: InventoryTableProps) => {
 
     return (
         <>
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead>
-                    <tr className="sticky top-0 bg-white/90 backdrop-blur-sm">
-                        <th className="py-3 px-4 text-xs font-semibold uppercase border-b text-[#64748b]">Serial Number</th>
-                        <th className="py-3 px-4 text-xs font-semibold uppercase border-b text-[#64748b]">Image</th>
-                        <th className="py-3 px-4 text-xs font-semibold uppercase border-b text-[#64748b]">Item</th>
-                        <th className="py-3 px-4 text-xs font-semibold uppercase border-b text-[#64748b]">Category</th>
-                        <th className="py-3 px-4 text-xs font-semibold uppercase border-b text-[#64748b]">Condition</th>
-                        <th className="py-3 px-4 text-xs font-semibold uppercase border-b text-[#64748b]">DateTime</th>
-                        <th className="py-3 px-4 text-xs font-semibold uppercase border-b text-[#64748b]">Status</th>
-                        <th className="py-3 px-4 text-xs font-semibold uppercase border-b text-[#64748b]">Action</th>
+                    <tr className="sticky top-0 z-10 bg-slate-50">
+                        {["Item", "Category", "Condition", "Date Added", "Status", ""].map((header, i) => (
+                            <th
+                                key={`${header}-${i}`}
+                                className="border-b border-slate-200 px-5 py-3 font-medium text-slate-500"
+                            >
+                                {header}
+                            </th>
+                        ))}
                     </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-100">
                     {item.map((row) => (
                         <tr
                             key={row.id}
                             onClick={() => navigate({ to: `/home/item/$id`, params: { id: row.id } })}
-                            className="transition-colors cursor-pointer odd:bg-white even:bg-[#f9fbff] hover:bg-[#f8fafc]"
+                            className="cursor-pointer transition-colors hover:bg-slate-50"
                         >
-                            <td className="py-3 px-4">{row.serialNumber}</td>
-                            <td className="py-3 px-4">
-                                <img
-                                    src={typeof row.image === "string" ? row.image : no_image_svg}
-                                    alt={row.itemName}
-                                    className="w-12 h-12 object-cover rounded"
-                                />
+                            <td className="px-5 py-3">
+                                <div className="flex items-center gap-3">
+                                    <img
+                                        src={typeof row.image === "string" ? row.image : no_image_svg}
+                                        alt={row.itemName}
+                                        className="h-10 w-10 shrink-0 rounded-lg border border-slate-200 bg-slate-50 object-cover"
+                                    />
+                                    <div className="min-w-0">
+                                        <p className="font-medium text-slate-900">{row.itemName}</p>
+                                        <p className="text-xs text-slate-500">{row.serialNumber}</p>
+                                    </div>
+                                </div>
                             </td>
-                            <td className="py-3 px-4">{row.itemName}</td>
-                            <td className="py-3 px-4">{row.category}</td>
-                            <td className="py-3 px-4">
-                                <span className={`px-3 py-1 rounded-full text-sm ${SlugCondition(row.condition)}`}>
-                                    {row.condition}
+                            <td className="px-5 py-3 text-slate-700">{row.category}</td>
+                            <td className="px-5 py-3">
+                                <span className={`rounded px-2 py-0.5 text-xs font-medium ${SlugCondition(row.condition)}`}>
+                                    {row.condition === "NeedRepair" ? "Need Repair" : row.condition}
                                 </span>
                             </td>
-                            <td className="py-3 px-4">
-                                <span>{FormattedDateTime(row.createdAt)}</span>
-                            </td>
-                            <td className="py-3 px-4">
-                                <span className={`px-3 py-1 rounded-full text-sm ${SlugStatus(row.status)}`}>
+                            <td className="px-5 py-3 text-slate-600">{FormattedDateTime(row.createdAt)}</td>
+                            <td className="px-5 py-3">
+                                <span className={`rounded px-2 py-0.5 text-xs font-medium ${SlugStatus(row.status)}`}>
                                     {row.status}
                                 </span>
                             </td>
-                            <td className="py-3 px-4">
+                            <td className="px-5 py-3 text-right">
                                 <ShowButtonIfUserAdmin
                                     userRole={userRole}
                                     itemStatus={row.status}
