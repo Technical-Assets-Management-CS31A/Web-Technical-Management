@@ -1,9 +1,18 @@
 export const ARCHIVE_CONTENT = {
-  badge: "Archive vault",
   title: "Archive",
-  description: (label: string) =>
-    `View and manage archived ${label}. Restore records back to the system or permanently delete them.`,
-  archivedCount: (count: number, label: string) => `${count} archived ${label}`,
+  description:
+    "Review archived records. Restore them back to the system or permanently delete them.",
+  stats: {
+    items: { label: "Archived items", hint: "Removed from inventory" },
+    users: { label: "Admin & staff", hint: "Archived accounts" },
+    teachers: { label: "Teachers", hint: "Archived accounts" },
+    students: { label: "Students", hint: "Archived accounts" },
+  },
+  table: {
+    title: (label: string) => `Archived ${label}`,
+    count: (count: number, label: string) =>
+      `${count} ${count === 1 ? "record" : "records"} in archived ${label}`,
+  },
   searchPlaceholder: (label: string) => `Search archived ${label}...`,
   tabs: {
     items: "Items",
@@ -12,18 +21,20 @@ export const ARCHIVE_CONTENT = {
     students: "Students",
   },
   headers: {
-    items: ["Serial No.", "Image", "Name", "Category", "Condition", "Archived At"],
-    users: ["User ID", "Full Name", "Username", "Email", "Phone", "Role", "Status", ""],
-    teachers: ["Teacher ID", "Full Name", "Username", "Role", "Status"],
-    students: ["Student ID", "Full Name", "Course", "Section", "Year", "Role", "Status"],
+    items: ["Item", "Category", "Condition", "Archived"],
+    users: ["User", "Username", "Email", "Phone", "Role", "Status"],
+    teachers: ["Teacher", "Username", "Status"],
+    students: ["Student", "Course", "Section", "Year", "Status"],
   },
-  userMenu: {
+  rowActions: {
     moreActions: "More actions",
-    restore: "Restore User",
-    delete: "Delete User",
+    restoreItem: "Restore item",
+    deleteItem: "Delete permanently",
+    restoreUser: "Restore user",
+    deleteUser: "Delete permanently",
   },
   empty: {
-    title: (label: string) => `No Archived ${label}`,
+    title: (label: string) => `No archived ${label}`,
     noRecords: (label: string) => `When ${label} are archived, they will appear here.`,
     noMatches: (label: string) =>
       `No archived ${label} match your search. Try adjusting your query.`,
