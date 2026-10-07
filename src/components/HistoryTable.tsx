@@ -16,7 +16,7 @@ export default function HistoryTable({ items }: HistoryTableProps) {
             {sortedItems.map((item) => (
                 <tr
                     key={item.id}
-                    className="hover:bg-[#f1f5f9] transition-colors odd:bg-white even:bg-[#f8fafc]"
+                    className="hover:bg-slate-100 transition-colors odd:bg-white even:bg-slate-50"
                 >
                     <td className="py-3 px-4">{item.item.serialNumber}</td>
                     <td className="py-4 px-6">
