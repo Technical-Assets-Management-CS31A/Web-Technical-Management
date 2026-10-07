@@ -1,8 +1,14 @@
 export const INVENTORY_LIST_CONTENT = {
-  badge: "Asset management",
-  title: "Inventory List",
-  description:
-    "Overview of assets and availability. Track counts by category, condition, and borrow status.",
+  title: "Inventory",
+  description: "Manage assets, track availability, and monitor item condition.",
+  stats: {
+    total: "Total Items",
+    available: "Available",
+    borrowed: "Borrowed",
+    needsAttention: "Needs Attention",
+    needsAttentionHint: "Defective or need repair",
+  },
+  allCategories: "All",
   newItem: "New Item",
   moreOptions: "More options",
   menu: {
@@ -12,7 +18,7 @@ export const INVENTORY_LIST_CONTENT = {
     exporting: "Exporting...",
   },
   table: {
-    title: "Items",
+    title: "All Items",
     count: (count: number) => `${count} item${count !== 1 ? "s" : ""}`,
     inCategory: (category: string) => ` in ${category}`,
     searchPlaceholder: "Search items...",
@@ -24,7 +30,6 @@ export const INVENTORY_LIST_CONTENT = {
     clearFilters: "Clear all filters",
   },
   printModal: {
-    badge: "Barcode export",
     title: "Generate Barcode PDF",
     readyToExport: (count: number) => `${count} item${count !== 1 ? "s" : ""} ready to export`,
     previous: "Previous",
