@@ -92,7 +92,7 @@ export const GuestBorrowWizard = ({
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-lg p-4 md:p-8 ring-1 ring-gray-100">
+    <div className="rounded-xl border border-slate-200 bg-white p-5 md:p-8">
       {/* Success modal */}
       {showSuccessModal && (
         <BorrowSuccessModal
@@ -115,8 +115,8 @@ export const GuestBorrowWizard = ({
       {step === 1 && (
         <div className="flex flex-col items-center gap-6">
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-gray-900 mb-1">Scan Item</h2>
-            <p className="text-sm text-gray-500">
+            <h2 className="text-lg font-semibold text-slate-900 mb-1">Scan Item</h2>
+            <p className="text-sm text-slate-500">
               Use the RFID scanner to select the item to {isReserve ? "reserve" : "borrow"}. The system will
               verify availability before proceeding.
             </p>
@@ -130,23 +130,23 @@ export const GuestBorrowWizard = ({
               type="button"
               onClick={() => setShowScanModal(true)}
               disabled={isCheckingRfid}
-              className={`flex flex-col items-center gap-3 p-6 rounded-2xl border-2 bg-white shadow-sm transition-all duration-200 cursor-pointer w-full sm:w-52
+              className={`flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-dashed bg-white transition-colors duration-200 cursor-pointer w-full sm:w-56
                 ${errors.tagUid || errors.rfid
-                  ? "border-red-400 ring-2 ring-red-100"
+                  ? "border-rose-300 bg-rose-50/40"
                   : scannedItem
-                    ? "border-indigo-500 ring-2 ring-indigo-100"
-                    : "border-slate-200 hover:border-slate-300 hover:shadow-md"
+                    ? "border-blue-400 bg-blue-50/40"
+                    : "border-slate-300 hover:border-blue-400 hover:bg-slate-50"
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              <span className={`flex items-center justify-center w-14 h-14 rounded-2xl
-                ${errors.tagUid || errors.rfid ? "bg-red-50" : "bg-indigo-50"}`}>
-                <ScanLine className={`w-7 h-7 ${errors.tagUid || errors.rfid ? "text-red-500" : "text-indigo-600"}`} />
+              <span className={`flex items-center justify-center w-12 h-12 rounded-lg
+                ${errors.tagUid || errors.rfid ? "bg-rose-100" : "bg-blue-50"}`}>
+                <ScanLine className={`w-6 h-6 ${errors.tagUid || errors.rfid ? "text-rose-600" : "text-blue-600"}`} />
               </span>
-              <span className="text-base font-semibold text-slate-700">
+              <span className="text-sm font-semibold text-slate-700">
                 {isCheckingRfid ? "Checking…" : scannedItem ? "Re-scan Item" : "Scan Item"}
               </span>
               {scannedItem && !errors.rfid && (
-                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700">
                   Scanned
                 </span>
               )}
@@ -170,7 +170,7 @@ export const GuestBorrowWizard = ({
 
           {/* RFID / availability error */}
           {errors.rfid && !isCheckingRfid && (
-            <div className="flex items-start gap-3 px-4 py-3 bg-red-50 border border-red-300 rounded-lg w-full max-w-sm">
+            <div className="flex items-start gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-lg w-full max-w-sm">
               <svg className="h-5 w-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
@@ -184,7 +184,7 @@ export const GuestBorrowWizard = ({
 
           {/* Item found — preview card */}
           {scannedItem && !errors.rfid && !isCheckingRfid && (
-            <div className="flex items-center gap-4 px-4 py-3 bg-green-50 border border-green-300 rounded-xl w-full max-w-sm">
+            <div className="flex items-center gap-4 px-4 py-3 bg-green-50 border border-green-200 rounded-lg w-full max-w-sm">
               {scannedItem.image ? (
                 <img
                   src={scannedItem.image}
@@ -200,8 +200,8 @@ export const GuestBorrowWizard = ({
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900 truncate text-sm">{scannedItem.itemName}</p>
-                <p className="text-xs text-gray-500 truncate">{scannedItem.serialNumber} · {scannedItem.category}</p>
+                <p className="font-semibold text-slate-900 truncate text-sm">{scannedItem.itemName}</p>
+                <p className="text-xs text-slate-500 truncate">{scannedItem.serialNumber} · {scannedItem.category}</p>
                 <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -212,12 +212,12 @@ export const GuestBorrowWizard = ({
             </div>
           )}
 
-          <div className="flex justify-end w-full">
+          <div className="flex justify-end w-full border-t border-slate-100 pt-5">
             <button
               type="button"
               onClick={nextStep}
               disabled={isCheckingRfid || !scannedItem}
-              className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isCheckingRfid ? "Checking…" : "Next"}
             </button>
@@ -241,10 +241,10 @@ export const GuestBorrowWizard = ({
       {step === 2 && (
         <div className="flex flex-col gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-1">
+            <h2 className="text-lg font-semibold text-slate-900 mb-1">
               Guest Information
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-500">
               Fill in the guest's details.
             </p>
           </div>
@@ -382,7 +382,7 @@ export const GuestBorrowWizard = ({
 
           {/* Duplicate guest name error */}
           {errors.duplicateName && !isCheckingName && (
-            <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 border border-amber-300 rounded-lg">
+            <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
               <svg className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
@@ -394,11 +394,11 @@ export const GuestBorrowWizard = ({
             </div>
           )}
 
-          <div className="flex justify-between">
+          <div className="flex justify-between border-t border-slate-100 pt-5 mt-2">
             <button
               type="button"
               onClick={prevStep}
-              className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 text-sm border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors"
             >
               Back
             </button>
@@ -406,7 +406,7 @@ export const GuestBorrowWizard = ({
               type="button"
               onClick={nextStep}
               disabled={isCheckingName}
-              className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isCheckingName ? "Checking…" : "Next"}
             </button>
@@ -418,10 +418,10 @@ export const GuestBorrowWizard = ({
       {isReserve && step === 3 && (
         <div className="flex flex-col gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-1">
+            <h2 className="text-lg font-semibold text-slate-900 mb-1">
               Reservation Schedule
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-500">
               Set the date and time for the reservation. Reservations can only be made up to 7 days in advance.
             </p>
           </div>
@@ -440,7 +440,7 @@ export const GuestBorrowWizard = ({
                 onChange={(e) => updateField("reservedForDate", e.target.value || null)}
                 className={inputClass(!!errors.reservedForDate)}
               />
-              <p className="text-xs text-gray-400 mt-1">Up to 7 days from today</p>
+              <p className="text-xs text-slate-400 mt-1">Up to 7 days from today</p>
             </FormField>
 
             <FormField label="Reservation Time" required error={errors.reservedForTime}>
@@ -452,22 +452,22 @@ export const GuestBorrowWizard = ({
                 onChange={(e) => updateField("reservedForTime", e.target.value || null)}
                 className={inputClass(!!errors.reservedForTime)}
               />
-              <p className="text-xs text-gray-400 mt-1">Between 7:30 AM and 8:30 PM</p>
+              <p className="text-xs text-slate-400 mt-1">Between 7:30 AM and 8:30 PM</p>
             </FormField>
           </div>
 
-          <div className="flex justify-between">
+          <div className="flex justify-between border-t border-slate-100 pt-5 mt-2">
             <button
               type="button"
               onClick={prevStep}
-              className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 text-sm border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors"
             >
               Back
             </button>
             <button
               type="button"
               onClick={nextStep}
-              className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 text-sm bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
             >
               Next
             </button>
@@ -479,10 +479,10 @@ export const GuestBorrowWizard = ({
       {((!isReserve && step === 3) || (isReserve && step === 4)) && (
         <div className="flex flex-col gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-1">
+            <h2 className="text-lg font-semibold text-slate-900 mb-1">
               Guest Photo
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-500">
               A photo is required for guest identification.
             </p>
           </div>
@@ -494,7 +494,7 @@ export const GuestBorrowWizard = ({
 
           {/* Photo required error */}
           {errors.guestImage && (
-            <div className="flex items-start gap-3 px-4 py-3 bg-red-50 border border-red-300 rounded-lg">
+            <div className="flex items-start gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
               <svg className="h-5 w-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
@@ -503,18 +503,18 @@ export const GuestBorrowWizard = ({
             </div>
           )}
 
-          <div className="flex justify-between">
+          <div className="flex justify-between border-t border-slate-100 pt-5 mt-2">
             <button
               type="button"
               onClick={prevStep}
-              className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 text-sm border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors"
             >
               Back
             </button>
             <button
               type="button"
               onClick={nextStep}
-              className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 text-sm bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
             >
               Next
             </button>
@@ -526,10 +526,10 @@ export const GuestBorrowWizard = ({
       {((!isReserve && step === 4) || (isReserve && step === 5)) && (
         <div className="flex flex-col gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-1">
+            <h2 className="text-lg font-semibold text-slate-900 mb-1">
               Review &amp; Submit
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-500">
               Review the details before submitting.
             </p>
           </div>
@@ -562,19 +562,19 @@ function FormField({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label} {required && <span className="text-red-500">*</span>}
+      <label className="block text-sm font-medium text-slate-700 mb-1.5">
+        {label} {required && <span className="text-rose-500">*</span>}
       </label>
       {children}
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {error && <p className="text-rose-600 text-sm mt-1">{error}</p>}
     </div>
   );
 }
 
 function inputClass(hasError: boolean) {
-  return `w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:border-transparent ${
+  return `w-full px-3.5 py-2.5 text-sm border rounded-lg bg-white transition-colors focus:outline-none focus:ring-4 ${
     hasError
-      ? "border-red-500 focus:ring-red-500"
-      : "border-gray-300 focus:ring-blue-500"
+      ? "border-rose-300 focus:border-rose-500 focus:ring-rose-500/10"
+      : "border-slate-300 focus:border-blue-500 focus:ring-blue-500/10"
   }`;
 }
