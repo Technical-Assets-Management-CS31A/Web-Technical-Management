@@ -78,7 +78,7 @@ export default function SelectItemStatus({
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg shadow-blue-500/10 border border-blue-200 z-50">
                     <div className="py-1">
                         {statuses.map((status) => (
                             <button
