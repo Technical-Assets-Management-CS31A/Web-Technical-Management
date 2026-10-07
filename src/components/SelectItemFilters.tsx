@@ -91,7 +91,11 @@ export default function SelectItemFilters({
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors min-w-[120px] sm:min-w-[160px]"
+                className={`flex items-center justify-between gap-2 px-3 sm:px-4 py-2.5 text-sm font-medium bg-white border rounded-lg transition-colors min-w-[120px] sm:min-w-[160px] focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/20 ${
+                    isOpen || getActiveFiltersCount() > 0
+                        ? "border-blue-500 text-blue-700 ring-4 ring-blue-500/10"
+                        : "border-gray-300 text-gray-700 hover:border-blue-300 hover:text-blue-700"
+                }`}
             >
                 <span className="flex items-center gap-1.5 sm:gap-2">
                     <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,7 +119,7 @@ export default function SelectItemFilters({
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-64 sm:w-72 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50 max-h-[80vh] overflow-y-auto">
+                <div className="absolute right-0 mt-2 w-64 sm:w-72 bg-white rounded-lg shadow-lg shadow-blue-500/10 border border-blue-200 z-50 max-h-[80vh] overflow-y-auto">
                     <div className="p-3 sm:p-4">
                         {/* Status Section */}
                         <div className="mb-3">
