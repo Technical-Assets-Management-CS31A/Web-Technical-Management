@@ -1,33 +1,41 @@
 export const BORROW_LOGS_CONTENT = {
+  eyebrow: "Audit Trail",
   title: "Borrow Logs",
-  description:
-    "Track every item borrowing event — who borrowed what, when it was returned, and the full status trail.",
-  searchPlaceholder: "Search by borrower, item, serial no...",
+  description: "Every borrowing event — who borrowed what, when it came back, and the full status trail.",
+  searchPlaceholder: "Search borrower, item, serial no...",
+  tableTitle: "Borrowing history",
+  countLabel: (count: number) => `${count} ${count === 1 ? "record" : "records"}`,
+  stats: {
+    total: "Total records",
+    out: "Currently out",
+    returned: "Returned",
+    borrowers: "Unique borrowers",
+  },
+  allStatuses: "All",
   tableHeaders: {
     borrower: "Borrower",
     item: "Item",
-    serialNo: "Serial No.",
     status: "Status",
-    borrowedAt: "Borrowed At",
-    returnedAt: "Returned At",
+    borrowedAt: "Borrowed",
+    returnedAt: "Returned",
+    duration: "Duration",
     remarks: "Remarks",
   },
   roles: {
     student: "Student",
   },
-  reservedFor: "Reserved for:",
+  reservedFor: "Reserved for",
   notReturned: "Not returned",
-  noRemarks: "No remarks",
+  noRemarks: "—",
+  footerHint: "Click any row to see the full borrow record, including ID photos.",
   empty: {
     title: "No logs found",
-    description:
-      "No borrow logs match your current search or filter. Try adjusting your criteria.",
+    description: "No borrow logs match your search or filter. Try a different term or filter.",
   },
   error: {
-    title: "Connection Issue",
-    description:
-      "We couldn't fetch the borrow logs. Please check your connection and try again.",
-    refresh: "Refresh Page",
+    title: "Couldn't load borrow logs",
+    description: "There was a problem fetching the borrow logs. Check your connection and try again.",
+    refresh: "Try again",
   },
   pagination: {
     showing: "Showing",
