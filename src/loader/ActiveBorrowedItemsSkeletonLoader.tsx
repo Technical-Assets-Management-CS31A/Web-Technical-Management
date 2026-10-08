@@ -6,86 +6,96 @@ const Bone = ({ className, style }: { className?: string; style?: React.CSSPrope
 
 const ActiveBorrowedItemsSkeletonLoader = () => {
   return (
-    <div className="h-screen bg-slate-50 flex flex-col p-6 md:p-8 gap-6">
-      {/* Header */}
-      <div className="shrink-0 space-y-2">
-        <Bone className="h-3.5 w-36 rounded-full" />
-        <Bone className="h-9 w-72" />
-        <Bone className="h-4 w-80 max-w-full" />
-      </div>
-
-      {/* Table card */}
-      <div className="flex-1 min-h-0 bg-white rounded-[2rem] border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden flex flex-col">
-        {/* Toolbar */}
-        <div className="shrink-0 px-6 md:px-8 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <Bone className="h-5 w-48" />
-            <Bone className="h-3 w-28" />
-          </div>
-          <div className="flex items-center gap-2">
-            <Bone className="h-9 w-40 rounded-xl" />
-            <Bone className="h-9 w-44 rounded-xl" />
-          </div>
+    <div className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-8xl space-y-6 px-4 py-6 sm:px-6 md:px-8">
+        {/* Header */}
+        <div className="space-y-2">
+          <Bone className="h-3 w-32 rounded-full" />
+          <Bone className="h-7 w-64" />
+          <Bone className="h-4 w-80 max-w-full" />
         </div>
 
-        {/* Table */}
-        <div className="flex-1 min-h-0 overflow-x-auto">
-          <div className="h-full overflow-y-auto">
+        {/* Summary */}
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5">
+              <div className="space-y-2">
+                <Bone className="h-3.5 w-24" />
+                <Bone className="h-7 w-12" />
+              </div>
+              <Bone className="h-10 w-10" />
+            </div>
+          ))}
+        </div>
+
+        {/* Table card */}
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          {/* Toolbar */}
+          <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1.5">
+              <Bone className="h-5 w-40" />
+              <Bone className="h-3 w-24" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Bone className="h-8 w-44" />
+              <Bone className="h-9 w-56" />
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
             <table className="w-full">
-              {/* Head */}
-              <thead className="sticky top-0 bg-slate-50/90 backdrop-blur-sm border-b border-slate-100">
+              <thead className="bg-slate-50">
                 <tr>
-                  {[100, 56, 160, 140, 120, 80, 100, 120, 90, 100].map((w, i) => (
-                    <th key={i} className="px-6 py-4 text-left">
+                  {[120, 120, 60, 100, 80, 90, 60].map((w, i) => (
+                    <th key={i} className="border-b border-slate-200 px-5 py-3 text-left">
                       <Bone className="h-3 rounded" style={{ width: w }} />
                     </th>
                   ))}
                 </tr>
               </thead>
-
-              {/* Rows */}
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {[...Array(8)].map((_, rowIdx) => (
-                  <tr key={rowIdx} className="border-b border-slate-50">
-                    {/* Serial No. */}
-                    <td className="px-6 py-4">
-                      <Bone className="h-3.5 w-24" />
+                  <tr key={rowIdx}>
+                    {/* Item */}
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <Bone className="h-10 w-10" />
+                        <div className="space-y-1.5">
+                          <Bone className="h-3.5 w-32" />
+                          <Bone className="h-3 w-20" />
+                        </div>
+                      </div>
                     </td>
-                    {/* Image */}
-                    <td className="px-6 py-4">
-                      <Bone className="h-10 w-10 rounded-xl" />
-                    </td>
-                    {/* Item name */}
-                    <td className="px-6 py-4">
-                      <Bone className="h-3.5 w-36" />
-                    </td>
-                    {/* Occupied By */}
-                    <td className="px-6 py-4">
-                      <Bone className="h-3.5 w-32" />
-                    </td>
-                    {/* Teacher */}
-                    <td className="px-6 py-4">
-                      <Bone className="h-3.5 w-28" />
+                    {/* Borrower */}
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <Bone className="h-8 w-8 rounded-full" />
+                        <div className="space-y-1.5">
+                          <Bone className="h-3.5 w-28" />
+                          <Bone className="h-3 w-24" />
+                        </div>
+                      </div>
                     </td>
                     {/* Room */}
-                    <td className="px-6 py-4">
-                      <Bone className="h-3.5 w-16" />
-                    </td>
-                    {/* Remarks */}
-                    <td className="px-6 py-4">
-                      <Bone className="h-3.5 w-24" />
+                    <td className="px-5 py-3">
+                      <Bone className="h-5 w-14 rounded-md" />
                     </td>
                     {/* Lent At */}
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-3">
                       <Bone className="h-3.5 w-28" />
                     </td>
-                    {/* Status badge */}
-                    <td className="px-6 py-4">
-                      <Bone className="h-5 w-20 rounded-full" />
+                    {/* Time Out */}
+                    <td className="px-5 py-3">
+                      <Bone className="h-5 w-16 rounded-full" />
+                    </td>
+                    {/* Remarks */}
+                    <td className="px-5 py-3">
+                      <Bone className="h-3.5 w-24" />
                     </td>
                     {/* Actions */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
+                    <td className="px-5 py-3">
+                      <div className="flex items-center justify-end gap-2">
                         <Bone className="h-7 w-20 rounded-md" />
                         <Bone className="h-4 w-4 rounded" />
                       </div>
