@@ -1,6 +1,5 @@
-import { type FC, useState, useRef, useEffect } from "react";
-import no_image_svg from "../assets/no-image-svgrepo-com.svg";
 import { useMemo, useCallback } from "react";
+import no_image_svg from "../assets/no-image-svgrepo-com.svg";
 import ArchiveSkeletonLoader from "../loader/ArchiveSkeletonLoader.tsx";
 import type { TUsers } from "../@types/types.ts";
 import { useDeleteItem } from "../hooks/itemHooks.ts";
@@ -12,10 +11,11 @@ import SearchBar from "../components/SearchBar.tsx";
 import Pagination from "../components/Pagination.tsx";
 import PopUpModal from "../components/PopUpModal.tsx";
 import PopUpModalDelete from "../components/PopUpModalDelete.tsx";
-import { UserData } from "../utils/usersData/userData.ts";
 import { ArchiveItemTable } from "../components/ArchiveItemTable.tsx";
 import { ArchiveTeacherTable } from "../components/ArchiveTeacherTable.tsx";
 import { ArchiveStudentTable } from "../components/ArchiveStudentTable.tsx";
+import ArchiveRowActions from "../components/ArchiveRowActions.tsx";
+import { RoleBadge, StatusBadge, UserIdentity } from "../components/ArchiveCells.tsx";
 import ArchiveStudentCredentialsPopup from "../components/ArchiveStudentCredentialsPopup.tsx";
 import ArchiveTeacherCredentialsPopup from "../components/ArchiveTeacherCredentialsPopup.tsx";
 import ArchiveItemDetailsPopup from "../components/ArchiveItemDetailsPopup.tsx";
@@ -28,30 +28,14 @@ import {
 } from "../data/archive-data.ts";
 import { useArchiveState } from "../states/archive-state.ts";
 import { ARCHIVE_CONTENT as T } from "../constants/archiveContent";
-import {
-  Archive as ArchiveIcon,
-  Package,
-  Users,
-  GraduationCap,
-  BookOpen,
-  Search,
-  Sparkles,
-  MoreVertical,
-} from "lucide-react";
-import { RiDeleteBin6Line } from "react-icons/ri";
-import { LuArchiveRestore } from "react-icons/lu";
+import { Package, Users, GraduationCap, BookOpen, Search, type LucideIcon } from "lucide-react";
 
 type TStudentTypes = TUsers;
 type TNewUserTypes = Omit<TUsers, "course" | "section" | "year">;
 
-type checkIfUserAdminProps = {
-  onHandleRestoreUser: () => void;
-  onHandleDeleteUser: () => void;
-};
-
 type FilterKey = "items" | "users" | "teachers" | "students";
 
-const filterTabs: { key: FilterKey; label: string; icon: typeof Package }[] = [
+const filterTabs: { key: FilterKey; label: string; icon: LucideIcon }[] = [
   { key: "items", label: T.tabs.items, icon: Package },
   { key: "users", label: T.tabs.users, icon: Users },
   { key: "teachers", label: T.tabs.teachers, icon: BookOpen },
@@ -59,6 +43,8 @@ const filterTabs: { key: FilterKey; label: string; icon: typeof Package }[] = [
 ];
 
 const itemsPerPage = 10;
+
+const thClass = "border-b border-slate-200 px-5 py-3 font-medium text-slate-500";
 
 export default function Archive() {
   const {
@@ -96,26 +82,42 @@ export default function Archive() {
     setSelectedTeacherId,
   } = useArchiveState();
 
-  const userData = UserData();
   const restoreItemMutation = useRestoreItem();
   const deleteItemMutation = useDeleteItem();
   const deleteUserMutation = useDeleteUser();
   const restoreUserMutation = useRestoreUser();
   const { archiveItems, isPending, isError } = useAllItemInArchive();
-  const { isUsersPending, isUsersError } = useAllUsersInArchive();
+  const { archiveUsers, isUsersPending, isUsersError } = useAllUsersInArchive();
   const { filteredItems } = useFilteredItems({ searchItem });
   const { filteredUsers, activeFilter, setActiveFilter, setSelectedCategory } =
     useFilteredUsers({ searchItem });
 
-  const totalPages = Math.ceil(
-    activeFilter === "items"
-      ? filteredItems.length / itemsPerPage
-      : filteredUsers.length / itemsPerPage,
-  );
+  const tabCounts = useMemo(() => {
+    const counts: Record<FilterKey, number> = {
+      items: archiveItems.length,
+      users: 0,
+      teachers: 0,
+      students: 0,
+    };
+    for (const user of archiveUsers) {
+      const role = user.userRole?.toLowerCase();
+      if (role === "admin" || role === "staff") counts.users++;
+      else if (role === "teacher") counts.teachers++;
+      else if (role === "student") counts.students++;
+    }
+    return counts;
+  }, [archiveItems, archiveUsers]);
+
+  const activeCount = activeFilter === "items" ? filteredItems.length : filteredUsers.length;
+  const totalPages = Math.ceil(activeCount / itemsPerPage);
   const validCurrentPage = totalPages > 0 ? Math.min(currentPage, totalPages) : 1;
 
   const paginatedItems = useMemo(
-    () => filteredItems.slice((validCurrentPage - 1) * itemsPerPage, validCurrentPage * itemsPerPage),
+    () =>
+      filteredItems
+        .slice()
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice((validCurrentPage - 1) * itemsPerPage, validCurrentPage * itemsPerPage),
     [filteredItems, validCurrentPage],
   );
 
@@ -125,11 +127,6 @@ export default function Archive() {
   );
 
   const handlePageChange = useCallback((page: number) => setCurrentPage(page), [setCurrentPage]);
-
-  // const handleShowAll = useCallback(() => {
-  //   setSelectedCategory("");
-  //   setCurrentPage(1);
-  // }, [setSelectedCategory, setCurrentPage]);
 
   const handleConfirmRestoreItem = useCallback(() => {
     if (!restoreSelectedItemId) return;
@@ -190,347 +187,261 @@ export default function Archive() {
   const handleDeleteUser = (id: string) => { setUserDeleteSelectedId(id); setIsUserDeleteConfirmOpen(true); };
   const handleCancelUserDelete = () => { setIsUserDeleteConfirmOpen(false); setUserDeleteSelectedId(null); };
 
-  const UserActionMenu: FC<checkIfUserAdminProps> = ({ onHandleRestoreUser, onHandleDeleteUser }) => {
-    const role = userData.userRole?.toLowerCase();
-    const isAdminOrSuper = role === "admin" || role === "superadmin";
-    const isStaff = role === "staff";
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const menuRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-          setIsMenuOpen(false);
-        }
-      };
-      if (isMenuOpen) document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [isMenuOpen]);
-
-    if (!isAdminOrSuper && !isStaff) return null;
-
-    return (
-      <div className="relative" ref={menuRef} onClick={(e) => e.stopPropagation()}>
-        <button
-          onClick={(e) => { e.stopPropagation(); setIsMenuOpen(!isMenuOpen); }}
-          className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
-          title={T.userMenu.moreActions}
-        >
-          <MoreVertical className="h-5 w-5" />
-        </button>
-
-        {isMenuOpen && (
-          <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
-            <button
-              onClick={(e) => { e.stopPropagation(); onHandleRestoreUser(); setIsMenuOpen(false); }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-amber-700 hover:bg-amber-50 transition-colors"
-            >
-              <LuArchiveRestore className="h-4 w-4" />
-              <span className="font-medium">{T.userMenu.restore}</span>
-            </button>
-
-            {isAdminOrSuper && (
-              <>
-                <div className="my-1 border-t border-slate-100" />
-                <button
-                  onClick={(e) => { e.stopPropagation(); onHandleDeleteUser(); setIsMenuOpen(false); }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-700 hover:bg-rose-50 transition-colors"
-                >
-                  <RiDeleteBin6Line className="h-4 w-4" />
-                  <span className="font-medium">{T.userMenu.delete}</span>
-                </button>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    );
+  const handleTabChange = (key: FilterKey) => {
+    setActiveFilter(key);
+    setCurrentPage(1);
+    setSearchItem("");
+    setSelectedCategory("");
   };
 
-  const activeCount = activeFilter === "items" ? filteredItems.length : filteredUsers.length;
-  const activeLabel = filterTabs.find((t) => t.key === activeFilter)?.label ?? "";
-
-  const itemHeaders = T.headers.items;
-  const userHeaders = T.headers.users;
-  const teacherHeaders = T.headers.teachers;
-  const studentHeaders = T.headers.students;
-
-  const emptyIcon = activeFilter === "items" ? Package : activeFilter === "users" ? Users : activeFilter === "teachers" ? BookOpen : GraduationCap;
-  const EmptyIcon = emptyIcon;
+  const activeTab = filterTabs.find((t) => t.key === activeFilter) ?? filterTabs[0];
+  const activeLabel = activeTab.label.toLowerCase();
+  const isEmpty = tabCounts[activeFilter] === 0;
+  const hasError = isError || isUsersError;
 
   if (isPending || isUsersPending) return <ArchiveSkeletonLoader />;
 
+  const renderEmptyRow = (colSpan: number) => (
+    <tr>
+      <td colSpan={colSpan}>
+        <EmptyState icon={activeTab.icon} label={activeLabel} isEmpty={isEmpty} />
+      </td>
+    </tr>
+  );
+
+  const renderHead = (headers: readonly string[]) => (
+    <thead>
+      <tr className="sticky top-0 z-10 bg-slate-50">
+        {headers.map((h) => (
+          <th key={h} className={thClass}>{h}</th>
+        ))}
+        <th className={`${thClass} w-16`} />
+      </tr>
+    </thead>
+  );
+
   return (
-    <div className="min-h-screen bg-slate-50 p-6 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100 text-amber-600 text-xs font-semibold mb-4">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>{T.badge}</span>
-          </div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">
-            {T.title}
-          </h1>
-          <p className="text-slate-500 font-medium text-base max-w-xl leading-relaxed">
-            {T.description(activeLabel.toLowerCase())}
-          </p>
-        </div>
+    <div className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-8xl space-y-6 px-4 py-6 sm:px-6 md:px-8">
 
-        <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white border border-slate-200 shadow-sm text-sm font-medium text-slate-600 flex-shrink-0">
-          <ArchiveIcon className="h-4 w-4 text-slate-400" />
-          <span>{T.archivedCount(activeCount, activeLabel.toLowerCase())}</span>
-        </div>
-      </div>
+        {/* Header */}
+        <header>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{T.title}</h1>
+          <p className="mt-1 text-sm text-slate-500">{T.description}</p>
+        </header>
 
-      {/* Main card */}
-      <div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-
-        {/* Toolbar */}
-        <div className="px-6 md:px-8 py-5 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-
-          {/* Filter tabs */}
-          {!(isError || isUsersError) && (
-            <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl w-fit">
-              {filterTabs.map(({ key, label, icon: Icon }) => (
-                <button
-                  key={key}
-                  onClick={() => {
-                    setActiveFilter(key);
-                    setCurrentPage(1);
-                    setSearchItem("");
-                    setSelectedCategory("");
-                  }}
-                  className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${activeFilter === key
-                      ? "bg-white text-slate-900 shadow-sm"
-                      : "text-slate-500 hover:text-slate-700"
-                    }`}
+        {/* Stats — doubles as the tab switcher */}
+        <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+          {filterTabs.map(({ key, icon: Icon }) => {
+            const isActive = activeFilter === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => handleTabChange(key)}
+                disabled={hasError}
+                aria-pressed={isActive}
+                className={`flex items-center justify-between gap-4 rounded-xl border bg-white p-5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 disabled:cursor-default ${
+                  isActive
+                    ? "border-blue-500 ring-1 ring-blue-500"
+                    : "border-slate-200 hover:border-slate-300"
+                }`}
+              >
+                <div className="min-w-0">
+                  <p className={`text-sm ${isActive ? "font-medium text-blue-700" : "text-slate-500"}`}>
+                    {T.stats[key].label}
+                  </p>
+                  <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+                    {tabCounts[key]}
+                  </p>
+                  <p className="mt-0.5 truncate text-xs text-slate-400">{T.stats[key].hint}</p>
+                </div>
+                <span
+                  className={`hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg sm:flex ${
+                    isActive ? "bg-blue-50 text-blue-600" : "bg-slate-100 text-slate-500"
+                  }`}
                 >
-                  <Icon className="h-3.5 w-3.5" />
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
+                  <Icon className="h-5 w-5" />
+                </span>
+              </button>
+            );
+          })}
+        </section>
 
-          {/* Search + pagination */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            {activeCount > 0 && (
-              <Pagination
-                totalPages={totalPages}
-                currentPage={currentPage}
-                totalItems={activeCount}
-                itemsPerPage={itemsPerPage}
-                handlePageChange={handlePageChange}
-              />
-            )}
+        {/* Table card */}
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+
+          {/* Toolbar */}
+          <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">{T.table.title(activeLabel)}</h2>
+              <p className="text-sm text-slate-500">{T.table.count(activeCount, activeLabel)}</p>
+            </div>
             <SearchBar
-              onChangeValue={(value) => setSearchItem(value)}
+              key={activeFilter}
+              onChangeValue={(value) => { setSearchItem(value); setCurrentPage(1); }}
               name="search"
-              placeholder={T.searchPlaceholder(activeLabel.toLowerCase())}
+              placeholder={T.searchPlaceholder(activeLabel)}
             />
           </div>
-        </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <div className="min-h-[65vh] max-h-[55vh] overflow-y-auto">
-            {isError || isUsersError ? (
-              <ErrorTable />
-            ) : (
-              <>
-                {/* Items */}
-                {activeFilter === "items" && (
-                  <table className="w-full text-left text-sm whitespace-nowrap">
-                    <thead>
-                      <tr className="border-b border-slate-100">
-                        {itemHeaders.map((h) => (
-                          <th key={h} className="sticky top-0 bg-slate-50/80 backdrop-blur-sm px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400">
-                            {h}
-                          </th>
-                        ))}
-                        <th className="sticky top-0 bg-slate-50/80 backdrop-blur-sm px-6 py-4" />
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {paginatedItems.length === 0 ? (
-                        <tr>
-                          <td colSpan={itemHeaders.length}>
-                            <EmptyState icon={EmptyIcon} label={activeLabel} isEmpty={archiveItems.length === 0} />
-                          </td>
-                        </tr>
-                      ) : (
-                        paginatedItems.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map((item) => (
-                          <tr
-                            key={item.id}
-                            onClick={() => viewArchiveItemCredentials(item.id)}
-                            className="group transition-all duration-200 hover:bg-amber-50/30 cursor-pointer"
-                          >
-                            <ArchiveItemTable
-                              id={item.id}
-                              archivedAt={item.createdAt}
-                              itemName={item.itemName}
-                              serialNumber={item.serialNumber}
-                              image={item.image || no_image_svg}
-                              description={item.description}
-                              category={item.category}
-                              condition={item.condition}
-                              onRestore={handleRestoreItem}
-                              onDelete={handleDeleteItem}
-                              isRestoring={restoreItemMutation.isPending}
-                              isDeleting={deleteItemMutation.isPending}
-                            />
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                )}
-
-                {/* Users */}
-                {activeFilter === "users" && (
-                  <table className="w-full text-left text-sm whitespace-nowrap">
-                    <thead>
-                      <tr className="border-b border-slate-100">
-                        {userHeaders.map((h) => (
-                          <th key={h} className="sticky top-0 bg-slate-50/80 backdrop-blur-sm px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400">
-                            {h}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {paginatedUsers.length === 0 ? (
-                        <tr>
-                          <td colSpan={userHeaders.length}>
-                            <EmptyState icon={EmptyIcon} label={activeLabel} isEmpty={filteredUsers.length === 0} />
-                          </td>
-                        </tr>
-                      ) : (
-                        paginatedUsers.map((user: TNewUserTypes) => (
-                          <tr key={user.id} className="group transition-all duration-200 hover:bg-amber-50/30">
-                            <td className="px-6 py-4 text-slate-500 font-mono text-xs">{user.id}</td>
-                            <td className="px-6 py-4 font-semibold text-slate-900">{user.firstName} {user.middleName} {user.lastName}</td>
-                            <td className="px-6 py-4 text-slate-600">{user.username}</td>
-                            <td className="px-6 py-4 text-slate-600">{user.email}</td>
-                            <td className="px-6 py-4 text-slate-600">{user.phoneNumber}</td>
-                            <td className="px-6 py-4">
-                              <RoleBadge role={user.userRole} />
-                            </td>
-                            <td className="px-6 py-4">
-                              <StatusBadge status={user.status} />
-                            </td>
-                            <td className="px-6 py-4">
-                              <UserActionMenu
-                                onHandleRestoreUser={() => handleRestoreUser(user.id)}
-                                onHandleDeleteUser={() => handleDeleteUser(user.id)}
+          {/* Table body */}
+          <div className="overflow-x-auto">
+            <div className="max-h-[60vh] min-h-[50vh] overflow-y-auto">
+              {hasError ? (
+                <ErrorTable />
+              ) : (
+                <table className="w-full text-left text-sm whitespace-nowrap">
+                  {/* Items */}
+                  {activeFilter === "items" && (
+                    <>
+                      {renderHead(T.headers.items)}
+                      <tbody className="divide-y divide-slate-100">
+                        {paginatedItems.length === 0
+                          ? renderEmptyRow(T.headers.items.length + 1)
+                          : paginatedItems.map((item) => (
+                            <tr
+                              key={item.id}
+                              onClick={() => viewArchiveItemCredentials(item.id)}
+                              className="cursor-pointer transition-colors hover:bg-slate-50"
+                            >
+                              <ArchiveItemTable
+                                id={item.id}
+                                archivedAt={item.createdAt}
+                                itemName={item.itemName}
+                                serialNumber={item.serialNumber}
+                                image={item.image || no_image_svg}
+                                description={item.description}
+                                category={item.category}
+                                condition={item.condition}
+                                onRestore={handleRestoreItem}
+                                onDelete={handleDeleteItem}
+                                isRestoring={restoreItemMutation.isPending}
+                                isDeleting={deleteItemMutation.isPending}
                               />
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                )}
+                            </tr>
+                          ))}
+                      </tbody>
+                    </>
+                  )}
 
-                {/* Teachers */}
-                {activeFilter === "teachers" && (
-                  <table className="w-full text-left text-sm whitespace-nowrap">
-                    <thead>
-                      <tr className="border-b border-slate-100">
-                        {teacherHeaders.map((h) => (
-                          <th key={h} className="sticky top-0 bg-slate-50/80 backdrop-blur-sm px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400">
-                            {h}
-                          </th>
-                        ))}
-                        <th className="sticky top-0 bg-slate-50/80 backdrop-blur-sm px-6 py-4" />
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {paginatedUsers.length === 0 ? (
-                        <tr>
-                          <td colSpan={teacherHeaders.length + 1}>
-                            <EmptyState icon={EmptyIcon} label={activeLabel} isEmpty={filteredUsers.length === 0} />
-                          </td>
-                        </tr>
-                      ) : (
-                        paginatedUsers.map((user: TNewUserTypes) => (
-                          <tr
-                            key={user.id}
-                            onClick={() => viewArchiveTeacherCredentials(user.id)}
-                            className="group transition-all duration-200 hover:bg-amber-50/30 cursor-pointer"
-                          >
-                            <ArchiveTeacherTable
-                              id={user.id}
-                              firstName={user.firstName}
-                              middleName={user.middleName}
-                              lastName={user.lastName}
-                              username={user.username}
-                              userRole={user.userRole}
-                              status={user.status}
-                              onDelete={() => handleDeleteUser(user.id)}
-                              onRestore={() => handleRestoreUser(user.id)}
-                              isRestoring={restoreUserMutation.isPending}
-                              isDeleting={deleteUserMutation.isPending}
-                            />
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                )}
+                  {/* Admin & staff */}
+                  {activeFilter === "users" && (
+                    <>
+                      {renderHead(T.headers.users)}
+                      <tbody className="divide-y divide-slate-100">
+                        {paginatedUsers.length === 0
+                          ? renderEmptyRow(T.headers.users.length + 1)
+                          : paginatedUsers.map((user: TNewUserTypes) => (
+                            <tr key={user.id} className="transition-colors hover:bg-slate-50">
+                              <td className="px-5 py-3">
+                                <UserIdentity
+                                  firstName={user.firstName}
+                                  middleName={user.middleName}
+                                  lastName={user.lastName}
+                                  subtitle={user.id}
+                                />
+                              </td>
+                              <td className="px-5 py-3 text-slate-700">{user.username}</td>
+                              <td className="px-5 py-3 text-slate-600">{user.email}</td>
+                              <td className="px-5 py-3 text-slate-600 tabular-nums">{user.phoneNumber}</td>
+                              <td className="px-5 py-3"><RoleBadge role={user.userRole} /></td>
+                              <td className="px-5 py-3"><StatusBadge status={user.status} /></td>
+                              <td className="px-5 py-3 text-right">
+                                <ArchiveRowActions
+                                  restoreLabel={T.rowActions.restoreUser}
+                                  deleteLabel={T.rowActions.deleteUser}
+                                  onRestore={() => handleRestoreUser(user.id)}
+                                  onDelete={() => handleDeleteUser(user.id)}
+                                  isRestoring={restoreUserMutation.isPending}
+                                  isDeleting={deleteUserMutation.isPending}
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </>
+                  )}
 
-                {/* Students */}
-                {activeFilter === "students" && (
-                  <table className="w-full text-left text-sm whitespace-nowrap">
-                    <thead>
-                      <tr className="border-b border-slate-100">
-                        {studentHeaders.map((h) => (
-                          <th key={h} className="sticky top-0 bg-slate-50/80 backdrop-blur-sm px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400">
-                            {h}
-                          </th>
-                        ))}
-                        <th className="sticky top-0 bg-slate-50/80 backdrop-blur-sm px-6 py-4" />
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {paginatedUsers.length === 0 ? (
-                        <tr>
-                          <td colSpan={studentHeaders.length + 1}>
-                            <EmptyState icon={EmptyIcon} label={activeLabel} isEmpty={filteredUsers.length === 0} />
-                          </td>
-                        </tr>
-                      ) : (
-                        paginatedUsers.map((user: TStudentTypes) => (
-                          <tr
-                            key={user.id}
-                            onClick={() => handleArchiveStudentCredentials(user.id)}
-                            className="group transition-all duration-200 hover:bg-amber-50/30 cursor-pointer"
-                          >
-                            <ArchiveStudentTable
-                              id={user.id}
-                              firstName={user.firstName}
-                              middleName={user.middleName}
-                              lastName={user.lastName}
-                              course={user.course}
-                              section={user.section}
-                              year={user.year}
-                              userRole={user.userRole}
-                              status={user.status}
-                              onDelete={() => handleDeleteUser(user.id)}
-                              onRestore={() => handleRestoreUser(user.id)}
-                              isRestoring={restoreUserMutation.isPending}
-                              isDeleting={deleteUserMutation.isPending}
-                            />
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                )}
-              </>
-            )}
+                  {/* Teachers */}
+                  {activeFilter === "teachers" && (
+                    <>
+                      {renderHead(T.headers.teachers)}
+                      <tbody className="divide-y divide-slate-100">
+                        {paginatedUsers.length === 0
+                          ? renderEmptyRow(T.headers.teachers.length + 1)
+                          : paginatedUsers.map((user: TNewUserTypes) => (
+                            <tr
+                              key={user.id}
+                              onClick={() => viewArchiveTeacherCredentials(user.id)}
+                              className="cursor-pointer transition-colors hover:bg-slate-50"
+                            >
+                              <ArchiveTeacherTable
+                                id={user.id}
+                                firstName={user.firstName}
+                                middleName={user.middleName}
+                                lastName={user.lastName}
+                                username={user.username}
+                                status={user.status}
+                                onDelete={handleDeleteUser}
+                                onRestore={handleRestoreUser}
+                                isRestoring={restoreUserMutation.isPending}
+                                isDeleting={deleteUserMutation.isPending}
+                              />
+                            </tr>
+                          ))}
+                      </tbody>
+                    </>
+                  )}
+
+                  {/* Students */}
+                  {activeFilter === "students" && (
+                    <>
+                      {renderHead(T.headers.students)}
+                      <tbody className="divide-y divide-slate-100">
+                        {paginatedUsers.length === 0
+                          ? renderEmptyRow(T.headers.students.length + 1)
+                          : paginatedUsers.map((user: TStudentTypes) => (
+                            <tr
+                              key={user.id}
+                              onClick={() => handleArchiveStudentCredentials(user.id)}
+                              className="cursor-pointer transition-colors hover:bg-slate-50"
+                            >
+                              <ArchiveStudentTable
+                                id={user.id}
+                                firstName={user.firstName}
+                                middleName={user.middleName}
+                                lastName={user.lastName}
+                                course={user.course}
+                                section={user.section}
+                                year={user.year}
+                                status={user.status}
+                                onDelete={handleDeleteUser}
+                                onRestore={handleRestoreUser}
+                                isRestoring={restoreUserMutation.isPending}
+                                isDeleting={deleteUserMutation.isPending}
+                              />
+                            </tr>
+                          ))}
+                      </tbody>
+                    </>
+                  )}
+                </table>
+              )}
+            </div>
           </div>
-        </div>
+
+          {/* Pagination footer */}
+          {!hasError && activeCount > 0 && (
+            <Pagination
+              totalPages={totalPages}
+              currentPage={validCurrentPage}
+              totalItems={activeCount}
+              itemsPerPage={itemsPerPage}
+              handlePageChange={handlePageChange}
+            />
+          )}
+        </section>
       </div>
 
       {/* Modals */}
@@ -566,49 +477,16 @@ export default function Archive() {
   );
 }
 
-// Shared sub-components
-
-function EmptyState({ icon: Icon, label, isEmpty }: { icon: any; label: string; isEmpty: boolean }) {
+function EmptyState({ icon: Icon, label, isEmpty }: { icon: LucideIcon; label: string; isEmpty: boolean }) {
   return (
-    <div className="flex flex-col items-center justify-center py-24 text-center px-8">
-      <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center mb-4 border border-slate-100 shadow-sm">
-        {isEmpty ? <Icon className="h-8 w-8 text-slate-300" /> : <Search className="h-8 w-8 text-slate-300" />}
-      </div>
-      <h3 className="text-lg font-bold text-slate-900 mb-1">
-        {T.empty.title(label)}
-      </h3>
-      <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
-        {isEmpty
-          ? T.empty.noRecords(label.toLowerCase())
-          : T.empty.noMatches(label.toLowerCase())}
+    <div className="flex flex-col items-center justify-center px-8 py-24 text-center">
+      <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+        {isEmpty ? <Icon className="h-5 w-5 text-slate-400" /> : <Search className="h-5 w-5 text-slate-400" />}
+      </span>
+      <h3 className="text-sm font-semibold text-slate-900">{T.empty.title(label)}</h3>
+      <p className="mt-1 max-w-sm text-sm text-slate-500">
+        {isEmpty ? T.empty.noRecords(label) : T.empty.noMatches(label)}
       </p>
     </div>
-  );
-}
-
-function RoleBadge({ role }: { role: string }) {
-  const r = role?.toLowerCase();
-  const cls =
-    r === "admin" ? "bg-red-50 text-red-700 border-red-100"
-      : r === "staff" ? "bg-violet-50 text-violet-700 border-violet-100"
-        : r === "teacher" ? "bg-blue-50 text-blue-700 border-blue-100"
-          : "bg-emerald-50 text-emerald-700 border-emerald-100";
-  return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${cls}`}>
-      {role}
-    </span>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const s = status?.toLowerCase();
-  const cls =
-    s === "active" || s === "online"
-      ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-      : "bg-slate-100 text-slate-600 border-slate-200";
-  return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${cls}`}>
-      {status}
-    </span>
   );
 }
