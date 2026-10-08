@@ -92,7 +92,7 @@ export default function HistoryList({
   if (isPending) return <HistoryListSkeletonLoader />;
 
   return (
-    <div className="relative flex flex-col items-center py-10 px-2 w-full min-h-screen bg-gradient-to-br animate-fadeIn from-[#f8fafc] via-[#e0e7ef] to-[#c7d2fe]">
+    <div className="relative flex flex-col items-center py-10 px-2 w-full min-h-screen bg-gradient-to-br animate-fadeIn from-slate-50 via-[#e0e7ef] to-[#c7d2fe]">
       <div className="w-full bg-white/90 rounded-2xl p-8 relative">
         {/* Title */}
         <div className="flex flex-col gap-4 mb-8 md:flex-row md:justify-between md:items-center">
@@ -100,7 +100,7 @@ export default function HistoryList({
             <h1 className="text-[#1e293b] text-3xl md:text-5xl mb-2 font-extrabold tracking-tight drop-shadow-lg">
               {title}
             </h1>
-            <span className="text-lg font-medium text-[#64748b]">
+            <span className="text-lg font-medium text-slate-500">
               {description}
             </span>
           </div>
@@ -223,7 +223,7 @@ export default function HistoryList({
                   {T.tableHeaders.map((header) => (
                     <th
                       key={header}
-                      className="sticky bg-white  top-0 py-4 px-6 text-sm font-semibold tracking-wider text-left uppercase text-[#64748b]"
+                      className="sticky bg-white  top-0 py-4 px-6 text-sm font-semibold tracking-wider text-left uppercase text-slate-500"
                     >
                       {header}
                     </th>
@@ -245,7 +245,7 @@ export default function HistoryList({
           )}
         </div>
 
-        <p className="mt-6 text-sm text-center text-[#64748b]">
+        <p className="mt-6 text-sm text-center text-slate-500">
           <span className="font-semibold">{T.footer.label}</span>{" "}
           {T.footer.intro} <em>{T.footer.eventDate}</em> {T.footer.eventDateDesc}{" "}
           <em>{T.footer.condition}</em> {T.footer.conditionDesc}{" "}
