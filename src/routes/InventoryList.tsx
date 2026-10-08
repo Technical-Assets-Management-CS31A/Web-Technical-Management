@@ -5,11 +5,9 @@ import {
   useRef,
 } from "react";
 import AddItemForm from "../components/AddItem";
-import Button from "../components/Button";
 import SearchBar from "../components/SearchBar";
 import InventoryListSkeletonLoader from "../loader/InventoryListSkeletonLoader";
 import no_image_svg from "../assets/no-image-svgrepo-com.svg";
-import { InventoryBadges } from "../components/InventoryBadges";
 import Pagination from "../components/Pagination";
 import ErrorTable from "../components/ErrorTables";
 import { showToast } from "../components/AppToast";
@@ -21,14 +19,16 @@ import { useAllInventoryItems, useFilteredItems } from "../data/inventory-data";
 import { useInventoryListState } from "../states/inventory-list-state";
 import { INVENTORY_LIST_CONTENT as T } from "../constants/inventoryListContent";
 import {
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
+  MoreHorizontal,
   Package,
+  PackageOpen,
+  Plus,
   Upload,
   Download,
-  Printer,
-  MoreHorizontal,
   X,
-  Sparkles,
-  Loader2,
 } from "lucide-react";
 
 export default function InventoryList() {
@@ -79,6 +79,24 @@ export default function InventoryList() {
     Refurbished: items.filter((item) => item.condition === "Refurbished").length,
     NeedRepair: items.filter((item) => item.condition === "NeedRepair").length,
   }), [items]);
+
+  const categories = useMemo(() => {
+    const counts = new Map<string, number>();
+    items.forEach((item) => counts.set(item.category, (counts.get(item.category) ?? 0) + 1));
+    return [...counts.entries()].map(([name, total]) => ({ name, total }));
+  }, [items]);
+
+  const stats = [
+    { label: T.stats.total, value: statusCounts.all, icon: Package },
+    { label: T.stats.available, value: statusCounts.available, icon: CheckCircle2 },
+    { label: T.stats.borrowed, value: statusCounts.borrowed, icon: PackageOpen },
+    {
+      label: T.stats.needsAttention,
+      value: conditionCounts.Defective + conditionCounts.NeedRepair,
+      icon: AlertTriangle,
+      hint: T.stats.needsAttentionHint,
+    },
+  ];
 
   const { mutate: importItem } = useImportItem();
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
@@ -239,7 +257,7 @@ export default function InventoryList() {
   if (isPending) return <InventoryListSkeletonLoader />;
 
   return (
-    <div className="min-h-screen bg-slate-50 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
+    <div className="min-h-screen bg-slate-50">
 
       {/* Hidden file input */}
       <input
@@ -250,160 +268,178 @@ export default function InventoryList() {
         className="hidden"
       />
 
-      <div className="p-6 md:p-8 space-y-6 max-w-[100rem] mx-auto">
+      <div className="mx-auto max-w-8xl space-y-6 px-4 py-6 sm:px-6 md:px-8">
 
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-semibold mb-4">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>{T.badge}</span>
-            </div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">
-              {T.title}
-            </h1>
-            <p className="text-slate-500 font-medium text-base max-w-xl leading-relaxed">
-              {T.description}
-            </p>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{T.title}</h1>
+            <p className="mt-1 text-sm text-slate-500">{T.description}</p>
           </div>
 
           {/* Action buttons */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <Button onClick={() => setIsAddItemFormOpen(true)} name={T.newItem} />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsAddItemFormOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
+            >
+              <Plus className="h-4 w-4" />
+              {T.newItem}
+            </button>
 
             {/* More menu */}
             <div className="relative" ref={moreMenuRef}>
               <button
                 onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-                className={`flex items-center justify-center h-10 w-10 rounded-xl border transition-all duration-200 ${
+                className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${
                   isMoreMenuOpen
-                    ? "bg-indigo-50 border-indigo-300 text-indigo-600 shadow-sm"
-                    : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50"
+                    ? "border-slate-300 bg-slate-100 text-slate-700"
+                    : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
                 }`}
                 aria-label={T.moreOptions}
               >
-                <MoreHorizontal className={`h-4.5 w-4.5 transition-transform duration-200 ${isMoreMenuOpen ? "rotate-90" : ""}`} />
+                <MoreHorizontal className="h-4 w-4" />
               </button>
 
               {isMoreMenuOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/60 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-                  <div className="p-1.5 space-y-0.5">
-                    {/* Import */}
-                    <button
-                      onClick={() => { fileInputRef.current?.click(); setIsMoreMenuOpen(false); }}
-                      disabled={isImporting}
-                      className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isImporting
-                        ? <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                        : <Upload className="h-4 w-4 text-slate-400" />
-                      }
-                      <span className="font-medium">{isImporting ? T.menu.importing : T.menu.import}</span>
-                    </button>
-                    <div className="h-px bg-slate-100 mx-1" />
+                <div className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-lg border border-slate-200 bg-white p-1 shadow-lg">
+                  {/* Import */}
+                  <button
+                    onClick={() => { fileInputRef.current?.click(); setIsMoreMenuOpen(false); }}
+                    disabled={isImporting}
+                    className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isImporting
+                      ? <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                      : <Upload className="h-4 w-4 text-slate-400" />
+                    }
+                    {isImporting ? T.menu.importing : T.menu.import}
+                  </button>
 
-                    {/* Export */}
-                    <button
-                      onClick={() => { handleExportItems(); setIsMoreMenuOpen(false); }}
-                      disabled={isExporting || filteredItems.length === 0}
-                      className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isExporting
-                        ? <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
-                        : <Download className="h-4 w-4 text-slate-400" />
-                      }
-                      <span className="font-medium">
-                        {isExporting ? T.menu.exporting : T.menu.export(filteredItems.length)}
-                      </span>
-                    </button>
-                  </div>
+                  {/* Export */}
+                  <button
+                    onClick={() => { handleExportItems(); setIsMoreMenuOpen(false); }}
+                    disabled={isExporting || filteredItems.length === 0}
+                    className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isExporting
+                      ? <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                      : <Download className="h-4 w-4 text-slate-400" />
+                    }
+                    {isExporting ? T.menu.exporting : T.menu.export(filteredItems.length)}
+                  </button>
                 </div>
               )}
             </div>
           </div>
-        </div>
+        </header>
 
-        {/* Category badges + filters row */}
-        <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-          <div className="flex-1 overflow-x-auto scrollbar-none">
-            <div className="flex flex-row gap-2.5 pb-1">
-              {Array.from(new Set(items.map((item) => item.category))).map((category) => {
-                const itemsInCategory = items.filter((item) => item.category === category);
-                return (
-                  <InventoryBadges
-                    key={category}
-                    name={category}
-                    total={itemsInCategory.length}
-                    onClick={() => handleCategoryClick(category)}
-                    isSelected={selectedCategory === category}
-                  />
-                );
-              })}
+        {/* Summary */}
+        <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+          {stats.map((stat) => (
+            <div key={stat.label} className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5">
+              <div className="min-w-0">
+                <p className="text-sm text-slate-500">{stat.label}</p>
+                <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+                  {stat.value.toLocaleString()}
+                </p>
+                {stat.hint && <p className="mt-0.5 truncate text-xs text-slate-400">{stat.hint}</p>}
+              </div>
+              <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 sm:flex">
+                <stat.icon className="h-5 w-5" />
+              </span>
             </div>
-          </div>
-          <div className="flex-shrink-0">
-            <SelectItemFilters
-              onStatusChange={handleStatusChange}
-              onConditionChange={handleConditionChange}
-              selectedStatus={selectedStatus}
-              selectedCondition={selectedCondition}
-              statusCounts={statusCounts}
-              conditionCounts={conditionCounts}
-            />
-          </div>
-        </div>
+          ))}
+        </section>
 
         {/* Table card */}
-        <div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
 
-          {/* Table toolbar */}
-          <div className="px-6 md:px-8 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Package className="h-4 w-4 text-indigo-500" />
-                {T.table.title}
-              </h2>
-              <p className="text-xs text-slate-400 font-medium mt-0.5">
-                {T.table.count(filteredItems.length)}
-                {selectedCategory && T.table.inCategory(selectedCategory)}
-              </p>
+          {/* Toolbar */}
+          <div className="space-y-4 border-b border-slate-200 px-5 py-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">{T.table.title}</h2>
+                <p className="text-sm text-slate-500">
+                  {T.table.count(filteredItems.length)}
+                  {selectedCategory && T.table.inCategory(selectedCategory)}
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <SearchBar
+                  onChangeValue={(value) => setSearchItem(value)}
+                  name="search"
+                  placeholder={T.table.searchPlaceholder}
+                />
+                <SelectItemFilters
+                  onStatusChange={handleStatusChange}
+                  onConditionChange={handleConditionChange}
+                  selectedStatus={selectedStatus}
+                  selectedCondition={selectedCondition}
+                  statusCounts={statusCounts}
+                  conditionCounts={conditionCounts}
+                />
+              </div>
             </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <SearchBar
-                onChangeValue={(value) => setSearchItem(value)}
-                name="search"
-                placeholder={T.table.searchPlaceholder}
-              />
-            </div>
+
+            {/* Category chips */}
+            {categories.length > 0 && (
+              <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5 scrollbar-none">
+                {[{ name: "", total: items.length }, ...categories].map((category) => {
+                  const isSelected = selectedCategory === category.name;
+                  return (
+                    <button
+                      key={category.name || "all"}
+                      type="button"
+                      onClick={() => {
+                        if (category.name) {
+                          handleCategoryClick(category.name);
+                        } else {
+                          setSelectedCategory("");
+                          setCurrentPage(1);
+                        }
+                      }}
+                      className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1 text-sm transition-colors ${
+                        isSelected
+                          ? "border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-600/20"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-700"
+                      }`}
+                    >
+                      {category.name || T.allCategories}
+                      <span className={`text-xs tabular-nums ${isSelected ? "text-blue-100" : "text-slate-400"}`}>
+                        {category.total}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Table body */}
           <div className="overflow-x-auto">
-            <div className="min-h-[55vh] max-h-[55vh] overflow-y-auto">
+            <div className="max-h-[60vh] min-h-[50vh] overflow-y-auto">
               {isError ? (
                 <ErrorTable />
               ) : paginatedData.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 text-center px-8">
-                  <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center mb-4 border border-slate-100 shadow-sm">
-                    <Package className="h-8 w-8 text-slate-300" />
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-1">{T.empty.title}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
-                    {T.empty.description}
-                  </p>
+                <div className="flex flex-col items-center justify-center px-8 py-24 text-center">
+                  <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                    <Package className="h-5 w-5 text-slate-400" />
+                  </span>
+                  <h3 className="text-sm font-semibold text-slate-900">{T.empty.title}</h3>
+                  <p className="mt-1 max-w-sm text-sm text-slate-500">{T.empty.description}</p>
                   {(selectedCategory || selectedStatus || selectedCondition) && (
                     <button
                       onClick={handleShowAll}
-                      className="mt-4 text-xs font-semibold text-indigo-600 hover:text-indigo-700 underline underline-offset-2"
+                      className="mt-4 text-sm font-medium text-blue-600 hover:underline"
                     >
                       {T.empty.clearFilters}
                     </button>
                   )}
                 </div>
               ) : (
-                <InventoryTable
-                  item={paginatedData}
-                />
+                <InventoryTable item={paginatedData} />
               )}
             </div>
           </div>
@@ -416,7 +452,7 @@ export default function InventoryList() {
             itemsPerPage={itemsPerPage}
             handlePageChange={handlePageChange}
           />
-        </div>
+        </section>
       </div>
 
       {/* Add item form */}
@@ -426,23 +462,19 @@ export default function InventoryList() {
 
       {showPrintBarcodeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-[2rem] border border-slate-200 shadow-2xl w-full max-w-5xl h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl w-full max-w-5xl h-[92vh] flex flex-col overflow-hidden">
 
             {/* Modal header */}
-            <div className="flex items-center justify-between px-8 py-5 border-b border-slate-100">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
               <div>
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-semibold mb-2">
-                  <Printer className="h-3 w-3" />
-                  <span>{T.printModal.badge}</span>
-                </div>
-                <h2 className="text-xl font-bold text-slate-900">{T.printModal.title}</h2>
-                <p className="text-sm text-slate-400 font-medium mt-0.5">
+                <h2 className="text-lg font-semibold text-slate-900">{T.printModal.title}</h2>
+                <p className="text-sm text-slate-500 mt-0.5">
                   {T.printModal.readyToExport(filteredItems.length)}
                 </p>
               </div>
               <button
                 onClick={() => { setShowPrintBarcodeModal(false); setPrintCurrentPage(1); }}
-                className="h-10 w-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500 transition-colors"
+                className="h-9 w-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -452,7 +484,7 @@ export default function InventoryList() {
             <div className="flex-1 overflow-auto p-6 bg-slate-50/60">
               <div
                 id="barcode-print-area"
-                className="bg-white p-6 mx-auto max-w-[210mm] min-h-[297mm] rounded-2xl border border-slate-200 shadow-sm"
+                className="bg-white p-6 mx-auto max-w-[210mm] min-h-[297mm] rounded-lg border border-slate-200"
               >
                 <div className="grid grid-cols-3 gap-3">
                   {filteredItems
@@ -463,7 +495,7 @@ export default function InventoryList() {
                     .map((item) => (
                       <div
                         key={item.id}
-                        className="border border-slate-200 rounded-xl p-3 flex flex-col items-center text-center bg-white"
+                        className="border border-slate-200 rounded-lg p-3 flex flex-col items-center text-center bg-white"
                       >
                         <div className="text-[11px] font-semibold text-slate-800 mb-1.5 line-clamp-2 w-full h-8 flex items-center justify-center">
                           {item.itemName}
@@ -488,7 +520,7 @@ export default function InventoryList() {
             </div>
 
             {/* Modal footer */}
-            <div className="flex items-center justify-between px-8 py-5 border-t border-slate-100 bg-slate-50/60">
+            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200">
               {/* Print page pagination */}
               <div>
                 {Math.ceil(filteredItems.length / itemsPerPrintPage) > 1 && (
@@ -517,7 +549,7 @@ export default function InventoryList() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => { setShowPrintBarcodeModal(false); setPrintCurrentPage(1); }}
-                  className="px-4 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
                 >
                   {T.printModal.cancel}
                 </button>
