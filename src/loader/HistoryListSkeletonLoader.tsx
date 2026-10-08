@@ -1,6 +1,6 @@
 const HistoryListSkeletonLoader = () => {
     return (
-        <div className="animate-fadeIn min-h-screen w-full bg-gradient-to-br from-[#f8fafc] via-[#e0e7ef] to-[#c7d2fe] flex flex-col items-center py-10 px-2">
+        <div className="animate-fadeIn min-h-screen w-full bg-gradient-to-br from-slate-50 via-[#e0e7ef] to-[#c7d2fe] flex flex-col items-center py-10 px-2">
             <div className="w-full max-w-[90%] bg-white/90 shadow-2xl rounded-3xl p-8 relative">
                 {/* Header Skeleton */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
@@ -24,7 +24,7 @@ const HistoryListSkeletonLoader = () => {
                         <thead>
                             <tr>
                                 {[...Array(9)].map((_, index) => (
-                                    <th key={index} className="bg-[#f8fafc] sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
+                                    <th key={index} className="bg-slate-50 sticky top-0 font-semibold py-4 px-6 border-b border-[#e6e6e6] text-[#2563eb]">
                                         <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
                                     </th>
                                 ))}
@@ -34,7 +34,7 @@ const HistoryListSkeletonLoader = () => {
                             {[...Array(8)].map((_, rowIndex) => (
                                 <tr
                                     key={rowIndex}
-                                    className="hover:bg-[#f1f5f9] transition-colors odd:bg-white even:bg-[#f8fafc]"
+                                    className="hover:bg-slate-100 transition-colors odd:bg-white even:bg-slate-50"
                                 >
                                     {/* ID Column */}
                                     <td className="py-3 px-6">
@@ -79,7 +79,7 @@ const HistoryListSkeletonLoader = () => {
                 </div>
 
                 {/* Description Skeleton */}
-                <div className="mt-6 text-[#64748b] text-sm text-center">
+                <div className="mt-6 text-slate-500 text-sm text-center">
                     <div className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>
                 </div>
             </div>
