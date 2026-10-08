@@ -1,8 +1,10 @@
 import { useEffect, useMemo } from "react";
-import HistoryListSkeletonLoader from "../loader/HistoryListSkeletonLoader";
 import { useQuery } from "@tanstack/react-query";
 import type { THistoryBorrwedItems } from "../@types/types";
 import PendingItemsTable from "../components/PendingItemsTable";
+import SearchBar from "../components/SearchBar";
+import PendingReservationsSkeletonLoader from "../loader/PendingReservationsSkeletonLoader";
+import { CalendarCheck, Hourglass } from "lucide-react";
 import ErrorTable from "../components/ErrorTables";
 import ApproveConfirmationModal from "../components/ApproveConfirmationModal";
 import DenyConfirmationModal from "../components/DenyConfirmationModal";
@@ -192,71 +194,108 @@ export default function PendingReservations() {
     setSelectedItemId(null);
   };
 
-  if (isPending) return <HistoryListSkeletonLoader />;
+  const totalPending = useMemo(
+    () => borrowedItem.filter((item) => item.status === "Pending").length,
+    [borrowedItem],
+  );
+
+  const totalApproved = useMemo(
+    () => borrowedItem.filter((item) => item.status === "Approved").length,
+    [borrowedItem],
+  );
+
+  const stats = [
+    { label: T.stats.pending, value: totalPending, icon: Hourglass },
+    { label: T.stats.approved, value: totalApproved, icon: CalendarCheck },
+  ];
+
+  const tabs = [
+    { id: "pending" as const, label: T.tabs.pending, count: pendingItems.length },
+    { id: "reservations" as const, label: T.tabs.reservations, count: reservationItems.length },
+  ];
+
+  if (isPending) return <PendingReservationsSkeletonLoader />;
 
   return (
-    <div className="relative flex flex-col items-center py-10 px-2 w-full min-h-screen lg:h-full bg-gradient-to-br animate-fadeIn from-[#f8fafc] via-[#e0e7ef] to-[#c7d2fe]">
-      <div className="w-full bg-white/90 rounded-2xl p-8 relative">
-        {/* Title */}
-        <div className="flex flex-col gap-4 mb-8 md:flex-row md:justify-between md:items-center">
-          <div>
-            <h1 className="text-[#1e293b] text-3xl md:text-3xl mb-2 font-extrabold tracking-tight drop-shadow-lg">
-              {T.title}
-            </h1>
-            <span className="text-lg font-medium text-[#64748b]">
-              {T.description}
-            </span>
+    <div className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-8xl space-y-6 px-4 py-6 sm:px-6 md:px-8">
+
+        {/* Header */}
+        <header>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{T.title}</h1>
+          <p className="mt-1 text-sm text-slate-500">{T.description}</p>
+        </header>
+
+        {/* Summary */}
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5"
+            >
+              <div>
+                <p className="text-sm text-slate-500">{stat.label}</p>
+                <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">{stat.value}</p>
+              </div>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                <stat.icon className="h-5 w-5" />
+              </span>
+            </div>
+          ))}
+        </section>
+
+        {/* Table card */}
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+
+          {/* Toolbar: tabs + search */}
+          <div className="flex flex-col gap-3 border-b border-slate-200 px-5 pt-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="-mb-px flex gap-6 overflow-x-auto">
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`inline-flex shrink-0 items-center gap-2 border-b-2 pb-3 pt-1 text-sm font-medium transition-colors ${
+                      isActive
+                        ? "border-blue-600 text-slate-900"
+                        : "border-transparent text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    {tab.label}
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs tabular-nums ${
+                        isActive ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-500"
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="pb-3">
+              <SearchBar
+                onChangeValue={setSearchItem}
+                name="Search Pending"
+                placeholder={T.searchPlaceholder}
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-gray-200">
-          <button
-            onClick={() => setActiveTab("pending")}
-            className={`px-6 py-3 font-semibold text-base transition-all duration-200 border-b-2 ${
-              activeTab === "pending"
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            {T.tabs.pending}
-            {pendingItems.length > 0 && (
-              <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded-full">
-                {pendingItems.length}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("reservations")}
-            className={`px-6 py-3 font-semibold text-base transition-all duration-200 border-b-2 ${
-              activeTab === "reservations"
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            {T.tabs.reservations}
-            {reservationItems.length > 0 && (
-              <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">
-                {reservationItems.length}
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* Table */}
-        {isError ? (
-          <ErrorTable />
-        ) : (
-          <PendingItemsTable
-            items={filteredItems}
-            onApprove={handleApproveClick}
-            onDeny={handleDenyClick}
-            onMarkBorrowed={handleMarkBorrowedClick}
-            onRowClick={handleRowClick}
-            searchValue={searchItem}
-            onSearchChange={setSearchItem}
-          />
-        )}
+          {isError ? (
+            <ErrorTable />
+          ) : (
+            <PendingItemsTable
+              key={activeTab}
+              items={filteredItems}
+              onApprove={handleApproveClick}
+              onDeny={handleDenyClick}
+              onMarkBorrowed={handleMarkBorrowedClick}
+              onRowClick={handleRowClick}
+            />
+          )}
+        </section>
       </div>
 
       {/* Modals */}
