@@ -4,88 +4,114 @@ const Bone = ({ className, style }: { className?: string; style?: React.CSSPrope
 
 export const DashboardSkeletonLoader = () => {
     return (
-        <div className="min-h-screen bg-slate-50 p-6 md:p-8 space-y-8">
+        <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 md:px-8">
+            <div className="mx-auto max-w-7xl space-y-6">
 
-            {/* ── Header ─────────────────────────────────────────────── */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-2">
-                    <Bone className="h-3 w-16 rounded-full" />
-                    <Bone className="h-8 w-40" />
-                    <Bone className="h-3.5 w-72 max-w-full" />
+                {/* ── Header ─────────────────────────────────────────────── */}
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div className="space-y-2">
+                        <Bone className="h-7 w-36" />
+                        <Bone className="h-3.5 w-72 max-w-full" />
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <Bone className="h-3.5 w-48" />
+                        <Bone className="h-7 w-40 rounded-full" />
+                    </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    <Bone className="h-9 w-52 rounded-xl" />
-                    <Bone className="h-9 w-44 rounded-xl" />
-                </div>
-            </div>
 
-            {/* ── Badge cards ────────────────────────────────────────── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {[...Array(4)].map((_, i) => (
-                    <div key={i} className="relative bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 overflow-hidden">
-                        {/* accent bar */}
-                        <Bone className="absolute inset-x-0 top-0 h-1 rounded-none rounded-t-2xl" />
-                        <div className="space-y-3 pt-2">
-                            <Bone className="h-3 w-24" />
-                            <Bone className="h-8 w-16" />
-                            <Bone className="h-3 w-20" />
+                {/* ── Stat cards ─────────────────────────────────────────── */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    {[...Array(4)].map((_, i) => (
+                        <div key={i} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5">
+                            <div className="space-y-3">
+                                <Bone className="h-3.5 w-24" />
+                                <Bone className="h-7 w-16" />
+                            </div>
+                            <Bone className="h-10 w-10" />
                         </div>
-                        {/* icon overlay */}
-                        <Bone className="absolute top-4 right-4 h-9 w-9 rounded-xl" />
+                    ))}
+                </div>
+
+                {/* ── Insights ───────────────────────────────────────────── */}
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                    <div className="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-2">
+                        <div className="flex justify-between">
+                            <div className="space-y-2">
+                                <Bone className="h-4 w-40" />
+                                <Bone className="h-3.5 w-56" />
+                            </div>
+                            <Bone className="h-7 w-10" />
+                        </div>
+                        <div className="mt-6 flex h-44 items-end gap-3">
+                            {[40, 65, 30, 80, 55, 90, 45].map((h, i) => (
+                                <div key={i} className="flex flex-1 justify-center">
+                                    <Bone className="w-full max-w-10 rounded-b-none" style={{ height: `${h}%` }} />
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                ))}
-            </div>
-
-            {/* ── Table card ─────────────────────────────────────────── */}
-            <div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-
-                {/* Toolbar */}
-                <div className="px-6 md:px-8 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="space-y-1.5">
-                        <Bone className="h-4 w-48" />
-                        <Bone className="h-3 w-36" />
+                    <div className="space-y-5 rounded-xl border border-slate-200 bg-white p-5">
+                        <div className="space-y-2">
+                            <Bone className="h-4 w-32" />
+                            <Bone className="h-3.5 w-44" />
+                        </div>
+                        {[...Array(3)].map((_, i) => (
+                            <div key={i} className="space-y-2">
+                                <div className="flex justify-between">
+                                    <Bone className="h-5 w-16 rounded" />
+                                    <Bone className="h-3.5 w-12" />
+                                </div>
+                                <Bone className="h-1.5 w-full rounded-full" />
+                            </div>
+                        ))}
                     </div>
                 </div>
 
-                {/* Table */}
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="border-b border-slate-100">
-                            <tr>
-                                {[100, 56, 140, 120, 100, 80, 100, 90, 80, 40].map((w, i) => (
-                                    <th key={i} className="px-6 py-4 bg-slate-50/80 text-left">
-                                        <Bone className="h-3 rounded" style={{ width: w }} />
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {[...Array(5)].map((_, rowIdx) => (
-                                <tr key={rowIdx} className="border-b border-slate-50">
-                                    {/* Serial No. */}
-                                    <td className="px-6 py-4"><Bone className="h-3.5 w-24" /></td>
-                                    {/* Image */}
-                                    <td className="px-6 py-4"><Bone className="h-10 w-10 rounded-xl" /></td>
-                                    {/* Item name */}
-                                    <td className="px-6 py-4"><Bone className="h-3.5 w-32" /></td>
-                                    {/* Occupied by */}
-                                    <td className="px-6 py-4"><Bone className="h-3.5 w-28" /></td>
-                                    {/* Teacher */}
-                                    <td className="px-6 py-4"><Bone className="h-3.5 w-24" /></td>
-                                    {/* Room */}
-                                    <td className="px-6 py-4"><Bone className="h-3.5 w-16" /></td>
-                                    {/* Remarks */}
-                                    <td className="px-6 py-4"><Bone className="h-3.5 w-20" /></td>
-                                    {/* Lent At */}
-                                    <td className="px-6 py-4"><Bone className="h-3.5 w-20" /></td>
-                                    {/* Status */}
-                                    <td className="px-6 py-4"><Bone className="h-5 w-16 rounded-full" /></td>
-                                    {/* Chevron */}
-                                    <td className="px-6 py-4"><Bone className="h-4 w-4 rounded" /></td>
+                {/* ── Table card ─────────────────────────────────────────── */}
+                <div className="rounded-xl border border-slate-200 bg-white">
+                    <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                        <div className="space-y-1.5">
+                            <Bone className="h-4 w-48" />
+                            <Bone className="h-3 w-36" />
+                        </div>
+                        <Bone className="h-3.5 w-14" />
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead className="border-b border-slate-200">
+                                <tr>
+                                    {[140, 110, 60, 100, 70, 80].map((w, i) => (
+                                        <th key={i} className="px-5 py-3 text-left">
+                                            <Bone className="h-3 rounded" style={{ width: w }} />
+                                        </th>
+                                    ))}
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {[...Array(5)].map((_, rowIdx) => (
+                                    <tr key={rowIdx}>
+                                        <td className="px-5 py-3">
+                                            <div className="flex items-center gap-3">
+                                                <Bone className="h-9 w-9 rounded" />
+                                                <div className="space-y-1.5">
+                                                    <Bone className="h-3.5 w-32" />
+                                                    <Bone className="h-3 w-20" />
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-3">
+                                            <Bone className="h-3.5 w-24" />
+                                        </td>
+                                        <td className="px-5 py-3"><Bone className="h-3.5 w-14" /></td>
+                                        <td className="px-5 py-3"><Bone className="h-3.5 w-28" /></td>
+                                        <td className="px-5 py-3"><Bone className="h-5 w-16 rounded" /></td>
+                                        <td className="px-5 py-3"><Bone className="h-3.5 w-20" /></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
