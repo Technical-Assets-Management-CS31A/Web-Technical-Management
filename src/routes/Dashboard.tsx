@@ -12,32 +12,26 @@ import { SlugStatus } from "../components/SlugStatus";
 import { useRecentlyAllBorrowItems, useSummarriesData } from "../data/dashboard-data";
 import { useDashboardStore } from "../states/dashboard-state";
 import { truncateRemarks } from "../components/truncateRemarks";
-import {
-  Package,
-  Users,
-  BookOpen,
-  LayoutGrid,
-  ScanLine,
-  RotateCcw,
-  X,
-  Clock,
-  ChevronRight,
-  Wifi,
-} from "lucide-react";
+import { BookOpen, LayoutGrid, Package, RotateCcw, ScanLine, Users, X } from "lucide-react";
+import DashboardActivityChart from "../components/DashboardActivityChart";
+import DashboardStatusOverview from "../components/DashboardStatusOverview";
+import { UserData } from "../utils/usersData/userData";
+import { Link } from "@tanstack/react-router";
 import { FormattedDateTime } from "../components/FormattedDateTime";
 import { DASHBOARD_CONTENT as T } from "../constants/dashboardContent";
 
 const TABLE_HEADERS = T.tableHeaders;
 
-const badgeIcons = [
-  <Package className="h-5 w-5" />,
-  <LayoutGrid className="h-5 w-5" />,
-  <Users className="h-5 w-5" />,
-  <BookOpen className="h-5 w-5" />,
-];
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return T.greetings.morning;
+  if (hour < 18) return T.greetings.afternoon;
+  return T.greetings.evening;
+};
 
 export default function Dashboard() {
   const { dataSummary } = useSummarriesData();
+  const { firstName } = UserData();
   const { borrowedItemData, isBorrowedItemLoading, isBorrowedItemError } =
     useRecentlyAllBorrowItems();
 
@@ -63,10 +57,10 @@ export default function Dashboard() {
   const returnItemMutation = useReturnItem();
 
   const badges = [
-    { name: T.badges.totalItems, data: dataSummary.totalItems, link: "/home/inventory-list" },
-    { name: T.badges.categories, data: dataSummary.totalItemsCategories, link: "/home/inventory-list" },
-    { name: T.badges.activeUsers, data: dataSummary.totalActiveUsers, link: "/home/user-management" },
-    { name: T.badges.totalBorrowed, data: dataSummary.totalLentItems, link: "/home/history-list" },
+    { name: T.badges.totalItems, data: dataSummary.totalItems, link: "/home/inventory-list", icon: <Package className="h-5 w-5" /> },
+    { name: T.badges.categories, data: dataSummary.totalItemsCategories, link: "/home/inventory-list", icon: <LayoutGrid className="h-5 w-5" /> },
+    { name: T.badges.activeUsers, data: dataSummary.totalActiveUsers, link: "/home/user-management", icon: <Users className="h-5 w-5" /> },
+    { name: T.badges.totalBorrowed, data: dataSummary.totalLentItems, link: "/home/history-list", icon: <BookOpen className="h-5 w-5" /> },
   ];
 
   const recentBorrows = useMemo(
@@ -145,135 +139,128 @@ export default function Dashboard() {
   if (isBorrowedItemLoading) return <DashboardSkeletonLoader />;
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
+    <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 md:px-8">
+      <div className="mx-auto max-w-8xl space-y-6">
 
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-indigo-500 mb-1">{T.eyebrow}</p>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">{T.title}</h1>
-          <p className="text-slate-500 text-sm mt-1 font-medium">
-            {T.description}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-xs text-slate-400 font-medium border-b-2 border-gray-200 px-4 py-2.5">
-            <Clock className="h-3.5 w-3.5 text-slate-400" />
-            {new Intl.DateTimeFormat("en-US", {
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            }).format(new Date())}
-          </div>
-          <div className="flex items-center gap-2 text-xs font-medium bg-white border border-slate-200 rounded-xl px-4 py-2.5 shadow-sm">
-            <Wifi className="h-3.5 w-3.5 text-green-500" />
-            <span className="text-slate-700">{T.notifications}</span>
-            <div className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-slate-600 font-semibold">{T.online}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Badges ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {badges.map((item, index) => (
-          <div key={index} className="relative group">
-            <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-slate-200" />
-            <DashboardBadges name={item.name} link={item.link} data={item.data} />
-            <div className="absolute top-4 right-4 h-9 w-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 shadow-sm">
-              {badgeIcons[index]}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* ── Recent Borrows Table ── */}
-      <div className="bg-white rounded-4xl border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-        <div className="px-6 md:px-8 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* ── Header ── */}
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-blue-500 inline-block" />
-              {T.recentBorrows.title}
-            </h2>
-            <p className="text-xs text-slate-400 font-medium mt-0.5">
-              {T.recentBorrows.description}
-            </p>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+              {getGreeting()}{firstName ? `, ${firstName}` : ""}
+            </h1>
+            <p className="mt-1 text-sm text-slate-500">{T.description}</p>
           </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500">
+            <span>
+              {new Intl.DateTimeFormat("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              }).format(new Date())}
+            </span>
+            <span className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              {T.notifications}
+              <span className="font-medium text-emerald-600">{T.online}</span>
+            </span>
+          </div>
+        </header>
+
+        {/* ── Stat Cards ── */}
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {badges.map((item) => (
+            <DashboardBadges key={item.name} name={item.name} link={item.link} data={item.data} icon={item.icon} />
+          ))}
+        </section>
+
+        {/* ── Insights ── */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <DashboardActivityChart records={borrowedItemData} />
+          </div>
+          <DashboardStatusOverview records={borrowedItemData} />
         </div>
 
-        <div className="overflow-x-auto">
-          {isBorrowedItemError ? (
-            <ErrorTable />
-          ) : (
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  {TABLE_HEADERS.map((h) => (
-                    <th
-                      key={h}
-                      className="sticky top-0 bg-slate-50/80 backdrop-blur-sm px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-400"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {recentBorrows.length > 0 ? (
-                  recentBorrows
-                    .slice()
-                    .sort((a, b) => new Date(b.lentAt).getTime() - new Date(a.lentAt).getTime())
-                    .map((row) => (
-                      <tr
-                        key={row.id}
-                        onClick={() => handleViewOpen(row.id)}
-                        className="group transition-all duration-200 hover:bg-indigo-50/30 cursor-pointer"
-                      >
-                        <td className="px-6 py-4 text-slate-700 font-medium">
-                          {row.item.serialNumber}
-                        </td>
-                        <td className="px-6 py-4">
-                          <img
-                            src={typeof row.item.image === "string" ? row.item.image : no_image_svg}
-                            alt={row.item.itemName}
-                            className="w-10 h-10 object-cover rounded-xl border border-slate-100"
-                          />
-                        </td>
-                        <td className="px-6 py-4 text-slate-700 font-medium">{row.item.itemName}</td>
-                        <td className="px-6 py-4 text-slate-700 font-medium">{row.borrowerFullName}</td>
-                        <td className="px-6 py-4 text-slate-700 font-medium">{row.room}</td>
-                        <td className="px-6 py-4 text-slate-700 font-medium">{FormattedDateTime(row.lentAt || "-")}</td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${SlugStatus(row.status)}`}>
-                            {row.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-slate-700 font-medium">
-                          {truncateRemarks(row.remarks || "-") ?? <span className="text-slate-300 italic text-xs">—</span>}
-                        </td>
-                        <td className="px-6 py-4">
-                          <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-indigo-500 transition-colors" />
-                        </td>
-                      </tr>
-                    ))
-                ) : (
-                  <tr>
-                    <td colSpan={TABLE_HEADERS.length} className="px-8 py-20 text-center">
-                      <div className="flex flex-col items-center gap-3 text-slate-400">
-                        <BookOpen className="h-10 w-10 text-slate-200" />
-                        <p className="font-semibold text-slate-500">{T.recentBorrows.empty.title}</p>
-                        <p className="text-xs">{T.recentBorrows.empty.description}</p>
-                      </div>
-                    </td>
+        {/* ── Recent Borrows Table ── */}
+        <section className="rounded-xl border border-slate-200 bg-white">
+          <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">{T.recentBorrows.title}</h2>
+              <p className="text-sm text-slate-500">{T.recentBorrows.description}</p>
+            </div>
+            <Link
+              to="/home/active-borrowed-items"
+              className="text-sm font-medium text-blue-600 hover:underline"
+            >
+              {T.recentBorrows.viewAll}
+            </Link>
+          </div>
+
+          <div className="overflow-x-auto">
+            {isBorrowedItemError ? (
+              <ErrorTable />
+            ) : (
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead>
+                  <tr className="border-b border-slate-200">
+                    {TABLE_HEADERS.map((h) => (
+                      <th key={h} className="px-5 py-3 font-medium text-slate-500">
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                )}
-              </tbody>
-            </table>
-          )}
-        </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {recentBorrows.length > 0 ? (
+                    recentBorrows
+                      .slice()
+                      .sort((a, b) => new Date(b.lentAt).getTime() - new Date(a.lentAt).getTime())
+                      .map((row) => (
+                        <tr
+                          key={row.id}
+                          onClick={() => handleViewOpen(row.id)}
+                          className="cursor-pointer hover:bg-slate-50"
+                        >
+                          <td className="px-5 py-3">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={typeof row.item.image === "string" ? row.item.image : no_image_svg}
+                                alt={row.item.itemName}
+                                className="h-9 w-9 rounded object-cover"
+                              />
+                              <div>
+                                <p className="text-slate-900">{row.item.itemName}</p>
+                                <p className="text-xs text-slate-500">{row.item.serialNumber}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3 text-slate-700">{row.borrowerFullName}</td>
+                          <td className="px-5 py-3 text-slate-700">{row.room || "-"}</td>
+                          <td className="px-5 py-3 text-slate-700">{FormattedDateTime(row.lentAt || "-")}</td>
+                          <td className="px-5 py-3">
+                            <span className={`rounded px-2 py-0.5 text-xs font-medium ${SlugStatus(row.status)}`}>
+                              {row.status}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-slate-500">
+                            {row.remarks ? truncateRemarks(row.remarks) : "-"}
+                          </td>
+                        </tr>
+                      ))
+                  ) : (
+                    <tr>
+                      <td colSpan={TABLE_HEADERS.length} className="px-5 py-12 text-center">
+                        <p className="text-sm font-medium text-slate-700">{T.recentBorrows.empty.title}</p>
+                        <p className="mt-1 text-sm text-slate-500">{T.recentBorrows.empty.description}</p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </section>
       </div>
 
       {/* ── Dialogs ── */}
