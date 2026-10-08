@@ -5,104 +5,85 @@ const Bone = ({ className, style }: { className?: string; style?: React.CSSPrope
 const InventoryListSkeletonLoader = () => {
     return (
         <div className="min-h-screen bg-slate-50">
-            <div className="p-6 md:p-8 space-y-6 max-w-[100rem] mx-auto">
+            <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 md:px-8">
 
-                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-                    <div className="space-y-3">
-                        {/* "Asset management" pill */}
-                        <Bone className="h-6 w-36 rounded-full" />
-                        {/* Title */}
-                        <Bone className="h-10 w-56" />
-                        {/* Subtitle */}
-                        <Bone className="h-4 w-96 max-w-full" />
+                {/* Header */}
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                    <div className="space-y-2">
+                        <Bone className="h-7 w-36" />
+                        <Bone className="h-3.5 w-80 max-w-full" />
                     </div>
-
-                    {/* Action buttons */}
-                    <div className="flex items-center gap-3 shrink-0">
-                        <Bone className="h-10 w-28 rounded-xl" />
-                        <Bone className="h-10 w-10 rounded-xl" />
+                    <div className="flex items-center gap-2">
+                        <Bone className="h-9 w-28" />
+                        <Bone className="h-9 w-9" />
                     </div>
                 </div>
 
-                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                    {/* Category badges */}
-                    <div className="flex-1 flex gap-2.5 overflow-hidden">
-                        {[80, 96, 72, 88, 76].map((w, i) => (
-                            <Bone key={i} className={`h-8 w-${w} rounded-full shrink-0`} style={{ width: w }} />
-                        ))}
-                    </div>
-                    {/* Filter dropdowns */}
-                    <Bone className="h-9 w-48 rounded-xl shrink-0" />
+                {/* Summary */}
+                <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+                    {[...Array(4)].map((_, i) => (
+                        <div key={i} className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-5">
+                            <div className="space-y-3">
+                                <Bone className="h-3.5 w-24" />
+                                <Bone className="h-7 w-14" />
+                            </div>
+                            <Bone className="hidden h-10 w-10 sm:block" />
+                        </div>
+                    ))}
                 </div>
 
-                <div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+                {/* Table card */}
+                <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
 
                     {/* Toolbar */}
-                    <div className="px-6 md:px-8 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div className="space-y-1.5">
-                            <Bone className="h-4 w-16" />
-                            <Bone className="h-3 w-24" />
+                    <div className="space-y-4 border-b border-slate-200 px-5 py-4">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="space-y-1.5">
+                                <Bone className="h-4 w-20" />
+                                <Bone className="h-3.5 w-16" />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Bone className="h-10 w-72 max-w-full rounded-xl" />
+                                <Bone className="h-10 w-40" />
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Bone className="h-9 w-40 rounded-xl" />
-                            <Bone className="h-9 w-44 rounded-xl" />
+                        <div className="flex gap-2 overflow-hidden">
+                            {[56, 96, 80, 104, 72].map((w, i) => (
+                                <Bone key={i} className="h-7 shrink-0 rounded-full" style={{ width: w }} />
+                            ))}
                         </div>
                     </div>
 
                     {/* Table */}
                     <div className="overflow-x-auto">
-                        <div className="min-h-[55vh] max-h-[55vh] overflow-y-auto">
+                        <div className="max-h-[60vh] min-h-[50vh] overflow-y-auto">
                             <table className="w-full">
-                                {/* Table head */}
-                                <thead className="sticky top-0 bg-slate-50/90 backdrop-blur-sm border-b border-slate-100">
+                                <thead className="border-b border-slate-200 bg-slate-50">
                                     <tr>
-                                        {[120, 56, 160, 100, 100, 90, 80, 80].map((w, i) => (
-                                            <th key={i} className="px-4 py-3 text-left">
+                                        {[160, 80, 70, 110, 70, 60].map((w, i) => (
+                                            <th key={i} className="px-5 py-3 text-left">
                                                 <Bone className="h-3 rounded" style={{ width: w }} />
                                             </th>
                                         ))}
                                     </tr>
                                 </thead>
-
-                                {/* Table rows */}
-                                <tbody>
+                                <tbody className="divide-y divide-slate-100">
                                     {[...Array(8)].map((_, rowIdx) => (
-                                        <tr key={rowIdx} className="border-b border-slate-50">
-                                            {/* Serial number */}
-                                            <td className="px-4 py-3.5">
-                                                <Bone className="h-3.5 w-28" />
-                                            </td>
-                                            {/* Image */}
-                                            <td className="px-4 py-3.5">
-                                                <Bone className="h-10 w-10 rounded-xl" />
-                                            </td>
-                                            {/* Item name */}
-                                            <td className="px-4 py-3.5">
-                                                <Bone className="h-3.5 w-36" />
-                                            </td>
-                                            {/* Type */}
-                                            <td className="px-4 py-3.5">
-                                                <Bone className="h-3.5 w-20" />
-                                            </td>
-                                            {/* Category */}
-                                            <td className="px-4 py-3.5">
-                                                <Bone className="h-3.5 w-24" />
-                                            </td>
-                                            {/* Condition badge */}
-                                            <td className="px-4 py-3.5">
-                                                <Bone className="h-5 w-16 rounded-full" />
-                                            </td>
-                                            {/* Status badge */}
-                                            <td className="px-4 py-3.5">
-                                                <Bone className="h-5 w-20 rounded-full" />
-                                            </td>
-                                            {/* Actions */}
-                                            <td className="px-4 py-3.5">
-                                                <div className="flex items-center gap-2">
-                                                    <Bone className="h-8 w-16 rounded-xl" />
-                                                    <Bone className="h-8 w-8 rounded-xl" />
+                                        <tr key={rowIdx}>
+                                            <td className="px-5 py-3">
+                                                <div className="flex items-center gap-3">
+                                                    <Bone className="h-10 w-10" />
+                                                    <div className="space-y-1.5">
+                                                        <Bone className="h-3.5 w-36" />
+                                                        <Bone className="h-3 w-24" />
+                                                    </div>
                                                 </div>
                                             </td>
+                                            <td className="px-5 py-3"><Bone className="h-3.5 w-20" /></td>
+                                            <td className="px-5 py-3"><Bone className="h-5 w-14 rounded" /></td>
+                                            <td className="px-5 py-3"><Bone className="h-3.5 w-28" /></td>
+                                            <td className="px-5 py-3"><Bone className="h-5 w-16 rounded" /></td>
+                                            <td className="px-5 py-3"><Bone className="ml-auto h-7 w-20 rounded-md" /></td>
                                         </tr>
                                     ))}
                                 </tbody>
