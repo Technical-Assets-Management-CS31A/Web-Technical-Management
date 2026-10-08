@@ -1,17 +1,17 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useBorrowLogs } from "../hooks/logsHooks";
 import {
     Search,
     BookOpen,
-    Calendar,
-    User,
     ArrowRight,
-    Package,
-    Hash,
-    Clock,
-    MessageSquare,
     ChevronLeft,
     ChevronRight,
+    History,
+    Info,
+    PackageOpen,
+    PackageCheck,
+    Users,
+    X,
 } from "lucide-react";
 import type { TBorrowingLogs } from "../@types/types";
 import BorrowLogsSkeletonLoader from "../loader/BorrowLogsSkeletonLoader";
@@ -22,81 +22,45 @@ import { BORROW_LOGS_CONTENT as T } from "../constants/borrowLogsContent";
 
 const ITEMS_PER_PAGE = 10;
 
-const getStatusBadge = (status: string) => {
-    const s = status?.toLowerCase() ?? "";
-    let colorClass = "bg-slate-100 text-slate-700 border-slate-200";
-    let dotClass = "bg-slate-400";
+const STATUS_DOT: Record<string, string> = {
+    borrowed: "bg-blue-500",
+    lent: "bg-blue-500",
+    returned: "bg-emerald-500",
+    reserved: "bg-amber-500",
+    approved: "bg-emerald-500",
+    pending: "bg-yellow-500",
+    overdue: "bg-rose-500",
+    denied: "bg-rose-500",
+    canceled: "bg-slate-400",
+    available: "bg-teal-500",
+};
 
-    if (s === "borrowed" || s === "lent") {
-        colorClass = "bg-blue-50 text-blue-700 border-blue-200/60";
-        dotClass = "bg-blue-500";
-    } else if (s === "returned") {
-        colorClass = "bg-emerald-50 text-emerald-700 border-emerald-200/60";
-        dotClass = "bg-emerald-500";
-    } else if (s === "reserved") {
-        colorClass = "bg-amber-50 text-amber-700 border-amber-200/60";
-        dotClass = "bg-amber-500";
-    } else if (s === "overdue") {
-        colorClass = "bg-rose-50 text-rose-700 border-rose-200/60";
-        dotClass = "bg-rose-500";
-    } else if (s === "available") {
-        colorClass = "bg-teal-50 text-teal-700 border-teal-200/60";
-        dotClass = "bg-teal-500";
-    }
+const statusDot = (status?: string | null) => STATUS_DOT[status?.toLowerCase() ?? ""] ?? "bg-slate-400";
 
+function StatusBadge({ status }: { status: string }) {
     return (
-        <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border shadow-sm ${colorClass}`}
-        >
-            <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
-            {status}
+        <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-200">
+            <span className={`h-1.5 w-1.5 rounded-full ${statusDot(status)}`} />
+            {status || "—"}
         </span>
     );
+}
+
+const parseDate = (value?: string | null) => {
+    if (!value) return null;
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? null : d;
 };
 
-const getRoleBadge = (role: string) => {
-    const r = role?.toLowerCase() ?? "";
-    if (r === "student") {
-        return (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-violet-50 text-violet-700 border border-violet-100">
-                {T.roles.student}
-            </span>
-        );
-    }
-    if (r === "teacher" || r === "faculty") {
-        return (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-sky-50 text-sky-700 border border-sky-100">
-                {role}
-            </span>
-        );
-    }
-    return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-slate-50 text-slate-600 border border-slate-100">
-            {role}
-        </span>
-    );
-};
+const dateFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" });
+const timeFormatter = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
 
-const formatDate = (dateStr: string) => {
-    if (!dateStr) return "—";
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return "—";
-    return new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-    }).format(d);
-};
-
-const formatTime = (dateStr: string) => {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return "";
-    return new Intl.DateTimeFormat("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-    }).format(d);
+const formatDuration = (ms: number) => {
+    const minutes = Math.max(0, Math.floor(ms / 60000));
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ${minutes % 60}m`;
+    return `${Math.floor(hours / 24)}d ${hours % 24}h`;
 };
 
 const getInitials = (name: string | null) => {
@@ -106,20 +70,16 @@ const getInitials = (name: string | null) => {
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 };
 
-const avatarGradients = [
-    "from-blue-500 to-indigo-600",
-    "from-violet-500 to-purple-600",
-    "from-emerald-500 to-teal-600",
-    "from-amber-500 to-orange-600",
-    "from-rose-500 to-pink-600",
-    "from-sky-500 to-cyan-600",
-];
-
-const getAvatarGradient = (name: string | null) => {
-    if (!name) return avatarGradients[0];
-    const idx = name.charCodeAt(0) % avatarGradients.length;
-    return avatarGradients[idx];
-};
+function DateCell({ value }: { value?: string | null }) {
+    const d = parseDate(value);
+    if (!d) return <span className="text-slate-400">—</span>;
+    return (
+        <>
+            <p className="font-medium text-slate-700">{dateFormatter.format(d)}</p>
+            <p className="text-xs text-slate-500">{timeFormatter.format(d)}</p>
+        </>
+    );
+}
 
 export default function BorrowLogs() {
     const { data: logsData, isLoading, isError } = useBorrowLogs();
@@ -135,19 +95,38 @@ export default function BorrowLogs() {
         selectedLog,
         setSelectedLog,
     } = useBorrowLogsState();
+    const [now] = useState(() => Date.now());
 
-    const logs: TBorrowingLogs[] = logsData?.data ?? logsData ?? [];
+    // Newest first
+    const logs: TBorrowingLogs[] = useMemo(() => {
+        const raw: TBorrowingLogs[] = logsData?.data ?? logsData ?? [];
+        const time = (l: TBorrowingLogs) => (parseDate(l.borrowedAt) ?? parseDate(l.createdAt))?.getTime() ?? 0;
+        return [...raw].sort((a, b) => time(b) - time(a));
+    }, [logsData]);
+
+    const stats = useMemo(
+        () => [
+            { label: T.stats.total, value: logs.length, icon: History },
+            { label: T.stats.out, value: logs.filter((l) => l.borrowedAt && !l.returnedAt).length, icon: PackageOpen },
+            { label: T.stats.returned, value: logs.filter((l) => !!l.returnedAt).length, icon: PackageCheck },
+            {
+                label: T.stats.borrowers,
+                value: new Set(logs.map((l) => l.borrowerUserId || l.borrowerName).filter(Boolean)).size,
+                icon: Users,
+            },
+        ],
+        [logs],
+    );
 
     const statusOptions = useMemo(() => {
-        const statuses = Array.from(
-            new Set(logs.map((l: TBorrowingLogs) => l.currentStatus).filter(Boolean))
-        );
-        return ["All", ...statuses];
+        const counts = new Map<string, number>();
+        for (const l of logs) if (l.currentStatus) counts.set(l.currentStatus, (counts.get(l.currentStatus) ?? 0) + 1);
+        return [{ value: "All", count: logs.length }, ...[...counts].map(([value, count]) => ({ value, count }))];
     }, [logs]);
 
     const filtered = useMemo(() => {
-        return logs.filter((log: TBorrowingLogs) => {
-            const term = searchTerm.toLowerCase();
+        const term = searchTerm.toLowerCase();
+        return logs.filter((log) => {
             const matchesSearch =
                 !term ||
                 log.borrowerName?.toLowerCase().includes(term) ||
@@ -155,18 +134,14 @@ export default function BorrowLogs() {
                 log.itemSerialNumber?.toLowerCase().includes(term) ||
                 log.studentIdNumber?.toLowerCase().includes(term) ||
                 log.borrowerRole?.toLowerCase().includes(term);
-            const matchesStatus =
-                statusFilter === "All" || log.currentStatus === statusFilter;
+            const matchesStatus = statusFilter === "All" || log.currentStatus === statusFilter;
             return matchesSearch && matchesStatus;
         });
     }, [logs, searchTerm, statusFilter]);
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
     const safePage = Math.min(currentPage, totalPages);
-    const paginated = filtered.slice(
-        (safePage - 1) * ITEMS_PER_PAGE,
-        safePage * ITEMS_PER_PAGE
-    );
+    const paginated = filtered.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
 
     const handleSearch = (val: string) => {
         setSearchTerm(val);
@@ -188,26 +163,20 @@ export default function BorrowLogs() {
         setSelectedLog(null);
     };
 
-    if (isLoading) {
-        return <BorrowLogsSkeletonLoader />;
-    }
+    if (isLoading) return <BorrowLogsSkeletonLoader />;
 
-    // Error 
     if (isError) {
         return (
-            <div className="flex h-[80vh] items-center justify-center p-6">
-                <div className="max-w-md w-full rounded-2xl bg-white p-8 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-rose-100 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-rose-500" />
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 mb-6">
-                        <BookOpen className="h-8 w-8 text-rose-500" />
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">{T.error.title}</h3>
-                    <p className="text-slate-500 mb-6 leading-relaxed">
-                        {T.error.description}
-                    </p>
+            <div className="flex min-h-[80vh] items-center justify-center bg-slate-50 p-6">
+                <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-6 text-center">
+                    <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                        <BookOpen className="h-5 w-5 text-slate-400" />
+                    </span>
+                    <h3 className="text-sm font-semibold text-slate-900">{T.error.title}</h3>
+                    <p className="mt-1 text-sm text-slate-500">{T.error.description}</p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-slate-900 text-white font-medium text-sm hover:bg-slate-800 transition-colors focus:ring-4 focus:ring-slate-200"
+                        className="mt-5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
                     >
                         {T.error.refresh}
                     </button>
@@ -216,291 +185,273 @@ export default function BorrowLogs() {
         );
     }
 
-    // Main 
+    const headers = Object.values(T.tableHeaders);
+    const pageItems = Array.from({ length: totalPages }, (_, i) => i + 1)
+        .filter((p) => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
+        .reduce<(number | "…")[]>((acc, p, idx, arr) => {
+            if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("…");
+            acc.push(p);
+            return acc;
+        }, []);
+
     return (
-        <div className="p-6 md:p-8 max-w-[100rem] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
+        <div className="min-h-screen bg-slate-50">
+            <div className="mx-auto max-w-8xl space-y-6 px-4 py-6 sm:px-6 md:px-8 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
 
-            {/* Header */}
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-                <div>
-                    <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">
-                        {T.title}
-                    </h1>
-                    <p className="text-slate-500 font-medium text-base max-w-xl leading-relaxed">
-                        {T.description}
-                    </p>
-                </div>
+                {/* Header */}
+                <header>
+                    <p className="text-xs font-medium uppercase tracking-wider text-blue-600">{T.eyebrow}</p>
+                    <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{T.title}</h1>
+                    <p className="mt-1 max-w-2xl text-sm text-slate-500">{T.description}</p>
+                </header>
 
-                {/* Search */}
-                <div className="relative group w-full lg:w-96">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <Search className="h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-300" />
-                    </div>
-                    <input
-                        type="text"
-                        placeholder={T.searchPlaceholder}
-                        value={searchTerm}
-                        onChange={(e) => handleSearch(e.target.value)}
-                        className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all shadow-sm hover:border-slate-300 hover:shadow-md"
-                    />
-                </div>
-            </div>
+                {/* Summary */}
+                <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    {stats.map((stat) => (
+                        <div key={stat.label} className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5">
+                            <div className="min-w-0">
+                                <p className="truncate text-sm text-slate-500">{stat.label}</p>
+                                <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">{stat.value}</p>
+                            </div>
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                                <stat.icon className="h-5 w-5" />
+                            </span>
+                        </div>
+                    ))}
+                </section>
 
-            {/* Status filter pills */}
-            <div className="flex flex-wrap gap-2">
-                {statusOptions.map((s) => (
-                    <button
-                        key={s}
-                        onClick={() => handleStatusFilter(s)}
-                        className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                            statusFilter === s
-                                ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200"
-                                : "bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-blue-600"
-                        }`}
-                    >
-                        {s}
-                    </button>
-                ))}
-            </div>
+                {/* Table card */}
+                <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
 
-            {/* Table card */}
-            <div className="bg-white rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-200/80 overflow-hidden relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-white via-white to-slate-50/50 pointer-events-none -z-10" />
-
-                <div className="overflow-x-auto">
-                    <table className="w-full whitespace-nowrap text-left text-sm">
-                        <thead>
-                            <tr className="border-b border-slate-100">
-                                {[
-                                    { icon: User, label: T.tableHeaders.borrower },
-                                    { icon: Package, label: T.tableHeaders.item },
-                                    { icon: Hash, label: T.tableHeaders.serialNo },
-                                    { icon: ArrowRight, label: T.tableHeaders.status },
-                                    { icon: Clock, label: T.tableHeaders.borrowedAt },
-                                    { icon: Clock, label: T.tableHeaders.returnedAt },
-                                    { icon: MessageSquare, label: T.tableHeaders.remarks },
-                                ].map(({ icon: Icon, label }) => (
-                                    <th
-                                        key={label}
-                                        className="px-6 py-4 text-xs uppercase tracking-wider font-bold text-slate-400 bg-slate-50/50"
-                                    >
-                                        <span className="flex items-center gap-1.5">
-                                            <Icon className="h-3.5 w-3.5" />
-                                            {label}
-                                        </span>
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {paginated.length > 0 ? (
-                                paginated.map((log: TBorrowingLogs) => (
-                                    <tr
-                                        key={log.id}
-                                        onClick={() => handleRowClick(log)}
-                                        className="group transition-all duration-200 hover:bg-blue-50/30 cursor-pointer"
-                                    >
-                                        {/* Borrower */}
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div
-                                                    className={`h-10 w-10 rounded-full bg-gradient-to-tr ${getAvatarGradient(log.borrowerName)} flex items-center justify-center text-white font-bold text-sm shadow-sm flex-shrink-0 group-hover:scale-105 transition-transform duration-200`}
-                                                >
-                                                    {getInitials(log.borrowerName)}
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate max-w-[140px]">
-                                                        {log.borrowerName ?? "—"}
-                                                    </p>
-                                                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                                        {getRoleBadge(log.borrowerRole)}
-                                                        {log.studentIdNumber && (
-                                                            <span className="text-xs text-slate-400 font-mono">
-                                                                #{log.studentIdNumber}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-
-                                        {/* Item */}
-                                        <td className="px-6 py-4">
-                                            <p className="font-semibold text-slate-900 truncate max-w-[160px]">
-                                                {log.itemName}
-                                            </p>
-                                            {log.reservedFor && (
-                                                <p className="text-xs text-slate-400 mt-0.5 truncate max-w-[160px]">
-                                                    {T.reservedFor} {log.reservedFor}
-                                                </p>
-                                            )}
-                                        </td>
-
-                                        {/* Serial No. */}
-                                        <td className="px-6 py-4">
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-xs font-mono font-medium">
-                                                {log.itemSerialNumber}
-                                            </span>
-                                        </td>
-
-                                        {/* Status */}
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                {log.previousStatus && (
-                                                    <>
-                                                        <span className="text-xs text-slate-400 font-medium">
-                                                            {log.previousStatus}
-                                                        </span>
-                                                        <div className="flex items-center justify-center h-4 w-4 rounded-full bg-slate-100">
-                                                            <ArrowRight className="h-2.5 w-2.5 text-slate-400" />
-                                                        </div>
-                                                    </>
-                                                )}
-                                                {getStatusBadge(log.currentStatus)}
-                                            </div>
-                                        </td>
-
-                                        {/* Borrowed At */}
-                                        <td className="px-6 py-4">
-                                            {log.borrowedAt ? (
-                                                <div className="flex flex-col gap-0.5">
-                                                    <span className="font-semibold text-slate-700 text-xs">
-                                                        {formatDate(log.borrowedAt)}
-                                                    </span>
-                                                    <span className="text-xs text-slate-400 flex items-center gap-1">
-                                                        <Calendar className="h-3 w-3" />
-                                                        {formatTime(log.borrowedAt)}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <span className="text-slate-300 text-xs italic">—</span>
-                                            )}
-                                        </td>
-
-                                        {/* Returned At */}
-                                        <td className="px-6 py-4">
-                                            {log.returnedAt ? (
-                                                <div className="flex flex-col gap-0.5">
-                                                    <span className="font-semibold text-emerald-700 text-xs">
-                                                        {formatDate(log.returnedAt)}
-                                                    </span>
-                                                    <span className="text-xs text-slate-400 flex items-center gap-1">
-                                                        <Calendar className="h-3 w-3" />
-                                                        {formatTime(log.returnedAt)}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-50 text-amber-600 text-xs font-medium border border-amber-100">
-                                                    {T.notReturned}
-                                                </span>
-                                            )}
-                                        </td>
-
-                                        {/* Remarks */}
-                                        <td className="px-6 py-4 max-w-[180px]">
-                                            {log.remarks ? (
-                                                <p className="text-xs text-slate-500 truncate" title={log.remarks}>
-                                                    {truncateRemarks(log.remarks)}
-                                                </p>
-                                            ) : (
-                                                <span className="text-slate-300 text-xs italic">{T.noRemarks}</span>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={Object.keys(T.tableHeaders).length} className="px-8 py-20">
-                                        <div className="flex flex-col items-center justify-center text-center max-w-sm mx-auto">
-                                            <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center mb-4 border border-slate-100 shadow-sm">
-                                                <Search className="h-8 w-8 text-slate-300" />
-                                            </div>
-                                            <h3 className="text-lg font-bold text-slate-900 mb-1">{T.empty.title}</h3>
-                                            <p className="text-sm text-slate-500 leading-relaxed">
-                                                {T.empty.description}
-                                            </p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Footer / Pagination */}
-                <div className="bg-slate-50/50 border-t border-slate-100 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
-                    <span className="text-slate-500 font-medium">
-                        {T.pagination.showing}{" "}
-                        <span className="font-bold text-slate-900">
-                            {filtered.length === 0 ? 0 : (safePage - 1) * ITEMS_PER_PAGE + 1}–
-                            {Math.min(safePage * ITEMS_PER_PAGE, filtered.length)}
-                        </span>{" "}
-                        {T.pagination.of}{" "}
-                        <span className="font-bold text-slate-900">{filtered.length}</span>{" "}
-                        {T.pagination.entries}
-                    </span>
-
-                    <div className="flex items-center gap-1">
-                        <button
-                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                            disabled={safePage === 1}
-                            className="flex items-center gap-1 px-3 py-2 rounded-xl text-slate-500 font-medium hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all disabled:opacity-40 disabled:pointer-events-none"
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                            {T.pagination.prev}
-                        </button>
-
-                        {Array.from({ length: totalPages }, (_, i) => i + 1)
-                            .filter(
-                                (p) =>
-                                    p === 1 ||
-                                    p === totalPages ||
-                                    Math.abs(p - safePage) <= 1
-                            )
-                            .reduce<(number | "...")[]>((acc, p, idx, arr) => {
-                                if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
-                                acc.push(p);
-                                return acc;
-                            }, [])
-                            .map((p, idx) =>
-                                p === "..." ? (
-                                    <span key={`ellipsis-${idx}`} className="px-2 text-slate-400">
-                                        …
-                                    </span>
-                                ) : (
+                    {/* Toolbar */}
+                    <div className="space-y-4 border-b border-slate-200 px-5 py-4">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <div>
+                                <h2 className="text-base font-semibold text-slate-900">{T.tableTitle}</h2>
+                                <p className="mt-0.5 text-xs text-slate-500">{T.countLabel(filtered.length)}</p>
+                            </div>
+                            <div className="relative w-full lg:w-80">
+                                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    type="text"
+                                    placeholder={T.searchPlaceholder}
+                                    value={searchTerm}
+                                    onChange={(e) => handleSearch(e.target.value)}
+                                    className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-9 text-sm text-slate-900 shadow-sm outline-none transition-colors placeholder:text-slate-400 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                                />
+                                {searchTerm && (
                                     <button
-                                        key={p}
-                                        onClick={() => setCurrentPage(p as number)}
-                                        className={`min-w-[36px] h-9 rounded-xl text-xs font-semibold transition-all ${
-                                            safePage === p
-                                                ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                                                : "text-slate-500 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200"
+                                        type="button"
+                                        onClick={() => handleSearch("")}
+                                        aria-label="Clear search"
+                                        className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Status filters */}
+                        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5">
+                            {statusOptions.map(({ value, count }) => {
+                                const isActive = statusFilter === value;
+                                return (
+                                    <button
+                                        key={value}
+                                        type="button"
+                                        onClick={() => handleStatusFilter(value)}
+                                        className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1 text-sm transition-colors ${
+                                            isActive
+                                                ? "border-blue-600 bg-blue-600 text-white shadow-sm shadow-blue-600/20"
+                                                : "border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-700"
                                         }`}
                                     >
-                                        {p}
+                                        {value !== "All" && (
+                                            <span className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-white" : statusDot(value)}`} />
+                                        )}
+                                        {value === "All" ? T.allStatuses : value}
+                                        <span className={`text-xs tabular-nums ${isActive ? "text-blue-100" : "text-slate-400"}`}>{count}</span>
                                     </button>
-                                )
-                            )}
-
-                        <button
-                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                            disabled={safePage === totalPages}
-                            className="flex items-center gap-1 px-3 py-2 rounded-xl text-slate-500 font-medium hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all disabled:opacity-40 disabled:pointer-events-none"
-                        >
-                            {T.pagination.next}
-                            <ChevronRight className="h-4 w-4" />
-                        </button>
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
+
+                    {/* Table */}
+                    <div className="overflow-x-auto">
+                        <table className="w-full whitespace-nowrap text-left text-sm">
+                            <thead>
+                                <tr className="bg-slate-50">
+                                    {headers.map((label) => (
+                                        <th key={label} className="border-b border-slate-200 px-5 py-3 font-medium text-slate-500">{label}</th>
+                                    ))}
+                                    <th className="w-10 border-b border-slate-200 px-5 py-3" />
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {paginated.length > 0 ? (
+                                    paginated.map((log) => {
+                                        const borrowed = parseDate(log.borrowedAt);
+                                        const returned = parseDate(log.returnedAt);
+                                        const duration = borrowed ? (returned ?? new Date(now)).getTime() - borrowed.getTime() : null;
+
+                                        return (
+                                            <tr key={log.id} onClick={() => handleRowClick(log)} className="group cursor-pointer transition-colors hover:bg-slate-50">
+                                                {/* Borrower */}
+                                                <td className="px-5 py-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-200">
+                                                            {getInitials(log.borrowerName)}
+                                                        </span>
+                                                        <div className="min-w-0">
+                                                            <p className="max-w-[160px] truncate font-medium text-slate-900">{log.borrowerName ?? "—"}</p>
+                                                            <p className="text-xs text-slate-500">
+                                                                {log.borrowerRole?.toLowerCase() === "student" ? T.roles.student : log.borrowerRole || "—"}
+                                                                {log.studentIdNumber && <span className="font-mono"> · #{log.studentIdNumber}</span>}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                {/* Item */}
+                                                <td className="px-5 py-3">
+                                                    <p className="max-w-[180px] truncate font-medium text-slate-900">{log.itemName || "—"}</p>
+                                                    <p className="max-w-[180px] truncate text-xs text-slate-500">
+                                                        <span className="font-mono">{log.itemSerialNumber}</span>
+                                                        {log.reservedFor && <span> · {T.reservedFor} {log.reservedFor}</span>}
+                                                    </p>
+                                                </td>
+
+                                                {/* Status */}
+                                                <td className="px-5 py-3">
+                                                    <div className="flex items-center gap-2">
+                                                        {log.previousStatus && (
+                                                            <>
+                                                                <span className="text-xs text-slate-500">{log.previousStatus}</span>
+                                                                <ArrowRight className="h-3.5 w-3.5 text-slate-300" />
+                                                            </>
+                                                        )}
+                                                        <StatusBadge status={log.currentStatus} />
+                                                    </div>
+                                                </td>
+
+                                                {/* Borrowed */}
+                                                <td className="px-5 py-3">
+                                                    <DateCell value={log.borrowedAt} />
+                                                </td>
+
+                                                {/* Returned */}
+                                                <td className="px-5 py-3">
+                                                    {returned ? (
+                                                        <DateCell value={log.returnedAt} />
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-200">
+                                                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                                            {T.notReturned}
+                                                        </span>
+                                                    )}
+                                                </td>
+
+                                                {/* Duration */}
+                                                <td className="px-5 py-3 tabular-nums">
+                                                    {duration !== null ? (
+                                                        <span className={returned ? "text-slate-600" : "font-medium text-slate-900"}>
+                                                            {formatDuration(duration)}
+                                                            {!returned && <span className="ml-1 text-xs font-normal text-slate-400">so far</span>}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-slate-400">—</span>
+                                                    )}
+                                                </td>
+
+                                                {/* Remarks */}
+                                                <td className="max-w-[200px] px-5 py-3">
+                                                    {log.remarks ? (
+                                                        <p className="truncate text-slate-500" title={log.remarks}>{truncateRemarks(log.remarks)}</p>
+                                                    ) : (
+                                                        <span className="text-slate-400">{T.noRemarks}</span>
+                                                    )}
+                                                </td>
+
+                                                <td className="px-5 py-3 text-right">
+                                                    <ChevronRight className="ml-auto h-4 w-4 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-slate-500" />
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                ) : (
+                                    <tr>
+                                        <td colSpan={headers.length + 1} className="px-8 py-20 text-center">
+                                            <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                                                <Search className="h-5 w-5 text-slate-400" />
+                                            </span>
+                                            <p className="text-sm font-semibold text-slate-900">{T.empty.title}</p>
+                                            <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">{T.empty.description}</p>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Footer: count + pagination */}
+                    <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 px-5 py-3 text-sm sm:flex-row">
+                        <span className="text-slate-500">
+                            {T.pagination.showing}{" "}
+                            <span className="font-medium text-slate-900 tabular-nums">
+                                {filtered.length === 0 ? 0 : (safePage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(safePage * ITEMS_PER_PAGE, filtered.length)}
+                            </span>{" "}
+                            {T.pagination.of} <span className="font-medium text-slate-900 tabular-nums">{filtered.length}</span> {T.pagination.entries}
+                        </span>
+
+                        {totalPages > 1 && (
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+                                    disabled={safePage === 1}
+                                    className="flex h-8 items-center gap-1 rounded-lg px-2.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:pointer-events-none disabled:opacity-40"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                    {T.pagination.prev}
+                                </button>
+                                {pageItems.map((p, idx) =>
+                                    p === "…" ? (
+                                        <span key={`ellipsis-${idx}`} className="px-1.5 text-slate-400">…</span>
+                                    ) : (
+                                        <button
+                                            key={p}
+                                            onClick={() => setCurrentPage(p)}
+                                            className={`h-8 min-w-8 rounded-lg px-2 text-xs font-medium tabular-nums transition-colors ${
+                                                safePage === p ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100"
+                                            }`}
+                                        >
+                                            {p}
+                                        </button>
+                                    ),
+                                )}
+                                <button
+                                    onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
+                                    disabled={safePage === totalPages}
+                                    className="flex h-8 items-center gap-1 rounded-lg px-2.5 text-slate-600 transition-colors hover:bg-slate-100 disabled:pointer-events-none disabled:opacity-40"
+                                >
+                                    {T.pagination.next}
+                                    <ChevronRight className="h-4 w-4" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    <p className="flex items-start gap-2 border-t border-slate-200 px-5 py-3 text-xs text-slate-500">
+                        <Info className="mt-px h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        <span>{T.footerHint}</span>
+                    </p>
+                </section>
             </div>
 
             {/* Detail Modal */}
             {selectedLog && (
-                <BorrowLogsDetailModal
-                    log={selectedLog}
-                    isOpen={isDetailModalOpen}
-                    onClose={handleCloseModal}
-                />
+                <BorrowLogsDetailModal log={selectedLog} isOpen={isDetailModalOpen} onClose={handleCloseModal} />
             )}
         </div>
     );
