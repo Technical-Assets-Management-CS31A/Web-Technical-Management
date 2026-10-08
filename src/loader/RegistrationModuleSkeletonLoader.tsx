@@ -24,7 +24,7 @@ const SkeletonTableRow = ({ cols }: { cols: number }) => (
 
 const RegistrationModuleSkeletonLoader = () => {
   return (
-    <div className="w-full min-h-screen bg-linear-gradient-to-br from-[#f8fafc] to-[#e2e8f0] p-6">
+    <div className="w-full min-h-screen bg-linear-gradient-to-br from-slate-50 to-slate-200 p-6">
       <div className="w-full max-w-8xl mx-auto">
         {/* Header */}
         <div className="mb-8">
