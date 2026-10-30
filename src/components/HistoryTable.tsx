@@ -1,41 +1,38 @@
-import type { THistoryBorrwedItems } from "../@types/types";
+import type { LoanDto } from "../@types/types";
 import { FormattedDateTime } from "./FormattedDateTime";
 import { SlugStatus } from "./SlugStatus";
-import no_image_svg from "../assets/no-image-svgrepo-com.svg";
+import { formatEnum } from "../lib/utils";
 
 type HistoryTableProps = {
-    items: THistoryBorrwedItems[];
+    items: LoanDto[];
+    onSelect: (loanId: string) => void;
 };
 
-export default function HistoryTable({ items }: HistoryTableProps) {
-    const sortedItems = [...items]
-        .sort((a, b) => new Date(b.item.updatedAt).getTime() - new Date(a.item.updatedAt).getTime());
-
+export default function HistoryTable({ items, onSelect }: HistoryTableProps) {
     return (
         <>
-            {sortedItems.map((item) => (
+            {items.map((loan) => (
                 <tr
-                    key={item.id}
-                    className="hover:bg-slate-100 transition-colors odd:bg-white even:bg-slate-50"
+                    key={loan.id}
+                    onClick={() => onSelect(loan.id)}
+                    className="cursor-pointer hover:bg-slate-100 transition-colors odd:bg-white even:bg-slate-50"
                 >
-                    <td className="py-3 px-4">{item.item.serialNumber}</td>
+                    <td className="py-3 px-4 font-mono text-sm">{loan.loanNo}</td>
                     <td className="py-4 px-6">
-                        <img
-                            src={typeof item.item.image === "string" ? item.item.image : no_image_svg}
-                            alt={item.borrowerFullName}
-                            className="object-cover w-10 h-10 rounded-xl"
-                            onError={(e) => (e.currentTarget.style.display = "none")}
-                        />
+                        <p>{loan.asset.name}</p>
+                        <p className="font-mono text-xs text-slate-500">{loan.asset.assetCode}</p>
                     </td>
-                    <td className="py-4 px-6">{item.item.itemName}</td>
-                    <td className="py-4 px-6">{item.borrowerFullName}</td>
-                    <td className="py-4 px-6">{item.teacherFullName || "-"}</td>
-                    <td className="py-4 px-6">{item.room || "-"}</td>
-                    <td className="py-4 px-6">{item.remarks || "-"}</td>
-                    <td className="py-4 px-6">{FormattedDateTime(item.item.updatedAt)}</td>
                     <td className="py-4 px-6">
-                        <span className={`px-3 py-1 rounded-full text-sm ${SlugStatus(item.status)}`}>
-                            {item.status}
+                        <p>{loan.student?.fullName ?? loan.coordinator?.fullName ?? "-"}</p>
+                        <p className="text-xs text-slate-500">{loan.type === "EVENT" ? loan.event?.title ?? "Event" : loan.student?.sectionCode}</p>
+                    </td>
+                    <td className="py-4 px-6">{loan.approvedBy?.fullName || "-"}</td>
+                    <td className="py-4 px-6">{loan.destinationRoom?.code || "-"}</td>
+                    <td className="py-4 px-6">{FormattedDateTime(loan.checkedOutAt)}</td>
+                    <td className="py-4 px-6">{loan.returnedAt ? FormattedDateTime(loan.returnedAt) : "-"}</td>
+                    <td className="py-4 px-6">
+                        <span className={`px-3 py-1 rounded-full text-sm ${SlugStatus(loan.status)}`}>
+                            {formatEnum(loan.status)}
                         </span>
                     </td>
                 </tr>
