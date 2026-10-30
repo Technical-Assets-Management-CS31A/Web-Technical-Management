@@ -47,7 +47,7 @@ const flushQueue = (token: string | null, error: unknown = null) => {
 };
 
 const refreshAccessToken = async (): Promise<string> => {
-  const res = await fetch(`${BASE_URL}/auth/refresh-token`, {
+  const res = await fetch(`${BASE_URL}/auth/refresh`, {
     method: "POST",
     credentials: "include",
   });
@@ -57,7 +57,7 @@ const refreshAccessToken = async (): Promise<string> => {
   }
 
   const data = await res.json();
-  const newToken: string = data?.data;
+  const newToken: string = data?.data?.accessToken ?? data?.data;
   if (!newToken) throw new Error("No token in refresh response");
 
   // Store the new access token in the cookie so getToken() picks it up

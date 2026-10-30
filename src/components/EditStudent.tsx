@@ -1,250 +1,118 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { GraduationCap } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import type { TStudentRfidSession, TUpdateStudent } from "../@types/types";
-import { useUpdateStudent } from "../hooks/userHooks";
+import type { RecordStatus, StudentDto, StudentForm } from "../@types/types";
+import { useAllSections, useCreateStudent, useUpdateStudent } from "../hooks/userHooks";
 import { showToast } from "./AppToast";
-import {
-  cancelStudentRfidSessionApi,
-  createStudentRfidSessionApi,
-  getStudentRfidSessionApi,
-} from "../api/user_api";
-import { Field, FormAlert, FormDialog, FormSection, TextInput, getErrorMessage } from "./form/FormKit";
-import { RfidRegistrationPanel, useRfidSession } from "./form/RfidRegistration";
-import { validateEmail, validatePhone, validateRequired } from "./form/validators";
+import { Field, FormAlert, FormDialog, FormSection, SelectInput, TextInput, getErrorMessage } from "./form/FormKit";
+import { validateRequired } from "./form/validators";
 
-type StudentFields = {
-  firstName: string;
-  middleName: string;
-  lastName: string;
-  studentIdNumber: string;
-  course: string;
-  section: string;
-  year: string;
-  phoneNumber: string;
-  email: string;
-  username: string;
-  street: string;
-  cityMunicipality: string;
-  province: string;
-  postalCode: string;
+// Short roster form: students have no account and prove identity by fingerprint at the kiosk.
+
+type EditStudentProps = {
+  /** Omit to create a new student */
+  student?: StudentDto;
+  onClose: () => void;
 };
 
-type FieldKey = keyof StudentFields;
+type Errors = Partial<Record<keyof StudentForm, string>>;
 
-const REQUIRED: { key: FieldKey; label: string }[] = [
-  { key: "firstName", label: "First name" },
-  { key: "lastName", label: "Last name" },
-  { key: "studentIdNumber", label: "Student ID number" },
-  { key: "course", label: "Course" },
-  { key: "section", label: "Section" },
-  { key: "year", label: "Year level" },
-  { key: "username", label: "Username" },
-  { key: "street", label: "Street address" },
-  { key: "cityMunicipality", label: "City / municipality" },
-  { key: "province", label: "Province" },
-  { key: "postalCode", label: "Postal code" },
-];
+export const EditStudent = ({ student, onClose }: EditStudentProps) => {
+  const isNew = !student;
+  const { data: sections = [] } = useQuery(useAllSections());
+  const create = useCreateStudent();
+  const update = useUpdateStudent();
+  const isPending = create.isPending || update.isPending;
 
-export const EditStudent = ({
-  id,
-  firstName,
-  middleName,
-  lastName,
-  studentIdNumber,
-  phoneNumber,
-  course,
-  section,
-  year,
-  street,
-  cityMunicipality,
-  province,
-  postalCode,
-  username,
-  email,
-  userRole,
-  status,
-  rfidUid,
-  onClose,
-}: TUpdateStudent) => {
-  const queryClient = useQueryClient();
-  const { mutate, isPending } = useUpdateStudent();
+  const [values, setValues] = useState<StudentForm>({
+    studentNo: student?.studentNo ?? "",
+    firstName: student?.firstName ?? "",
+    lastName: student?.lastName ?? "",
+    sectionId: student?.section?.id ?? "",
+    status: student?.status ?? "ACTIVE",
+  });
+  const [errors, setErrors] = useState<Errors>({});
   const [submitError, setSubmitError] = useState("");
-  const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
 
-  const [formData, setFormData] = useState<StudentFields>({
-    firstName: firstName ?? "",
-    middleName: middleName ?? "",
-    lastName: lastName ?? "",
-    studentIdNumber: studentIdNumber ?? "",
-    course: course ?? "",
-    section: section ?? "",
-    year: year ?? "",
-    phoneNumber: phoneNumber ?? "",
-    email: email ?? "",
-    username: username ?? "",
-    street: street ?? "",
-    cityMunicipality: cityMunicipality ?? "",
-    province: province ?? "",
-    postalCode: postalCode ?? "",
-  });
-
-  const rfid = useRfidSession<TStudentRfidSession>({
-    createSession: () => createStudentRfidSessionApi(id),
-    fetchSession: getStudentRfidSessionApi,
-    cancelSession: cancelStudentRfidSessionApi,
-    retryCreate: true,
-    onCompleted: () => {
-      showToast.success("RFID Registered", `RFID card assigned to ${firstName} ${lastName} successfully!`);
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-    },
-  });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: undefined }));
+  const onChange = <K extends keyof StudentForm>(key: K, value: StudentForm[K]) => {
+    setValues((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => ({ ...prev, [key]: undefined }));
     setSubmitError("");
-  };
-
-  const validate = () => {
-    const next: Partial<Record<FieldKey, string>> = {};
-    for (const { key, label } of REQUIRED) next[key] = validateRequired(formData[key], label);
-    next.email = validateEmail(formData.email);
-    next.phoneNumber = validatePhone(formData.phoneNumber, true);
-    setErrors(next);
-    return Object.values(next).every((v) => !v);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
 
-    const trimmed = Object.fromEntries(
-      Object.entries(formData).map(([k, v]) => [k, v.trim()]),
-    ) as StudentFields;
+    const next: Errors = {
+      studentNo: validateRequired(values.studentNo, "Student number"),
+      firstName: validateRequired(values.firstName, "First name"),
+      lastName: validateRequired(values.lastName, "Last name"),
+      sectionId: validateRequired(values.sectionId, "Section"),
+    };
+    setErrors(next);
+    if (Object.values(next).some(Boolean)) return;
 
-    mutate(
-      {
-        id,
-        data: {
-          ...trimmed,
-          id,
-          userRole,
-          status,
-          // Pictures aren't edited here; the API only uploads File values, so null leaves them unchanged
-          frontStudentIdPicture: null,
-          backStudentIdPicture: null,
-          profilePicture: null,
-        },
+    const data: StudentForm = {
+      ...values,
+      studentNo: values.studentNo.trim(),
+      firstName: values.firstName.trim(),
+      lastName: values.lastName.trim(),
+    };
+    const callbacks = {
+      onSuccess: () => {
+        showToast.success(isNew ? "Student Added" : "Student Updated", `${data.firstName} ${data.lastName} is on the roster.`);
+        onClose();
       },
-      {
-        onSuccess: () => {
-          showToast.success("Student Updated", "Student updated successfully!");
-          onClose();
-        },
-        onError: (error) => {
-          const message = getErrorMessage(error, "Failed to update student.");
-          setSubmitError(message);
-          showToast.error("Update Failed", message);
-        },
+      onError: (err: unknown) => {
+        const message = getErrorMessage(err, isNew ? "Failed to add student." : "Failed to update student.");
+        setSubmitError(message);
+        showToast.error(isNew ? "Add Failed" : "Update Failed", message);
       },
-    );
+    };
+
+    if (student) update.mutate({ id: student.id, data }, callbacks);
+    else create.mutate(data, callbacks);
   };
-
-  const input = (key: FieldKey, props: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
-    <TextInput
-      id={key}
-      name={key}
-      value={formData[key]}
-      onChange={handleInputChange}
-      error={!!errors[key]}
-      {...props}
-    />
-  );
 
   return (
     <FormDialog
-      title="Edit Student"
-      subtitle={`Update ${firstName ?? "student"}'s information`}
+      title={isNew ? "Add student" : "Edit student"}
+      subtitle={isNew ? "Roster record" : `${student.firstName} ${student.lastName}`}
       icon={GraduationCap}
-      size="xl"
+      size="md"
       onClose={onClose}
       onSubmit={handleSubmit}
       isSubmitting={isPending}
-      preventClose={rfid.isActive}
-      footerNote={
-        rfid.isActive ? "Finish or cancel the RFID scan before closing." : <><span className="text-rose-500">*</span> Required fields</>
-      }
+      submitLabel={isNew ? "Add student" : "Save changes"}
+      footerNote={<><span className="text-rose-500">*</span> Required fields</>}
     >
-      <FormSection title="Personal information" columns={3}>
-        <Field label="First name" htmlFor="firstName" required error={errors.firstName}>
-          {input("firstName", { placeholder: "Juan", autoComplete: "given-name" })}
+      <FormSection title="Student">
+        <Field label="Student number" htmlFor="student-no" required error={errors.studentNo} className="sm:col-span-2">
+          <TextInput id="student-no" value={values.studentNo} onChange={(e) => onChange("studentNo", e.target.value)} placeholder="2024-00123" maxLength={20} error={!!errors.studentNo} className="font-mono" />
         </Field>
-        <Field label="Middle name" htmlFor="middleName" optional>
-          {input("middleName", { placeholder: "Santos", autoComplete: "additional-name" })}
+        <Field label="First name" htmlFor="student-firstName" required error={errors.firstName}>
+          <TextInput id="student-firstName" value={values.firstName} onChange={(e) => onChange("firstName", e.target.value)} placeholder="Juan" error={!!errors.firstName} />
         </Field>
-        <Field label="Last name" htmlFor="lastName" required error={errors.lastName}>
-          {input("lastName", { placeholder: "Dela Cruz", autoComplete: "family-name" })}
+        <Field label="Last name" htmlFor="student-lastName" required error={errors.lastName}>
+          <TextInput id="student-lastName" value={values.lastName} onChange={(e) => onChange("lastName", e.target.value)} placeholder="Dela Cruz" error={!!errors.lastName} />
         </Field>
-      </FormSection>
-
-      <FormSection title="Academic">
-        <Field label="Student ID number" htmlFor="studentIdNumber" required error={errors.studentIdNumber}>
-          {input("studentIdNumber", { placeholder: "e.g. 2024-00123", className: "font-mono" })}
+        <Field label="Section" htmlFor="student-section" required error={errors.sectionId}>
+          <SelectInput id="student-section" value={values.sectionId} onChange={(e) => onChange("sectionId", e.target.value)} error={!!errors.sectionId}>
+            <option value="" disabled>Select a section</option>
+            {sections.map((section) => (
+              <option key={section.id} value={section.id}>{section.code} · {section.schoolYear}</option>
+            ))}
+          </SelectInput>
         </Field>
-        <Field label="Course" htmlFor="course" required error={errors.course}>
-          {input("course", { placeholder: "e.g. BSIT" })}
-        </Field>
-        <Field label="Year level" htmlFor="year" required error={errors.year}>
-          {input("year", { placeholder: "e.g. 3rd Year" })}
-        </Field>
-        <Field label="Section" htmlFor="section" required error={errors.section}>
-          {input("section", { placeholder: "e.g. A" })}
-        </Field>
-      </FormSection>
-
-      <FormSection title="Contact & account">
-        <Field label="Phone number" htmlFor="phoneNumber" required error={errors.phoneNumber} hint="e.g. 09171234567">
-          {input("phoneNumber", { type: "tel", inputMode: "numeric", placeholder: "09XX XXX XXXX", maxLength: 13 })}
-        </Field>
-        <Field label="Email" htmlFor="email" required error={errors.email}>
-          {input("email", { type: "email", placeholder: "name@school.edu", autoComplete: "email" })}
-        </Field>
-        <Field label="Username" htmlFor="username" required error={errors.username} className="sm:col-span-2">
-          {input("username", { placeholder: "jdelacruz", autoComplete: "username" })}
+        <Field label="Status" htmlFor="student-status">
+          <SelectInput id="student-status" value={values.status} onChange={(e) => onChange("status", e.target.value as RecordStatus)}>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+          </SelectInput>
         </Field>
       </FormSection>
 
-      <FormSection title="Address" columns={3}>
-        <Field label="Street address" htmlFor="street" required error={errors.street} className="sm:col-span-3">
-          {input("street", { placeholder: "House no., street, barangay", autoComplete: "street-address" })}
-        </Field>
-        <Field label="City / municipality" htmlFor="cityMunicipality" required error={errors.cityMunicipality}>
-          {input("cityMunicipality", { placeholder: "City", autoComplete: "address-level2" })}
-        </Field>
-        <Field label="Province" htmlFor="province" required error={errors.province}>
-          {input("province", { placeholder: "Province", autoComplete: "address-level1" })}
-        </Field>
-        <Field label="Postal code" htmlFor="postalCode" required error={errors.postalCode}>
-          {input("postalCode", { placeholder: "e.g. 6000", inputMode: "numeric", autoComplete: "postal-code" })}
-        </Field>
-      </FormSection>
-
-      <section>
-        <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-slate-400">RFID card</h3>
-        <RfidRegistrationPanel
-          noun="card"
-          subject="student"
-          currentUid={rfidUid}
-          status={rfid.status}
-          expiresAt={rfid.session?.expiresAt}
-          waitingHint="Ask the student to tap their card on the reader."
-          onStart={rfid.start}
-          onCancel={rfid.cancel}
-        />
-      </section>
-
+      {isNew && <FormAlert tone="success">Enroll the student's fingerprint at the kiosk after saving so they can borrow.</FormAlert>}
       {submitError && <FormAlert tone="error">{submitError}</FormAlert>}
     </FormDialog>
   );

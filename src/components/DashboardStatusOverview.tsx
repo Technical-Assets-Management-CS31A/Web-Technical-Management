@@ -1,9 +1,10 @@
 import { useMemo } from "react";
-import type { TRecentBorrowItemProps } from "../@types/types";
+import type { LoanDto } from "../@types/types";
+import { formatEnum } from "../lib/utils";
 import { SlugStatus } from "./SlugStatus";
 import { DASHBOARD_CONTENT as T } from "../constants/dashboardContent";
 
-export default function DashboardStatusOverview({ records }: { records: TRecentBorrowItemProps[] }) {
+export default function DashboardStatusOverview({ records }: { records: LoanDto[] }) {
   const statuses = useMemo(() => {
     const counts = new Map<string, number>();
     records.forEach((record) => {
@@ -33,7 +34,7 @@ export default function DashboardStatusOverview({ records }: { records: TRecentB
             return (
               <li key={status}>
                 <div className="flex items-center justify-between text-sm">
-                  <span className={`rounded px-2 py-0.5 text-xs font-medium ${SlugStatus(status)}`}>{status}</span>
+                  <span className={`rounded px-2 py-0.5 text-xs font-medium ${SlugStatus(status)}`}>{formatEnum(status)}</span>
                   <span className="text-slate-500 tabular-nums">
                     <span className="font-semibold text-slate-900">{count}</span> · {percent}%
                   </span>
