@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { TRecentBorrowItemProps } from "../@types/types";
+import type { LoanDto } from "../@types/types";
 import { DASHBOARD_CONTENT as T } from "../constants/dashboardContent";
 
 const DAYS = 7;
@@ -7,14 +7,14 @@ const DAYS = 7;
 const toDayKey = (date: Date) =>
   `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
 
-export default function DashboardActivityChart({ records }: { records: TRecentBorrowItemProps[] }) {
+export default function DashboardActivityChart({ records }: { records: LoanDto[] }) {
   const days = useMemo(() => {
     const counts = new Map<string, number>();
     records.forEach((record) => {
-      if (!record.lentAt) return;
-      const lentAt = new Date(record.lentAt);
-      if (Number.isNaN(lentAt.getTime())) return;
-      const key = toDayKey(lentAt);
+      if (!record.checkedOutAt) return;
+      const checkedOutAt = new Date(record.checkedOutAt);
+      if (Number.isNaN(checkedOutAt.getTime())) return;
+      const key = toDayKey(checkedOutAt);
       counts.set(key, (counts.get(key) ?? 0) + 1);
     });
 
