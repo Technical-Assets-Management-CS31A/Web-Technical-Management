@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Archive, Check, Copy, Hash, ImageOff, Loader2, X, ZoomIn } from "lucide-react";
 import { FormattedDateTime } from "./FormattedDateTime";
 
-// Shared building blocks for the archive detail popups (item, student, teacher)
+// Shared building blocks for the archive detail popups (item, student, instructor)
 
 function useCopy() {
   const [copied, setCopied] = useState(false);
@@ -43,6 +43,8 @@ const panelClass =
 
 type ArchiveDialogProps = {
   label: string;
+  /** Top-bar badge icon; archive by default */
+  icon?: React.ElementType;
   titleId: string;
   recordId?: string | null;
   recordIdLabel?: string;
@@ -53,6 +55,7 @@ type ArchiveDialogProps = {
 
 export function ArchiveDialog({
   label,
+  icon: LabelIcon = Archive,
   titleId,
   recordId,
   recordIdLabel = "Record ID",
@@ -75,7 +78,7 @@ export function ArchiveDialog({
         {/* Top bar */}
         <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-3">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-            <Archive className="h-3 w-3 text-slate-400" />
+            <LabelIcon className="h-3 w-3 text-slate-400" />
             {label}
           </span>
           <button
@@ -158,17 +161,17 @@ export function ArchiveError({ message, onClose }: { message: string; onClose: (
   );
 }
 
-/** Neutral banner stating when the record was archived */
-export function ArchivedNotice({ archivedAt, subject }: { archivedAt?: string | null; subject: string }) {
+/** Neutral banner stating when the record was soft-deleted */
+export function DeletedNotice({ deletedAt, subject }: { deletedAt?: string | null; subject: string }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3">
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-slate-500 ring-1 ring-slate-200">
         <Archive className="h-4 w-4" />
       </span>
       <div className="min-w-0 text-sm">
-        <p className="font-medium text-slate-900">This {subject} is archived</p>
+        <p className="font-medium text-slate-900">This {subject} is deleted</p>
         <p className="text-slate-500">
-          {archivedAt ? `Archived on ${FormattedDateTime(archivedAt)}` : "Archive date not available"}
+          {deletedAt ? `Deleted on ${FormattedDateTime(deletedAt)}` : "Delete date not available"}
         </p>
       </div>
     </div>
