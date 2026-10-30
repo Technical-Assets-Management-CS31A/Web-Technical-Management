@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FiLock } from "react-icons/fi";
-import { useResetUserPassword } from "../hooks/userHooks";
-import type { TUpdatePassword } from "../@types/types";
+import { useChangePassword } from "../hooks/userHooks";
+import type { ChangePasswordRequest } from "../@types/types";
 
 type ChangePasswordModalProps = {
     id?: string;
@@ -12,7 +12,7 @@ export default function ChangePasswordModal({
     id,
     onClose,
 }: ChangePasswordModalProps) {
-    const updateUserPassword = useResetUserPassword();
+    const updateUserPassword = useChangePassword();
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,7 +27,7 @@ export default function ChangePasswordModal({
         if (!isValid) return;
 
         try {
-            const newUserPassword: TUpdatePassword = {
+            const newUserPassword: ChangePasswordRequest = {
                 newPassword: newPassword,
                 confirmPassword: confirmPassword,
             };
