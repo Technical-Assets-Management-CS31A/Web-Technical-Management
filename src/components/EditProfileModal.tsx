@@ -3,43 +3,27 @@ import { CircleUserRound } from "lucide-react";
 import { useUpdateUser } from "../hooks/userHooks";
 import { showToast } from "./AppToast";
 import { Field, FormAlert, FormDialog, FormSection, TextInput, getErrorMessage } from "./form/FormKit";
-import { validateEmail, validatePhone, validateRequired } from "./form/validators";
-
-export type EditableUser = {
-    id?: string | null;
-    firstName?: string | null;
-    lastName?: string | null;
-    middleName?: string | null;
-    username?: string | null;
-    email?: string | null;
-    phoneNumber?: string | null;
-    position?: string | null;
-};
+import { validateEmail, validateRequired } from "./form/validators";
+import type { UserDto } from "../@types/types";
 
 type EditProfileModalProps = {
-    initialValues: EditableUser;
+    user: UserDto;
     onClose: () => void;
-    onSubmit?: (values: EditableUser) => Promise<void> | void;
 };
 
-type Values = Required<{ [K in keyof EditableUser]: string }>;
-type FieldKey = "firstName" | "lastName" | "middleName" | "username" | "email" | "phoneNumber";
+type FieldKey = "firstName" | "lastName" | "email";
+type Values = Record<FieldKey, string>;
 
-export default function EditProfileModal({ initialValues, onClose, onSubmit }: EditProfileModalProps) {
+export default function EditProfileModal({ user, onClose }: EditProfileModalProps) {
     const { mutate, isPending } = useUpdateUser();
     const [submitError, setSubmitError] = useState("");
     const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
 
     // Seeded once on open — re-seeding on every parent render would wipe what the user is typing
     const [values, setValues] = useState<Values>(() => ({
-        id: initialValues.id ?? "",
-        firstName: initialValues.firstName ?? "",
-        lastName: initialValues.lastName ?? "",
-        middleName: initialValues.middleName ?? "",
-        username: initialValues.username ?? "",
-        email: initialValues.email ?? "",
-        phoneNumber: initialValues.phoneNumber ?? "",
-        position: initialValues.position ?? "",
+        firstName: user.firstName ?? "",
+        lastName: user.lastName ?? "",
+        email: user.email ?? "",
     }));
 
     const update = (key: FieldKey) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,29 +39,28 @@ export default function EditProfileModal({ initialValues, onClose, onSubmit }: E
         const next = {
             firstName: validateRequired(values.firstName, "First name"),
             lastName: validateRequired(values.lastName, "Last name"),
-            username: validateRequired(values.username, "Username"),
             email: validateEmail(values.email),
-            phoneNumber: validatePhone(values.phoneNumber, false),
         };
         setErrors(next);
         if (Object.values(next).some(Boolean)) return;
 
+        // PUT replaces the whole record, so role and settings are sent back unchanged.
         mutate(
             {
-                id: values.id,
+                id: user.id,
                 data: {
+                    employeeNo: user.employeeNo,
                     firstName: values.firstName.trim(),
                     lastName: values.lastName.trim(),
-                    middleName: values.middleName.trim(),
-                    username: values.username.trim(),
                     email: values.email.trim(),
-                    phoneNumber: values.phoneNumber.trim(),
-                    position: values.position,
+                    role: user.role,
+                    isEventCoordinator: user.isEventCoordinator,
+                    defaultRoomId: user.defaultRoomId,
+                    status: user.status,
                 },
             },
             {
                 onSuccess: () => {
-                    onSubmit?.(values);
                     showToast.success("Profile Updated", "Your profile was updated successfully.");
                     onClose();
                 },
@@ -107,19 +90,10 @@ export default function EditProfileModal({ initialValues, onClose, onSubmit }: E
                 <Field label="Last name" htmlFor="profile-lastName" required error={errors.lastName}>
                     <TextInput id="profile-lastName" value={values.lastName} onChange={update("lastName")} placeholder="Dela Cruz" error={!!errors.lastName} autoComplete="family-name" />
                 </Field>
-                <Field label="Middle name" htmlFor="profile-middleName" optional>
-                    <TextInput id="profile-middleName" value={values.middleName} onChange={update("middleName")} placeholder="Santos" autoComplete="additional-name" />
-                </Field>
-                <Field label="Phone number" htmlFor="profile-phone" optional error={errors.phoneNumber} hint="e.g. 09171234567">
-                    <TextInput id="profile-phone" type="tel" inputMode="numeric" value={values.phoneNumber} onChange={update("phoneNumber")} placeholder="09XX XXX XXXX" maxLength={13} error={!!errors.phoneNumber} autoComplete="tel-national" />
-                </Field>
             </FormSection>
 
             <FormSection title="Account">
-                <Field label="Username" htmlFor="profile-username" required error={errors.username}>
-                    <TextInput id="profile-username" value={values.username} onChange={update("username")} placeholder="jdelacruz" error={!!errors.username} autoComplete="username" />
-                </Field>
-                <Field label="Email" htmlFor="profile-email" required error={errors.email}>
+                <Field label="Email" htmlFor="profile-email" required error={errors.email} hint="You sign in with this email.">
                     <TextInput id="profile-email" type="email" value={values.email} onChange={update("email")} placeholder="name@school.edu" error={!!errors.email} autoComplete="email" />
                 </Field>
             </FormSection>
