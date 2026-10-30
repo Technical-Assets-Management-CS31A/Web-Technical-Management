@@ -1,12 +1,12 @@
-// Shared cell pieces for the archive tables.
+// Shared cell pieces for the deleted-records tables.
 
-export function UserIdentity({ firstName, middleName, lastName, subtitle }: {
+import { formatEnum, formatRole } from "../lib/utils";
+
+export function UserIdentity({ firstName, lastName, subtitle }: {
     firstName: string;
-    middleName?: string;
     lastName: string;
     subtitle?: string;
 }) {
-    const middleInitial = middleName ? `${String(middleName).charAt(0).toUpperCase()}. ` : "";
     const initials = `${firstName?.charAt(0) ?? ""}${lastName?.charAt(0) ?? ""}`.toUpperCase();
 
     return (
@@ -16,7 +16,7 @@ export function UserIdentity({ firstName, middleName, lastName, subtitle }: {
             </span>
             <div className="min-w-0">
                 <p className="truncate font-medium text-slate-900">
-                    {firstName} {middleInitial}{lastName}
+                    {firstName} {lastName}
                 </p>
                 {subtitle && <p className="truncate font-mono text-xs text-slate-500">{subtitle}</p>}
             </div>
@@ -25,26 +25,24 @@ export function UserIdentity({ firstName, middleName, lastName, subtitle }: {
 }
 
 export function RoleBadge({ role }: { role: string }) {
-    const r = role?.toLowerCase();
     const cls =
-        r === "admin" || r === "superadmin" ? "bg-rose-50 text-rose-700 ring-rose-600/10"
-            : r === "staff" ? "bg-violet-50 text-violet-700 ring-violet-600/10"
-                : r === "teacher" ? "bg-blue-50 text-blue-700 ring-blue-600/10"
-                    : "bg-emerald-50 text-emerald-700 ring-emerald-600/10";
+        role === "ADMIN" ? "bg-amber-50 text-amber-700 ring-amber-600/10"
+            : role === "TECH_STAFF" ? "bg-violet-50 text-violet-700 ring-violet-600/10"
+                : role === "CUSTODIAN" ? "bg-cyan-50 text-cyan-700 ring-cyan-600/10"
+                    : "bg-blue-50 text-blue-700 ring-blue-600/10";
     return (
-        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium capitalize ring-1 ring-inset ${cls}`}>
-            {role}
+        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${cls}`}>
+            {formatRole(role)}
         </span>
     );
 }
 
 export function StatusBadge({ status }: { status: string }) {
-    const s = status?.toLowerCase();
-    const isActive = s === "active" || s === "online";
+    const isActive = status === "ACTIVE";
     return (
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium capitalize text-slate-600">
+        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600">
             <span className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-300"}`} />
-            {status}
+            {formatEnum(status)}
         </span>
     );
 }
