@@ -1,92 +1,42 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useSignalR } from '../hooks/useSignalR';
 import { showToast } from './AppToast';
 import { useQueryClient } from '@tanstack/react-query';
-import ReservationDueSoonDialog, {
-    type ReservationDueSoonNotification,
-} from './ReservationDueSoonDialog';
+import type { StationHealth } from '../@types/types';
+import { formatEnum } from '../lib/utils';
 
-// ── Notification payload types ────────────────────────────────────────────────
+// ── Staff dashboard events (PRD 6.4) ──────────────────────────────────────────
 
-interface NewPendingRequestNotification {
-    type: 'new_pending_request';
-    lentItemId: string;
-    itemName: string;
-    borrowerName: string;
-    reservedFor?: string;
-    message: string;
-    timestamp: string;
+interface AnomalyEvent {
+    anomalyId: string;
+    type: string;
+    assetCode?: string;
+    roomCode?: string;
 }
 
-interface ApprovalNotification {
-    type: 'approval';
-    lentItemId: string;
-    itemName: string;
-    borrowerName: string;
-    message: string;
-    timestamp: string;
+interface WarningIssuedEvent {
+    loanId: string;
+    studentName?: string;
+    warningNo: number;
+    penaltyTriggered: boolean;
 }
 
-interface StatusChangeNotification {
-    type: 'status_change';
-    lentItemId: string;
-    itemName: string;
-    oldStatus: string;
-    newStatus: string;
-    message: string;
-    timestamp: string;
+interface LoanOverdueEvent {
+    loanId: string;
+    assetCode?: string;
+    studentName?: string;
 }
 
-interface ReservationExpiredNotification {
-    type: 'reservation_expired';
-    lentItemId: string;
-    itemName: string;
-    borrowerName: string;
-    reservedFor: string;
-    message: string;
-    timestamp: string;
-}
-
-interface ReservationDueSoonSignalRNotification {
-    type: 'reservation_due_soon';
-    lentItemId: string;
-    itemName: string;
-    borrowerName: string;
-    borrowerRole?: string;
-    guestImageUrl?: string | null;
-    frontStudentIdPictureUrl?: string | null;
-    reservedFor: string;
-    message: string;
-    timestamp: string;
-}
-
-// ── Audio alert — three ascending beeps via Web Audio API ────────────────────
-function playAlertSound() {
-    try {
-        const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-        const ctx = new AudioContextClass();
-        const beep = (t: number, freq: number, dur: number) => {
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, t);
-            gain.gain.setValueAtTime(0.35, t);
-            gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
-            osc.start(t);
-            osc.stop(t + dur);
-        };
-        beep(ctx.currentTime, 880, 0.18);
-        beep(ctx.currentTime + 0.22, 1046, 0.18);
-        beep(ctx.currentTime + 0.44, 1318, 0.28);
-    } catch { /* ignore */ }
+interface StationHealthChangedEvent {
+    stationId: string;
+    stationCode: string;
+    health: StationHealth;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 /**
- * Mounts once in the Home layout for Admin/Staff users.
+ * Mounts once in the Home layout for staff and admins.
  *
  * Initialization order (critical):
  *   1. Register all SignalR event handlers via subscribe() — queued in the
@@ -97,88 +47,44 @@ function playAlertSound() {
 const AdminNotificationListener = () => {
     const { connect, subscribe, joinAdminStaffGroup } = useSignalR();
     const queryClient = useQueryClient();
-    const [dueSoonAlerts, setDueSoonAlerts] = useState<ReservationDueSoonNotification[]>([]);
-
-    const pushDueSoonAlert = (n: ReservationDueSoonNotification) => {
-        playAlertSound();
-        setDueSoonAlerts((prev) => {
-            if (prev.some((a) => a.lentItemId === n.lentItemId)) return prev;
-            return [...prev, n];
-        });
-    };
 
     useEffect(() => {
+        const refresh = (...keys: string[]) => keys.forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
+
         // Step 1: Register all handlers BEFORE connecting so none are missed
-        const unsubNewRequest = subscribe('ReceiveNewPendingRequest',
-            (n: NewPendingRequestNotification) => {
-                // Play alert sound for new pending requests
-                playAlertSound();
-                
+        const unsubscribers = [
+            subscribe('asset.statusChanged', () => {
+                refresh('assets', 'loans', 'dashboard');
+            }),
+            subscribe('loan.created', () => {
+                refresh('loans', 'assets', 'dashboard', 'kioskSessions');
+            }),
+            subscribe('room.occupancyChanged', () => {
+                refresh('dashboard', 'loans');
+            }),
+            subscribe('anomaly.raised', (e: AnomalyEvent) => {
+                showToast.warning('Location Anomaly', [formatEnum(e.type), e.assetCode, e.roomCode].filter(Boolean).join(' · '), { autoClose: 10000 });
+                refresh('dashboard', 'loans', 'assets');
+            }),
+            subscribe('anomaly.resolved', () => {
+                refresh('dashboard', 'loans', 'assets');
+            }),
+            subscribe('warning.issued', (e: WarningIssuedEvent) => {
                 showToast.info(
-                    '🔔 New Pending Request',
-                    n.reservedFor
-                        ? `${n.message} — Pickup: ${new Date(n.reservedFor).toLocaleString()}`
-                        : n.message,
-                    {
-                        autoClose: 10000,
-                        onClick: () => { window.location.href = '/home/pending-reservations'; },
-                        closeOnClick: true,
-                        pauseOnHover: true,
-                        draggable: true,
-                    },
+                    `Late Arrival Warning #${e.warningNo}`,
+                    `${e.studentName ?? 'A student'}${e.penaltyTriggered ? ' now has a Non-Compliance Mark.' : ' arrived late.'}`,
                 );
-                queryClient.invalidateQueries({ queryKey: ['lentItems'] });
-            }
-        );
-
-        const unsubApproval = subscribe('ReceiveApprovalNotification',
-            (n: ApprovalNotification) => {
-                showToast.success('Reservation Approved', n.message, { autoClose: 6000 });
-                queryClient.invalidateQueries({ queryKey: ['lentItems'] });
-            }
-        );
-
-        const unsubStatusChange = subscribe('ReceiveStatusChangeNotification',
-            (n: StatusChangeNotification) => {
-                // Only show notification for "Borrowed" status changes
-                // "Returned" notifications are redundant since the user action already shows a success toast
-                if (n.newStatus === 'Borrowed') {
-                    showToast.info(`Item ${n.newStatus}`, n.message, { autoClose: 6000 });
-                }
-                queryClient.invalidateQueries({ queryKey: ['lentItems'] });
-                queryClient.invalidateQueries({ queryKey: ['items'] });
-            }
-        );
-
-        const unsubExpired = subscribe('ReceiveReservationExpired',
-            (n: ReservationExpiredNotification) => {
-                showToast.warning(
-                    'Reservation Expired',
-                    `${n.borrowerName}'s reservation for ${n.itemName} has expired. Was scheduled: ${new Date(n.reservedFor).toLocaleString()}`,
-                    {
-                        autoClose: 10000,
-                        onClick: () => { window.location.href = '/home/pending-reservations'; },
-                    },
-                );
-                queryClient.invalidateQueries({ queryKey: ['lentItems'] });
-                queryClient.invalidateQueries({ queryKey: ['items'] });
-            }
-        );
-
-        const unsubDueSoon = subscribe('ReceiveReservationDueSoon',
-            (n: ReservationDueSoonSignalRNotification) => {
-                pushDueSoonAlert({
-                    lentItemId:               n.lentItemId,
-                    itemName:                 n.itemName,
-                    borrowerName:             n.borrowerName,
-                    borrowerRole:             n.borrowerRole,
-                    guestImageUrl:            n.guestImageUrl,
-                    frontStudentIdPictureUrl: n.frontStudentIdPictureUrl,
-                    reservedFor:              n.reservedFor,
-                    message:                  n.message,
-                });
-            }
-        );
+                refresh('students', 'standing', 'loans');
+            }),
+            subscribe('loan.overdue', (e: LoanOverdueEvent) => {
+                showToast.warning('Loan Overdue', [e.assetCode, e.studentName].filter(Boolean).join(' · '), { autoClose: 10000 });
+                refresh('loans', 'dashboard', 'students');
+            }),
+            subscribe('station.healthChanged', (e: StationHealthChangedEvent) => {
+                if (e.health === 'OFFLINE') showToast.error('Station Offline', e.stationCode);
+                refresh('dashboard');
+            }),
+        ];
 
         // Step 2: Connect → Step 3: Join group
         connect()
@@ -189,22 +95,12 @@ const AdminNotificationListener = () => {
             });
 
         return () => {
-            unsubNewRequest();
-            unsubApproval();
-            unsubStatusChange();
-            unsubExpired();
-            unsubDueSoon();
+            unsubscribers.forEach((unsubscribe) => unsubscribe());
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    return (
-        <ReservationDueSoonDialog
-            notifications={dueSoonAlerts}
-            onDismiss={(id) => setDueSoonAlerts((prev) => prev.filter((a) => a.lentItemId !== id))}
-            onDismissAll={() => setDueSoonAlerts([])}
-        />
-    );
+    return null;
 };
 
 export default AdminNotificationListener;
