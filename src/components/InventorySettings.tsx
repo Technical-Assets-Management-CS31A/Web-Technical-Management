@@ -2,26 +2,33 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Trash2, Tag, Layers, Loader2 } from "lucide-react";
 import { showToast } from "./AppToast";
+import { getErrorMessage } from "./form/FormKit";
 import {
   useGetCategories,
-  useGetConditions,
   useAddCategory,
+  useUpdateCategory,
   useDeleteCategory,
-  useAddCondition,
-  useDeleteCondition,
-} from "../hooks/inventorySettingsHooks";
+} from "../hooks/assetHooks";
+import type { AssetCategoryDto } from "../@types/types";
+
+const CONDITIONS = [
+  { value: "Good", hint: "Works as expected" },
+  { value: "Fair", hint: "Usable with wear" },
+  { value: "Damaged", hint: "Needs repair or replacement" },
+];
 
 type LookupPanelProps = {
   title: string;
   description: string;
   noun: string;
   icon: React.ElementType;
-  items: string[];
+  items: AssetCategoryDto[];
   isLoading: boolean;
   isAdding: boolean;
   deletingItem: string | null;
   onAdd: (name: string, onDone: () => void) => void;
-  onDelete: (name: string) => void;
+  onDelete: (category: AssetCategoryDto) => void;
+  onToggleBorrowable: (category: AssetCategoryDto) => void;
   placeholder: string;
 };
 
@@ -36,13 +43,14 @@ function LookupPanel({
   deletingItem,
   onAdd,
   onDelete,
+  onToggleBorrowable,
   placeholder,
 }: LookupPanelProps) {
   const [input, setInput] = useState("");
   const [confirming, setConfirming] = useState<string | null>(null);
 
   const trimmed = input.trim();
-  const isDuplicate = !!trimmed && items.some((i) => i.toLowerCase() === trimmed.toLowerCase());
+  const isDuplicate = !!trimmed && items.some((i) => i.name.toLowerCase() === trimmed.toLowerCase());
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,16 +122,28 @@ function LookupPanel({
       ) : (
         <ul className="scrollbar-thin max-h-72 divide-y divide-slate-100 overflow-y-auto">
           {items.map((item) => {
-            const isConfirming = confirming === item;
-            const isDeleting = deletingItem === item;
+            const isConfirming = confirming === item.id;
+            const isDeleting = deletingItem === item.id;
             return (
               <li
-                key={item}
+                key={item.id}
                 className={`group flex items-center justify-between gap-3 px-5 py-2.5 transition-colors ${
                   isConfirming ? "bg-rose-50/60" : "hover:bg-slate-50"
                 }`}
               >
-                <span className="min-w-0 truncate text-sm text-slate-800">{item}</span>
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="min-w-0 truncate text-sm text-slate-800">{item.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => onToggleBorrowable(item)}
+                    title="Toggle whether assets in this category can be borrowed"
+                    className={`shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium ring-1 ring-inset transition-colors ${
+                      item.isBorrowable ? "bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100" : "bg-slate-100 text-slate-500 ring-slate-200 hover:bg-slate-200"
+                    }`}
+                  >
+                    {item.isBorrowable ? "Borrowable" : "Fixed only"}
+                  </button>
+                </div>
 
                 {isConfirming ? (
                   <div className="flex shrink-0 items-center gap-1.5">
@@ -149,10 +169,10 @@ function LookupPanel({
                 ) : (
                   <button
                     type="button"
-                    onClick={() => setConfirming(item)}
+                    onClick={() => setConfirming(item.id)}
                     disabled={isDeleting}
-                    title={`Delete ${item}`}
-                    aria-label={`Delete ${item}`}
+                    title={`Delete ${item.name}`}
+                    aria-label={`Delete ${item.name}`}
                     className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 focus-visible:text-rose-600 disabled:cursor-not-allowed"
                   >
                     {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
@@ -168,45 +188,33 @@ function LookupPanel({
 }
 
 export default function InventorySettings() {
-  const { data: categories = [], isLoading: catLoading } = useQuery(useGetCategories());
-  const { data: conditions = [], isLoading: conLoading } = useQuery(useGetConditions());
+  const { data: categories = [], isLoading } = useQuery(useGetCategories());
 
   const addCategory = useAddCategory();
+  const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
-  const addCondition = useAddCondition();
-  const deleteCondition = useDeleteCondition();
 
   const handleAddCategory = (name: string, onDone: () => void) => {
-    addCategory.mutate(name, {
+    addCategory.mutate({ name, description: "", isBorrowable: true }, {
       onSuccess: () => {
         onDone();
         showToast.success("Category Added", `"${name}" has been added.`);
       },
-      onError: (err) => showToast.error("Failed", err.message),
+      onError: (err) => showToast.error("Failed", getErrorMessage(err, "Could not add category.")),
     });
   };
 
-  const handleDeleteCategory = (name: string) => {
-    deleteCategory.mutate(name, {
-      onSuccess: () => showToast.success("Category Removed", `"${name}" has been removed.`),
-      onError: (err) => showToast.error("Failed", err.message),
-    });
+  const handleToggleBorrowable = (category: AssetCategoryDto) => {
+    updateCategory.mutate(
+      { id: category.id, data: { name: category.name, description: category.description ?? "", isBorrowable: !category.isBorrowable } },
+      { onError: (err) => showToast.error("Failed", getErrorMessage(err, "Could not update category.")) },
+    );
   };
 
-  const handleAddCondition = (name: string, onDone: () => void) => {
-    addCondition.mutate(name, {
-      onSuccess: () => {
-        onDone();
-        showToast.success("Condition Added", `"${name}" has been added.`);
-      },
-      onError: (err) => showToast.error("Failed", err.message),
-    });
-  };
-
-  const handleDeleteCondition = (name: string) => {
-    deleteCondition.mutate(name, {
-      onSuccess: () => showToast.success("Condition Removed", `"${name}" has been removed.`),
-      onError: (err) => showToast.error("Failed", err.message),
+  const handleDeleteCategory = (category: AssetCategoryDto) => {
+    deleteCategory.mutate(category.id, {
+      onSuccess: () => showToast.success("Category Removed", `"${category.name}" has been removed.`),
+      onError: (err) => showToast.error("Failed", getErrorMessage(err, "Could not remove category.")),
     });
   };
 
@@ -214,30 +222,39 @@ export default function InventorySettings() {
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
       <LookupPanel
         title="Categories"
-        description="Group items by type, e.g. Electronics or Tools."
+        description="Group assets, e.g. Laptops or Projectors, and set whether they can be borrowed."
         noun="category"
         icon={Tag}
         items={categories}
-        isLoading={catLoading}
+        isLoading={isLoading}
         isAdding={addCategory.isPending}
         deletingItem={deleteCategory.isPending ? (deleteCategory.variables ?? null) : null}
         onAdd={handleAddCategory}
         onDelete={handleDeleteCategory}
-        placeholder="e.g. Electronics"
+        onToggleBorrowable={handleToggleBorrowable}
+        placeholder="e.g. Projectors"
       />
-      <LookupPanel
-        title="Conditions"
-        description="Describe an item's physical state, e.g. Good or Defective."
-        noun="condition"
-        icon={Layers}
-        items={conditions}
-        isLoading={conLoading}
-        isAdding={addCondition.isPending}
-        deletingItem={deleteCondition.isPending ? (deleteCondition.variables ?? null) : null}
-        onAdd={handleAddCondition}
-        onDelete={handleDeleteCondition}
-        placeholder="e.g. Good"
-      />
+
+      {/* Conditions are a fixed PRD enum, not editable */}
+      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="flex items-start gap-3 border-b border-slate-200 px-5 py-4">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+            <Layers className="h-4 w-4" />
+          </span>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900">Conditions</h3>
+            <p className="mt-0.5 text-xs text-slate-500">Fixed by the TAMS data model.</p>
+          </div>
+        </div>
+        <ul className="divide-y divide-slate-100">
+          {CONDITIONS.map((condition) => (
+            <li key={condition.value} className="flex items-center justify-between px-5 py-2.5 text-sm">
+              <span className="text-slate-800">{condition.value}</span>
+              <span className="text-xs text-slate-500">{condition.hint}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }
