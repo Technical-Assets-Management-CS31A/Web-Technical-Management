@@ -1,13 +1,14 @@
-import { UserData } from "../utils/usersData/userData";
-import { ShieldAlert, MoreVertical, Pencil, Archive, Ban, CheckCircle, Crown, ShieldCheck, Shield } from "lucide-react";
-import type { FC } from "react";
+import { UserData, canManageAccounts } from "../utils/usersData/userData";
+import { Snowflake, MoreVertical, Pencil, Trash2, ShieldCheck, Shield, Wrench, Boxes, Presentation, CreditCard, CalendarCheck } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { formatRole, fullName as toFullName, initials as toInitials } from "../lib/utils";
+import type { UserDto, UserRole } from "../@types/types";
 
-const ROLE_STYLES: Record<string, { badge: string; icon: typeof Shield }> = {
-    superadmin: { badge: "bg-rose-50 text-rose-700 ring-rose-200", icon: Crown },
-    admin: { badge: "bg-amber-50 text-amber-700 ring-amber-200", icon: ShieldCheck },
-    staff: { badge: "bg-violet-50 text-violet-700 ring-violet-200", icon: Shield },
-    default: { badge: "bg-slate-50 text-slate-700 ring-slate-200", icon: Shield },
+const ROLE_STYLES: Record<UserRole, { badge: string; icon: typeof Shield }> = {
+    ADMIN: { badge: "bg-amber-50 text-amber-700 ring-amber-200", icon: ShieldCheck },
+    TECH_STAFF: { badge: "bg-violet-50 text-violet-700 ring-violet-200", icon: Wrench },
+    CUSTODIAN: { badge: "bg-cyan-50 text-cyan-700 ring-cyan-200", icon: Boxes },
+    INSTRUCTOR: { badge: "bg-blue-50 text-blue-700 ring-blue-200", icon: Presentation },
 };
 
 const AVATAR_COLORS = [
@@ -25,60 +26,15 @@ const getAvatarColor = (name: string) => {
 };
 
 type UserTableProps = {
-    id: string;
-    firstName: string;
-    lastName: string;
-    username: string;
-    email: string;
-    userRole: string;
-    status: string;
-    isBlocked?: boolean;
-    onSetEditUserId: (value: string) => void;
-    onSetIsEditUserOpen: (value: boolean) => void;
-    onMutate: (value: string) => void;
-    onBlockUser?: (value: string) => void;
-    onUnblockUser?: (value: string) => void;
+    user: UserDto;
+    onEdit: (id: string) => void;
+    onDelete: (id: string) => void;
 };
 
-export default function UserTable({
-    id,
-    firstName,
-    lastName,
-    username,
-    email,
-    userRole,
-    status,
-    isBlocked = false,
-    onSetEditUserId,
-    onSetIsEditUserOpen,
-    onMutate,
-    onBlockUser,
-    onUnblockUser,
-}: UserTableProps) {
-    const data = UserData();
+export default function UserTable({ user, onEdit, onDelete }: UserTableProps) {
+    const viewer = UserData();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
-
-    const handleArchiveUser = () => {
-        onMutate(id);
-        setIsMenuOpen(false);
-    }
-
-    const handleEditUser = (id: string) => {
-        onSetEditUserId(id);
-        onSetIsEditUserOpen(true);
-        setIsMenuOpen(false);
-    }
-
-    const handleBlockUser = () => {
-        onBlockUser?.(id);
-        setIsMenuOpen(false);
-    }
-
-    const handleUnblockUser = () => {
-        onUnblockUser?.(id);
-        setIsMenuOpen(false);
-    }
 
     // Close menu when clicking outside
     useEffect(() => {
@@ -97,134 +53,14 @@ export default function UserTable({
         };
     }, [isMenuOpen]);
 
-    type ActionMenuProps = {
-        viewerRole?: string;
-        targetRole?: string;
-        targetStatus?: string;
-        targetIsBlocked?: boolean;
-    }
+    // Admins create and edit accounts (FR-9.2); nobody deletes their own.
+    const canEdit = canManageAccounts(viewer.role);
+    const canDelete = canEdit && viewer.id !== user.id;
 
-    const ActionMenu: FC<ActionMenuProps> = ({
-        viewerRole,
-        targetRole,
-        targetStatus,
-        targetIsBlocked,
-    }) => {
-        const viewer = viewerRole?.toLowerCase();
-        const target = targetRole?.toLowerCase();
-        const isOnline = targetStatus?.toLowerCase() === "online";
-
-        const isAdminOrSuper = viewer === "admin" || viewer === "superadmin";
-        const isStaff = viewer === "staff";
-
-        // Check permissions
-        const canArchive = (isAdminOrSuper || isStaff) && !isOnline;
-        
-        // Block/Unblock permissions:
-        // - Staff can block/unblock Teachers and Students
-        // - Admin can block/unblock Staff, Teachers, and Students
-        // - SuperAdmin can block/unblock everyone except other SuperAdmins
-        const canBlockUnblock = onBlockUser && onUnblockUser && (
-            (isStaff && (target === "teacher" || target === "student")) ||
-            (isAdminOrSuper && target !== "superadmin")
-        );
-        
-        const canEdit = true; // Everyone can edit (with backend validation)
-
-        // Don't show menu if no permissions
-        if (!canArchive && !canBlockUnblock && !canEdit) return null;
-
-        return (
-            <div className="relative" ref={menuRef}>
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setIsMenuOpen(!isMenuOpen);
-                    }}
-                    className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
-                    title="More actions"
-                >
-                    <MoreVertical className="h-5 w-5" />
-                </button>
-
-                {isMenuOpen && (
-                    <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
-                        {/* Edit */}
-                        {canEdit && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditUser(id);
-                                }}
-                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
-                            >
-                                <Pencil className="h-4 w-4" />
-                                <span className="font-medium">Edit User</span>
-                            </button>
-                        )}
-
-                        {/* Block/Unblock */}
-                        {canBlockUnblock && (
-                            targetIsBlocked ? (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleUnblockUser();
-                                    }}
-                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors"
-                                >
-                                    <CheckCircle className="h-4 w-4" />
-                                    <span className="font-medium">Unblock User</span>
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleBlockUser();
-                                    }}
-                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-700 hover:bg-rose-50 transition-colors"
-                                >
-                                    <Ban className="h-4 w-4" />
-                                    <span className="font-medium">Block User</span>
-                                </button>
-                            )
-                        )}
-
-                        {/* Divider if both block and archive are available */}
-                        {canBlockUnblock && canArchive && (
-                            <div className="my-1 border-t border-slate-100" />
-                        )}
-
-                        {/* Archive */}
-                        {canArchive && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleArchiveUser();
-                                }}
-                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-orange-700 hover:bg-orange-50 transition-colors"
-                            >
-                                <Archive className="h-4 w-4" />
-                                <span className="font-medium">Archive User</span>
-                            </button>
-                        )}
-
-                        {/* Disabled archive message */}
-                        {!canArchive && isOnline && (isAdminOrSuper || isStaff) && (
-                            <div className="px-4 py-2.5 text-xs text-slate-400 italic">
-                                Cannot archive online user
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
-        );
-    };
-
-    const fullName = `${firstName ?? ""} ${lastName ?? ""}`.trim();
-    const initials = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase() || "?";
-    const isOnline = status?.toLowerCase() === "online";
-    const roleStyle = ROLE_STYLES[userRole?.toLowerCase()] ?? ROLE_STYLES.default;
+    const name = toFullName(user);
+    const isActive = user.status === "ACTIVE";
+    const roleStyle = ROLE_STYLES[user.role] ?? ROLE_STYLES.TECH_STAFF;
+    const activeCards = user.authCards?.filter((card) => card.status === "ACTIVE").length ?? 0;
 
     return (
         <>
@@ -233,30 +69,34 @@ export default function UserTable({
                 <div className="flex items-center gap-3">
                     <div className="relative shrink-0">
                         <span
-                            className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold ${getAvatarColor(fullName)} ${isBlocked ? "opacity-50 grayscale" : ""}`}
+                            className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold ${getAvatarColor(name)} ${isActive ? "" : "opacity-50 grayscale"}`}
                         >
-                            {initials}
+                            {toInitials(user) || "?"}
                         </span>
-                        <span
-                            className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-white ${isOnline ? "bg-emerald-500" : "bg-slate-300"}`}
-                        />
                     </div>
                     <div className="min-w-0">
-                        <p className="font-medium text-slate-900">{fullName || "—"}</p>
-                        <p className="text-xs text-slate-500">@{username}</p>
+                        <p className="font-medium text-slate-900">{name || "—"}</p>
+                        <p className="font-mono text-xs text-slate-500">{user.employeeNo}</p>
                     </div>
                 </div>
             </td>
 
             {/* Email */}
-            <td className="px-5 py-3 text-slate-600">{email}</td>
+            <td className="px-5 py-3 text-slate-600">{user.email}</td>
 
             {/* Role */}
             <td className="px-5 py-3">
-                <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${roleStyle.badge}`}>
-                    <roleStyle.icon className="h-3 w-3" />
-                    {userRole}
-                </span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                    <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${roleStyle.badge}`}>
+                        <roleStyle.icon className="h-3 w-3" />
+                        {formatRole(user.role)}
+                    </span>
+                    {user.isEventCoordinator && (
+                        <span title="Event coordinator" className="inline-flex items-center rounded-md bg-slate-100 p-1 text-slate-500 ring-1 ring-inset ring-slate-200">
+                            <CalendarCheck className="h-3 w-3" />
+                        </span>
+                    )}
+                </div>
             </td>
 
             {/* Status */}
@@ -264,34 +104,80 @@ export default function UserTable({
                 <div className="flex items-center gap-2">
                     <span
                         className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                            isOnline ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
+                            isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
                         }`}
                     >
-                        <span className="relative flex h-1.5 w-1.5">
-                            {isOnline && (
-                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                            )}
-                            <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${isOnline ? "bg-emerald-500" : "bg-slate-400"}`} />
-                        </span>
-                        {status || "Unknown"}
+                        <span className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-400"}`} />
+                        {isActive ? "Active" : "Inactive"}
                     </span>
-                    {isBlocked && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700 ring-1 ring-inset ring-rose-200">
-                            <ShieldAlert className="h-3 w-3" />
-                            Blocked
+                    {user.isFrozen && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700 ring-1 ring-inset ring-sky-200">
+                            <Snowflake className="h-3 w-3" />
+                            Frozen
                         </span>
                     )}
                 </div>
             </td>
 
+            {/* Card (instructors only) */}
+            <td className="px-5 py-3 text-xs text-slate-500">
+                {user.role === "INSTRUCTOR" ? (
+                    <span className={`inline-flex items-center gap-1.5 ${activeCards ? "text-slate-700" : "text-amber-700"}`}>
+                        <CreditCard className="h-3.5 w-3.5" />
+                        {activeCards ? `${activeCards} active` : "No card"}
+                    </span>
+                ) : "—"}
+            </td>
+
             {/* Actions */}
             <td className="px-5 py-3 text-right">
-                <ActionMenu
-                    viewerRole={data.userRole}
-                    targetRole={userRole}
-                    targetStatus={status}
-                    targetIsBlocked={isBlocked}
-                />
+                {canEdit && (
+                    <div className="relative" ref={menuRef}>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsMenuOpen(!isMenuOpen);
+                            }}
+                            className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
+                            title="More actions"
+                        >
+                            <MoreVertical className="h-5 w-5" />
+                        </button>
+
+                        {isMenuOpen && (
+                            <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-50 animate-in fade-in zoom-in-95 duration-100">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onEdit(user.id);
+                                        setIsMenuOpen(false);
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                                >
+                                    <Pencil className="h-4 w-4" />
+                                    <span className="font-medium">Edit account</span>
+                                </button>
+
+                                {canDelete && (
+                                    <>
+                                        <div className="my-1 border-t border-slate-100" />
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onDelete(user.id);
+                                                setIsMenuOpen(false);
+                                            }}
+                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-700 hover:bg-rose-50 transition-colors"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                            <span className="font-medium">Delete account</span>
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
             </td>
         </>
     );
