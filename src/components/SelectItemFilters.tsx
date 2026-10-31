@@ -1,22 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 
+type FilterOption = { value: string; label: string; count: number };
+
 interface SelectItemFiltersProps {
     onStatusChange: (status: string) => void;
     onConditionChange: (condition: string) => void;
     selectedStatus: string;
     selectedCondition: string;
-    statusCounts: {
-        all: number;
-        available: number;
-        borrowed: number;
-    };
-    conditionCounts: {
-        New: number;
-        Good: number;
-        Defective: number;
-        Refurbished: number;
-        NeedRepair: number;
-    };
+    /** First option should be the "all" option with value "" */
+    statuses: FilterOption[];
+    conditions: FilterOption[];
 }
 
 export default function SelectItemFilters({
@@ -24,26 +17,11 @@ export default function SelectItemFilters({
     onConditionChange,
     selectedStatus,
     selectedCondition,
-    statusCounts,
-    conditionCounts,
+    statuses,
+    conditions,
 }: SelectItemFiltersProps) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-
-    const statuses = [
-        { value: "", label: "All Status", count: statusCounts.all },
-        { value: "Available", label: "Available", count: statusCounts.available },
-        { value: "Borrowed", label: "Borrowed", count: statusCounts.borrowed },
-    ];
-
-    const conditions = [
-        { value: "", label: "All Conditions", count: conditionCounts.New + conditionCounts.Good + conditionCounts.Defective + conditionCounts.Refurbished + conditionCounts.NeedRepair },
-        { value: "New", label: "New", count: conditionCounts.New },
-        { value: "Good", label: "Good", count: conditionCounts.Good },
-        { value: "Defective", label: "Defective", count: conditionCounts.Defective },
-        { value: "Refurbished", label: "Refurbished", count: conditionCounts.Refurbished },
-        { value: "NeedRepair", label: "Need Repair", count: conditionCounts.NeedRepair },
-    ];
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
