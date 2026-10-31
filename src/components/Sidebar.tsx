@@ -10,12 +10,10 @@ import {
 } from "react-icons/md";
 import { BiLogoSass } from "react-icons/bi";
 import { BsPersonCircle, BsClipboardCheck } from "react-icons/bs";
-import { TbPackages } from "react-icons/tb";
 import { FaWifi } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import SidebarSkeletonLoader from "../loader/SidebarSkeletonLoader";
 import { useSidebar } from "../context/SidebarContext";
-import { usePendingCount } from "../hooks/usePendingCount";
 import { useActiveBorrowCount } from "../hooks/useActiveBorrowCount";
 import { useLogoutUser } from "../hooks/authHooks";
 import { ChevronDown } from "lucide-react";
@@ -37,35 +35,27 @@ export default function Sidebar() {
 
   const { mutate, isPending } = useLogoutUser();
   const { setIsSidebarExpanded } = useSidebar();
-  const { total: pendingCount } = usePendingCount();
   const activeBorrowCount = useActiveBorrowCount();
 
   const primaryLinks: NavLink[] = [
     { label: "Dashboard", link: "/home/dashboard", icon: MdDashboardCustomize },
-    { label: "Inventory", link: "/home/inventory-list", icon: GiArchiveRegister },
-    {
-      label: "Pending Requests",
-      link: "/home/pending-reservations",
-      icon: BsClipboardCheck,
-      badge: pendingCount,
-    },
+    { label: "Assets", link: "/home/inventory-list", icon: GiArchiveRegister },
   ];
 
   const operationalLinks: NavLink[] = [
-    { label: "Borrowing", link: "/home/borrow-item", icon: TbPackages },
-    { label: "Active Borrows", link: "/home/active-borrowed-items", icon: BsClipboardCheck, badge: activeBorrowCount },
-    { label: "Scan Controller", link: "/home/rfid-controller", icon: FaWifi },
+    { label: "Loans", link: "/home/active-borrowed-items", icon: BsClipboardCheck, badge: activeBorrowCount },
+    { label: "Counter", link: "/home/rfid-controller", icon: FaWifi },
   ];
 
   const administrativeLinks: NavLink[] = [
-    { label: "User Management", link: "/home/user-management", icon: CiUser },
+    { label: "People", link: "/home/user-management", icon: CiUser },
     { label: "Reports", link: "/home/reports", icon: MdAssessment },
-    { label: "Archives", link: "/home/archive-table", icon: MdInventory },
+    { label: "Deleted records", link: "/home/archive-table", icon: MdInventory },
   ];
 
   const logsLinks: NavLink[] = [
     { label: "Activity Logs", link: "/home/activity-logs", icon: BiLogoSass },
-    { label: "Borrowing Logs", link: "/home/borrow-logs", icon: MdHistory },
+    { label: "Loan History", link: "/home/history-list", icon: MdHistory },
   ];
 
   const bottomLinks: NavLink[] = [

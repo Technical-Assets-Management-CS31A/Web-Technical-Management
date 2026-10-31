@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { AlertCircle, CheckCircle2, ChevronDown, Loader2, Save, X } from "lucide-react";
 
-// Shared building blocks for the edit forms (user, profile, teacher, student, item)
+// Shared building blocks for the edit forms (user, profile, instructor, student, item)
 
 const SIZE = { md: "max-w-lg", lg: "max-w-2xl", xl: "max-w-3xl" } as const;
 

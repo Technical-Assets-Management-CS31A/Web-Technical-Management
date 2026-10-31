@@ -26,7 +26,7 @@ async function captureFrame(
           reject(new Error("Canvas toBlob returned null"));
           return;
         }
-        resolve(new File([blob], "guest-photo.jpg", { type: "image/jpeg" }));
+        resolve(new File([blob], "checkout-photo.jpg", { type: "image/jpeg" }));
       },
       "image/jpeg",
       0.92
