@@ -9,12 +9,12 @@ export const SETTINGS_CONTENT = {
   },
   tabDescriptions: {
     profile: "Your personal and account details",
-    inventory: "Item categories and conditions",
+    inventory: "Asset categories",
     appearance: "Theme and display preferences",
   },
   inventory: {
-    title: "Inventory",
-    description: "Manage the categories and conditions available when adding or editing items.",
+    title: "Asset categories",
+    description: "Manage the categories available when adding or editing assets, and whether each can be borrowed.",
   },
   profileSection: {
     title: "Profile",
@@ -32,25 +32,23 @@ export const SETTINGS_CONTENT = {
   },
   fallbackName: "User Profile",
   fallbackRole: "User",
-  fallbackStatus: "Offline",
+  fallbackStatus: "Inactive",
   editProfile: "Edit Profile",
   personalInfo: {
     title: "Personal Information",
     firstName: "First Name",
     lastName: "Last Name",
-    middleName: "Middle Name",
-    phoneNumber: "Phone Number",
   },
   accountInfo: {
     title: "Account Information",
-    username: "Username",
+    employeeNo: "Employee No.",
     email: "Email",
     role: "Role",
-    position: "Position",
+    eventCoordinator: "Event coordinator",
   },
   accountStatus: {
     title: "Account Status",
-    description: "Your account is active and verified.",
+    description: "Inactive accounts cannot sign in.",
   },
   profileCard: {
     signedInAs: "Signed in as",
