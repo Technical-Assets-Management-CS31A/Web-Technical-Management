@@ -1,8 +1,8 @@
 export const FORGOT_PASSWORD_CONTENT = {
   title: "Forgot Password",
   description:
-    "Enter your username and we'll send you instructions to reset your password.",
-  placeholder: "Enter your username",
+    "Enter your email and we'll send you instructions to reset your password.",
+  placeholder: "Enter your email",
   submit: "Send Reset Instructions",
   rememberPassword: "Remember your password?",
   backToLogin: "Back to Login",
