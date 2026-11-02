@@ -1,32 +1,34 @@
 export const RFID_CONTROLLER_CONTENT = {
-  eyebrow: "RFID Station",
-  title: "Scan Controller",
-  description: "Start a session, then have the student tap their card or item tag on the RFID station.",
-  station: {
-    label: "Station status",
-    idleTitle: "Ready to scan",
-    idleDescription: "Choose a mode below to open a scan session.",
-    activeTitle: (mode: string) => `${mode} session in progress`,
-    activeDescription: "Waiting for the student to tap on the RFID station...",
-    idleBadge: "Idle",
-    activeBadge: "Listening",
+  eyebrow: "Counter",
+  title: "Counter Station",
+  description:
+    "Follows the kiosk checkout at this counter. When the kiosk reaches the photo step, capture the borrower with the webcam and upload it.",
+  idleTitle: "No active kiosk session",
+  idleDescription: "A session appears here when an instructor taps their card at the kiosk.",
+  steps: {
+    AWAITING_FINGERPRINT: "Fingerprint",
+    AWAITING_ASSET: "Item tag",
+    AWAITING_PHOTO: "Photo",
+    AWAITING_APPROVAL: "Approval",
+    AWAITING_CONFIRM: "Confirm",
   },
-  modes: {
-    borrow: {
-      label: "Borrow",
-      description: "Register a new borrow request from the RFID station.",
-      cta: "Start borrow session",
-      steps: ["Start the session", "Student taps their ID card", "Student taps the item tag"],
-      outcome: "Request goes to pending approval",
-    },
-    return: {
-      label: "Return",
-      description: "Process an item being returned at the RFID station.",
-      cta: "Start return session",
-      steps: ["Start the session", "Student taps the item tag"],
-      outcome: "Item is marked as returned",
-    },
+  fields: {
+    instructor: "Instructor (card)",
+    student: "Student",
+    asset: "Asset",
+    room: "Room",
   },
-  activeBadge: "Active",
-  footerHint: "Each session expires after 5 minutes. Closing the session window cancels it.",
+  capturePrompt: "Take the checkout photo",
+  cameraIdle: "The camera opens when the kiosk asks for the photo.",
+  photoReceived: "Checkout photo received.",
+  upload: "Upload photo",
+  error: "Couldn't load kiosk sessions. Check the connection to the server.",
+  footerHint:
+    "Card, fingerprint, item tag, photo and the instructor's approval on mobile must all pass. Any failed step denies the borrow.",
+  toast: {
+    uploadedTitle: "Photo Uploaded",
+    uploaded: "The kiosk will now ask the instructor to approve.",
+    failedTitle: "Upload Failed",
+    failed: "Could not upload the photo. Try again.",
+  },
 } as const;
