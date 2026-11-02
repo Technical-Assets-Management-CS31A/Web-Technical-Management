@@ -1,65 +1,61 @@
 import { useQuery } from "@tanstack/react-query";
-import type { TUsers } from "../@types/types";
-import { useEffect, useMemo, useState } from "react";
-import { useAllUsers } from "../hooks/userHooks";
+import type { StudentDto, StudentStanding, UserDto } from "../@types/types";
+import { useMemo, useState } from "react";
+import { useAllStudents, useAllUsers } from "../hooks/userHooks";
+import { formatRole, fullName } from "../lib/utils";
 
-type TNewUserTypes = Omit<TUsers, "course" | "section" | "year">;
+const EMPTY_USERS: UserDto[] = [];
+const EMPTY_STUDENTS: StudentDto[] = [];
 
 export const useAllUsersManagement = () => {
-    const [users, setUsers] = useState<TNewUserTypes[]>([]);
     const { data, isPending, isError } = useQuery(useAllUsers());
-
-    useEffect(() => {
-        if (data && Array.isArray(data)) {
-            setUsers(data);
-        }
-    }, [data]);
+    const users = Array.isArray(data) ? data : EMPTY_USERS;
 
     return { users, isPending, isError }
 }
 
-export const useFilteredUser = () => {
-    const { users } = useAllUsersManagement()
-
+export const useFilteredUser = (users: UserDto[]) => {
     const [searchUser, setSearchUser] = useState<string>("");
     const [selectedStatus, setSelectedStatus] = useState<string>("all");
     const [selectedRole, setSelectedRole] = useState<string>("all");
 
-    const filteredUser = useMemo(
-        () =>
-            users.filter((user) => {
-                const userStatus = user.status.toLowerCase();
-                const userRole = user.userRole.toLowerCase();
-                const searchValue = searchUser.toLowerCase();
-                const selectedStatusFilter = selectedStatus.toLowerCase();
-                const selectedRoleFilter = selectedRole.toLowerCase();
-
-                const matchesStatus =
-                    selectedStatusFilter === "all"
-                        ? true
-                        : userStatus === selectedStatusFilter;
-
-                const matchesRole =
-                    selectedRoleFilter === "all" ? true : userRole === selectedRoleFilter;
-
-                if (selectedStatusFilter !== "all" || selectedRoleFilter !== "all") {
-                    return (
-                        matchesStatus &&
-                        matchesRole &&
-                        (user.username.toLowerCase().includes(searchValue) ||
-                            user.userRole.toLowerCase().includes(searchValue) ||
-                            userStatus.includes(searchValue))
-                    );
-                }
-
-                return (
-                    user.username.toLowerCase().includes(searchValue) ||
-                    user.userRole.toLowerCase().includes(searchValue) ||
-                    userStatus.includes(searchValue)
-                );
-            }),
-        [searchUser, selectedStatus, selectedRole, users],
-    )
+    const filteredUser = useMemo(() => {
+        const searchValue = searchUser.trim().toLowerCase();
+        return users.filter((user) => {
+            const matchesStatus = selectedStatus === "all" || user.status === selectedStatus;
+            const matchesRole = selectedRole === "all" || user.role === selectedRole;
+            const matchesSearch =
+                !searchValue ||
+                fullName(user).toLowerCase().includes(searchValue) ||
+                user.email.toLowerCase().includes(searchValue) ||
+                user.employeeNo.toLowerCase().includes(searchValue) ||
+                formatRole(user.role).toLowerCase().includes(searchValue);
+            return matchesStatus && matchesRole && matchesSearch && !user.deletedAt;
+        });
+    }, [searchUser, selectedStatus, selectedRole, users]);
 
     return { filteredUser, setSearchUser, selectedStatus, setSelectedStatus, selectedRole, setSelectedRole }
+}
+
+export const useStudentRoster = () => {
+    const { data, isPending, isError } = useQuery(useAllStudents());
+    const students = Array.isArray(data) ? data : EMPTY_STUDENTS;
+
+    const [searchStudent, setSearchStudent] = useState<string>("");
+    const [selectedStanding, setSelectedStanding] = useState<StudentStanding | "all">("all");
+
+    const filteredStudents = useMemo(() => {
+        const searchValue = searchStudent.trim().toLowerCase();
+        return students.filter((student) => {
+            const matchesStanding = selectedStanding === "all" || student.standing === selectedStanding;
+            const matchesSearch =
+                !searchValue ||
+                fullName(student).toLowerCase().includes(searchValue) ||
+                student.studentNo.toLowerCase().includes(searchValue) ||
+                student.section?.code.toLowerCase().includes(searchValue);
+            return matchesStanding && matchesSearch && !student.deletedAt;
+        });
+    }, [students, searchStudent, selectedStanding]);
+
+    return { students, filteredStudents, isPending, isError, setSearchStudent, selectedStanding, setSelectedStanding }
 }
