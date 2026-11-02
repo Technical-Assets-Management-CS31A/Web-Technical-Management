@@ -8,17 +8,17 @@ export const LOGIN_CONTENT = {
     titleLines: ["Technical Equipment", "Borrowing System"],
     description:
       "Managing resources, tracking items and borrowers. Ensures smooth lifecycle management.",
-    tags: ["Inventory", "Borrow Logs", "User Roles", "Activity Logs"],
+    tags: ["Assets", "Loans", "People", "Activity"],
   },
   heading: {
     title: "Welcome back!",
     subtitle: "Access the Technical Equipment Borrowing System.",
   },
   fields: {
-    identifier: {
-      label: "Username",
-      placeholder: "Enter your username",
-      required: "Username is required",
+    email: {
+      label: "Email",
+      placeholder: "you@aclc.edu.ph",
+      required: "Email is required",
     },
     password: {
       label: "Password",
@@ -33,8 +33,8 @@ export const LOGIN_CONTENT = {
     pending: "Signing in...",
   },
   errors: {
-    blocked: "Your account has been blocked.",
-    invalid: "Invalid username or password.",
+    inactive: "Your account is inactive. Contact an administrator.",
+    invalid: "Invalid email or password.",
   },
   footer: {
     copyright: "© 2025 ACLC College of Mandaue. All rights reserved.",
