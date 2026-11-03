@@ -10,10 +10,8 @@ function HomeContent() {
   const { isSidebarExpanded } = useSidebar();
   const userData = UserData();
 
-  const isAdminOrStaff =
-    userData.userRole === "Admin" || 
-    userData.userRole === "Staff" || 
-    userData.userRole === "SuperAdmin";
+  // Instructors get their notices on the mobile app; staff dashboards get live SignalR events.
+  const isStaff = !!userData.role && userData.role !== "INSTRUCTOR";
 
   return (
     <div className="layout-container relative flex min-h-screen w-full">
@@ -33,8 +31,8 @@ function HomeContent() {
         style={{ zIndex: 9999, minWidth: 320 }}
       />
 
-      {/* Mount notification listener for Admin/Staff/SuperAdmin only */}
-      {isAdminOrStaff && <AdminNotificationListener />}
+      {/* Mount live event listener for staff and admins only */}
+      {isStaff && <AdminNotificationListener />}
 
       {/* Sidebar component for navigation */}
       <Sidebar />
