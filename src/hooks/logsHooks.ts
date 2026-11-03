@@ -1,25 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
-import { activityLogsApi, activityLogByIdApi, borrowLogsApi } from "../api/logs_api";
+import { auditLogApi, auditLogByIdApi } from "../api/logs_api";
 
 
-export const useActivityLogs = () => {
+export const useAuditLog = () => {
     return useQuery({
-        queryKey: ["activity-logs"],
-        queryFn: activityLogsApi,
+        queryKey: ["audit-log"],
+        queryFn: auditLogApi,
     });
 };
 
-export const useBorrowLogs = () => {
+export const useAuditLogById = (id: string) => {
     return useQuery({
-        queryKey: ["borrow-logs"],
-        queryFn: borrowLogsApi,
-    });
-};
-
-export const useActivityLogById = (id: string) => {
-    return useQuery({
-        queryKey: ["activity-logs", id],
-        queryFn: () => activityLogByIdApi(id),
+        queryKey: ["audit-log", id],
+        queryFn: () => auditLogByIdApi(id),
         enabled: !!id,
     });
 };

@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { useActivityLogs } from "../hooks/logsHooks";
+import { useAuditLog } from "../hooks/logsHooks";
+import { formatEnum, formatRole } from "../lib/utils";
+import { changedKeys } from "../components/auditDiff";
 import { useNavigate } from "@tanstack/react-router";
 import {
     Search,
@@ -15,23 +17,24 @@ import {
     Users,
     X,
 } from "lucide-react";
-import type { TActivityLogs } from "../@types/types";
+import type { AuditLogEntryDto } from "../@types/types";
 import ActivityLogsSkeletonLoader from "../loader/ActivityLogsSkeletonLoader";
 import { useActivityLogsState } from "../states/activity-logs-state";
 import { ACTIVITY_LOGS_CONTENT as T } from "../constants/activityLogsContent";
 
 const ITEMS_PER_PAGE = 10;
 
-type ActionKind = "create" | "update" | "remove" | "borrow" | "return" | "other";
+type ActionKind = "create" | "update" | "remove" | "resolve" | "loan" | "other";
 type ActionFilter = "all" | Exclude<ActionKind, "other">;
 
+// Audit actions are UPPER_SNAKE verbs such as USER_CREATED, WARNING_CLEARED or LOAN_MARKED_MISSING.
 const getActionKind = (action: string): ActionKind => {
-    const act = action.toLowerCase();
-    if (act.includes("add") || act.includes("create")) return "create";
-    if (act.includes("delete") || act.includes("remove") || act.includes("archive")) return "remove";
-    if (act.includes("update") || act.includes("edit")) return "update";
-    if (act.includes("return")) return "return";
-    if (act.includes("borrow") || act.includes("lent")) return "borrow";
+    const act = action.toUpperCase();
+    if (act.includes("CLEAR") || act.includes("LIFT") || act.includes("SETTLE") || act.includes("RESOLVE") || act.includes("RESET")) return "resolve";
+    if (act.includes("LOAN") || act.includes("MISSING")) return "loan";
+    if (act.includes("CREATE") || act.includes("ADD") || act.includes("IMPORT")) return "create";
+    if (act.includes("DELETE") || act.includes("REMOVE") || act.includes("RETIRE")) return "remove";
+    if (act.includes("UPDATE") || act.includes("EDIT") || act.includes("RESTORE")) return "update";
     return "other";
 };
 
@@ -39,12 +42,12 @@ const ACTION_STYLES: Record<ActionKind, string> = {
     create: "bg-emerald-500",
     update: "bg-amber-500",
     remove: "bg-rose-500",
-    borrow: "bg-blue-500",
-    return: "bg-indigo-500",
+    resolve: "bg-violet-500",
+    loan: "bg-blue-500",
     other: "bg-slate-400",
 };
 
-const FILTERS: ActionFilter[] = ["all", "create", "update", "remove", "borrow", "return"];
+const FILTERS: ActionFilter[] = ["all", "create", "update", "remove", "resolve", "loan"];
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" });
 const timeFormatter = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
@@ -64,23 +67,23 @@ function ActionBadge({ action }: { action: string }) {
     return (
         <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-200">
             <span className={`h-1.5 w-1.5 rounded-full ${ACTION_STYLES[getActionKind(action)]}`} />
-            {action}
+            {formatEnum(action)}
         </span>
     );
 }
 
 export default function ActivityLogs() {
-    const { data: logs, isLoading, isError } = useActivityLogs();
+    const { data: logs, isLoading, isError } = useAuditLog();
     const { searchTerm, setSearchTerm, currentPage, setCurrentPage } = useActivityLogsState();
     const [actionFilter, setActionFilter] = useState<ActionFilter>("all");
     const [now] = useState(() => Date.now());
     const navigate = useNavigate();
 
     // Newest first
-    const allLogs: TActivityLogs[] = useMemo(
+    const allLogs: AuditLogEntryDto[] = useMemo(
         () =>
-            [...(logs?.data ?? [])].sort(
-                (a: TActivityLogs, b: TActivityLogs) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+            [...(logs ?? [])].sort(
+                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
             ),
         [logs],
     );
@@ -94,17 +97,17 @@ export default function ActivityLogs() {
                 value: allLogs.filter((l) => new Date(l.createdAt).getTime() >= startOfToday).length,
                 icon: CalendarClock,
             },
-            { label: T.stats.actors, value: new Set(allLogs.map((l) => l.actorUserId || l.actorName)).size, icon: Users },
+            { label: T.stats.actors, value: new Set(allLogs.map((l) => l.actor?.id)).size, icon: Users },
             {
-                label: T.stats.movements,
-                value: allLogs.filter((l) => ["borrow", "return"].includes(getActionKind(l.action ?? ""))).length,
+                label: T.stats.resolutions,
+                value: allLogs.filter((l) => getActionKind(l.action ?? "") === "resolve").length,
                 icon: ArrowLeftRight,
             },
         ];
     }, [allLogs, now]);
 
     const filterCounts = useMemo(() => {
-        const counts: Record<ActionFilter, number> = { all: allLogs.length, create: 0, update: 0, remove: 0, borrow: 0, return: 0 };
+        const counts: Record<ActionFilter, number> = { all: allLogs.length, create: 0, update: 0, remove: 0, resolve: 0, loan: 0 };
         for (const log of allLogs) {
             const kind = getActionKind(log.action ?? "");
             if (kind !== "other") counts[kind]++;
@@ -117,9 +120,10 @@ export default function ActivityLogs() {
         return allLogs.filter((log) => {
             const matchesFilter = actionFilter === "all" || getActionKind(log.action ?? "") === actionFilter;
             const matchesSearch =
-                (log.actorName ?? "").toLowerCase().includes(term) ||
+                (log.actor?.fullName ?? "").toLowerCase().includes(term) ||
                 (log.action ?? "").toLowerCase().includes(term) ||
-                (log.itemName ?? "").toLowerCase().includes(term);
+                (log.entityType ?? "").toLowerCase().includes(term) ||
+                (log.entityId ?? "").toLowerCase().includes(term);
             return matchesFilter && matchesSearch;
         });
     }, [allLogs, searchTerm, actionFilter]);
@@ -277,11 +281,11 @@ export default function ActivityLogs() {
                                             <td className="px-5 py-3">
                                                 <div className="flex items-center gap-3">
                                                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600 ring-1 ring-inset ring-slate-200">
-                                                        {(log.actorName ?? "?").charAt(0).toUpperCase()}
+                                                        {(log.actor?.fullName ?? "?").charAt(0).toUpperCase()}
                                                     </span>
                                                     <div className="min-w-0">
-                                                        <p className="font-medium text-slate-900">{log.actorName}</p>
-                                                        <p className="text-xs text-slate-500">{log.actorRole}</p>
+                                                        <p className="font-medium text-slate-900">{log.actor?.fullName}</p>
+                                                        <p className="text-xs text-slate-500">{formatRole(log.actor?.role)}</p>
                                                     </div>
                                                 </div>
                                             </td>
@@ -291,31 +295,22 @@ export default function ActivityLogs() {
                                                 <ActionBadge action={log.action} />
                                             </td>
 
-                                            {/* Item */}
+                                            {/* Record */}
                                             <td className="px-5 py-3">
-                                                <p className="font-medium text-slate-900">{log.itemName || "—"}</p>
-                                                <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
-                                                    {log.itemSerialNumber && (
-                                                        <span className="inline-flex items-center gap-1 font-mono">
-                                                            <Tag className="h-3 w-3 text-slate-400" />
-                                                            {log.itemSerialNumber}
-                                                        </span>
-                                                    )}
-                                                    {log.itemSerialNumber && log.category && <span className="text-slate-300">·</span>}
-                                                    {log.category && <span>{log.category}</span>}
-                                                </div>
+                                                <p className="font-medium text-slate-900">{formatEnum(log.entityType) || "—"}</p>
+                                                <p className="mt-0.5 inline-flex items-center gap-1 font-mono text-xs text-slate-500">
+                                                    <Tag className="h-3 w-3 text-slate-400" />
+                                                    {log.entityId?.slice(0, 8)}
+                                                </p>
                                             </td>
 
-                                            {/* Status change */}
+                                            {/* Change */}
                                             <td className="px-5 py-3">
-                                                {log.previousStatus || log.newStatus ? (
+                                                {changedKeys(log).length > 0 ? (
                                                     <div className="flex items-center gap-2 text-xs">
-                                                        <span className={log.previousStatus ? "text-slate-500" : "italic text-slate-400"}>
-                                                            {log.previousStatus || T.none}
-                                                        </span>
                                                         <ArrowRight className="h-3.5 w-3.5 text-slate-300" />
                                                         <span className="rounded-md bg-blue-50 px-2 py-0.5 font-medium text-blue-700">
-                                                            {log.newStatus || T.none}
+                                                            {T.fieldsChanged(changedKeys(log))}
                                                         </span>
                                                     </div>
                                                 ) : (

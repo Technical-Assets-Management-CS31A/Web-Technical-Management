@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-type TPageTab = "staff" | "registered";
+type TPageTab = "accounts" | "students";
 
 interface IUserManagement {
   activeTab: TPageTab;
@@ -11,20 +11,16 @@ interface IUserManagement {
   setIsEditUserOpen: (value: boolean) => void;
   isViewCredentialsOpen: boolean;
   setIsViewCredentialsOpen: (value: boolean) => void;
-  isArchiveModalOpen: boolean;
-  setIsArchiveModalOpen: (value: boolean) => void;
-  isBlockModalOpen: boolean;
-  setIsBlockModalOpen: (value: boolean) => void;
+  isDeleteModalOpen: boolean;
+  setIsDeleteModalOpen: (value: boolean) => void;
   selectedUserId: string;
   setSelectedUserId: (id: string) => void;
-  archiveUserId: string;
-  setArchiveUserId: (id: string) => void;
-  blockUserId: string;
-  setBlockUserId: (id: string) => void;
+  deleteUserId: string;
+  setDeleteUserId: (id: string) => void;
 }
 
 const UserManagementStore = create<IUserManagement>((set) => ({
-  activeTab: "staff",
+  activeTab: "accounts",
   setActiveTab: (value) => set(() => ({ activeTab: value })),
 
   isAddUserOpen: false,
@@ -36,20 +32,14 @@ const UserManagementStore = create<IUserManagement>((set) => ({
   isViewCredentialsOpen: false,
   setIsViewCredentialsOpen: (value) => set(() => ({ isViewCredentialsOpen: value })),
 
-  isArchiveModalOpen: false,
-  setIsArchiveModalOpen: (value) => set(() => ({ isArchiveModalOpen: value })),
-
-  isBlockModalOpen: false,
-  setIsBlockModalOpen: (value) => set(() => ({ isBlockModalOpen: value })),
+  isDeleteModalOpen: false,
+  setIsDeleteModalOpen: (value) => set(() => ({ isDeleteModalOpen: value })),
 
   selectedUserId: "",
   setSelectedUserId: (id) => set(() => ({ selectedUserId: id })),
 
-  archiveUserId: "",
-  setArchiveUserId: (id) => set(() => ({ archiveUserId: id })),
-
-  blockUserId: "",
-  setBlockUserId: (id) => set(() => ({ blockUserId: id })),
+  deleteUserId: "",
+  setDeleteUserId: (id) => set(() => ({ deleteUserId: id })),
 }));
 
 export const useAllUsersManagementState = () => {
@@ -65,20 +55,14 @@ export const useAllUsersManagementState = () => {
   const isViewCredentialsOpen = UserManagementStore((state) => state.isViewCredentialsOpen);
   const setIsViewCredentialsOpen = UserManagementStore((state) => state.setIsViewCredentialsOpen);
 
-  const isArchiveModalOpen = UserManagementStore((state) => state.isArchiveModalOpen);
-  const setIsArchiveModalOpen = UserManagementStore((state) => state.setIsArchiveModalOpen);
-
-  const isBlockModalOpen = UserManagementStore((state) => state.isBlockModalOpen);
-  const setIsBlockModalOpen = UserManagementStore((state) => state.setIsBlockModalOpen);
+  const isDeleteModalOpen = UserManagementStore((state) => state.isDeleteModalOpen);
+  const setIsDeleteModalOpen = UserManagementStore((state) => state.setIsDeleteModalOpen);
 
   const selectedUserId = UserManagementStore((state) => state.selectedUserId);
   const setSelectedUserId = UserManagementStore((state) => state.setSelectedUserId);
 
-  const archiveUserId = UserManagementStore((state) => state.archiveUserId);
-  const setArchiveUserId = UserManagementStore((state) => state.setArchiveUserId);
-
-  const blockUserId = UserManagementStore((state) => state.blockUserId);
-  const setBlockUserId = UserManagementStore((state) => state.setBlockUserId);
+  const deleteUserId = UserManagementStore((state) => state.deleteUserId);
+  const setDeleteUserId = UserManagementStore((state) => state.setDeleteUserId);
 
   return {
     activeTab,
@@ -89,15 +73,11 @@ export const useAllUsersManagementState = () => {
     setIsEditUserOpen,
     isViewCredentialsOpen,
     setIsViewCredentialsOpen,
-    isArchiveModalOpen,
-    setIsArchiveModalOpen,
-    isBlockModalOpen,
-    setIsBlockModalOpen,
+    isDeleteModalOpen,
+    setIsDeleteModalOpen,
     selectedUserId,
     setSelectedUserId,
-    archiveUserId,
-    setArchiveUserId,
-    blockUserId,
-    setBlockUserId,
+    deleteUserId,
+    setDeleteUserId,
   };
 };

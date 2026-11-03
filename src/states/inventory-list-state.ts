@@ -11,12 +11,6 @@ interface IInventoryList {
     setIsExporting: (value: boolean) => void
     isMoreMenuOpen: boolean
     setIsMoreMenuOpen: (value: boolean) => void
-    showPrintBarcodeModal: boolean,
-    setShowPrintBarcodeModal: (value: boolean) => void
-    printCurrentPage: number
-    setPrintCurrentPage: (value: number) => void
-    isGeneratingPDF: boolean
-    setIsGeneratingPDF: (value: boolean) => void
 }
 
 const inventoryListState = create<IInventoryList>((set) => ({
@@ -40,18 +34,6 @@ const inventoryListState = create<IInventoryList>((set) => ({
     setIsMoreMenuOpen: (value) => set(() => ({
         isMoreMenuOpen: value
     })),
-    showPrintBarcodeModal: false,
-    setShowPrintBarcodeModal: (value) => set(() => ({
-        showPrintBarcodeModal: value
-    })),
-    printCurrentPage: 1,
-    setPrintCurrentPage: (value) => set(() => ({
-        printCurrentPage: value
-    })),
-    isGeneratingPDF: false,
-    setIsGeneratingPDF:  (value) => set(() => ({
-        isGeneratingPDF: value
-    })),
 }))
 
 export const useInventoryListState = () => {
@@ -65,12 +47,6 @@ export const useInventoryListState = () => {
     const setIsExporting = inventoryListState((state) => state.setIsExporting)
     const isMoreMenuOpen = inventoryListState((state) => state.isMoreMenuOpen)
     const setIsMoreMenuOpen = inventoryListState((state) => state.setIsMoreMenuOpen)
-    const showPrintBarcodeModal = inventoryListState((state) => state.showPrintBarcodeModal)
-    const setShowPrintBarcodeModal = inventoryListState((state) => state.setShowPrintBarcodeModal)
-    const printCurrentPage = inventoryListState((state) => state.printCurrentPage)
-    const setPrintCurrentPage = inventoryListState((state) => state.setPrintCurrentPage)
-    const isGeneratingPDF = inventoryListState((state) => state.isGeneratingPDF)
-    const setIsGeneratingPDF = inventoryListState((state) => state.setIsGeneratingPDF)
 
     return {
         currentPage,
@@ -83,11 +59,5 @@ export const useInventoryListState = () => {
         setIsExporting,
         isMoreMenuOpen,
         setIsMoreMenuOpen,
-        showPrintBarcodeModal,
-        setShowPrintBarcodeModal,
-        printCurrentPage,
-        setPrintCurrentPage,
-        isGeneratingPDF,
-        setIsGeneratingPDF
     };
 };

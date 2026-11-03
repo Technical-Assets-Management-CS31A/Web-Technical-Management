@@ -2,19 +2,21 @@ import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import logo from "../../assets/newAclcLogo.webp";
-import type { TLoginUser } from "../../@types/types";
+import Cookies from "js-cookie";
+import { isAxiosError } from "axios";
+import type { LoginRequest, LoginResponse } from "../../@types/types";
 import { useLogin } from "../../hooks/authHooks";
 import { LOGIN_CONTENT as T } from "../../constants/loginContent";
 
 export default function Login() {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState<string>("");
-  const [isBlockedError, setIsBlockedError] = useState<boolean>(false);
+  const [isInactiveError, setIsInactiveError] = useState<boolean>(false);
   const [isShowPassword, setIsShowPassword] = useState<boolean>(false);
-  const [usernameError, setUsernameError] = useState<string>("");
+  const [emailError, setEmailError] = useState<string>("");
   const [passwordError, setPasswordError] = useState<string>("");
-  const [submitForm, setSubmitForm] = useState<TLoginUser>({
-    identifier: "",
+  const [submitForm, setSubmitForm] = useState<LoginRequest>({
+    email: "",
     password: "",
   });
 
@@ -23,38 +25,42 @@ export default function Login() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setSubmitForm((prev) => ({ ...prev, [name]: value }));
-    if (name === "identifier") { setUsernameError(""); setErrorMessage(""); setIsBlockedError(false); }
-    if (name === "password") { setPasswordError(""); setErrorMessage(""); setIsBlockedError(false); }
+    if (name === "email") { setEmailError(""); setErrorMessage(""); setIsInactiveError(false); }
+    if (name === "password") { setPasswordError(""); setErrorMessage(""); setIsInactiveError(false); }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     let hasError = false;
-    if (!submitForm.identifier) { setUsernameError(T.fields.identifier.required); hasError = true; }
+    if (!submitForm.email) { setEmailError(T.fields.email.required); hasError = true; }
     if (!submitForm.password) { setPasswordError(T.fields.password.required); hasError = true; }
     if (hasError) return;
 
     mutate(submitForm, {
-      onSuccess: () => navigate({ to: "/home/dashboard" }),
-      onError: (error: any) => {
-        // Check if it's a blocked user error (403 Forbidden)
-        if (error?.response?.status === 403) {
-          // Extract the block message from the API response
-          const blockMessage = error?.response?.data?.message || T.errors.blocked;
-          setErrorMessage(blockMessage);
-          setIsBlockedError(true);
+      onSuccess: (res: { data?: LoginResponse }) => {
+        if (res?.data?.accessToken) {
+          Cookies.set(import.meta.env.VITE_ACCESS_TOKEN_KEY, res.data.accessToken);
+        }
+        // Instructors land on their own loans; staff and admins on the live board.
+        navigate({ to: res?.data?.role === "INSTRUCTOR" ? "/home/active-borrowed-items" : "/home/dashboard" });
+      },
+      onError: (error) => {
+        // 403 means the account exists but is INACTIVE
+        if (isAxiosError(error) && error.response?.status === 403) {
+          setErrorMessage(error.response.data?.message || T.errors.inactive);
+          setIsInactiveError(true);
         } else {
           // For all other errors (401, 500, etc.), show generic message
           setErrorMessage(T.errors.invalid);
-          setIsBlockedError(false);
+          setIsInactiveError(false);
         }
       },
     });
   };
 
-  const hasError = (field: "identifier" | "password") =>
-    field === "identifier"
-      ? !!usernameError || !!errorMessage
+  const hasError = (field: "email" | "password") =>
+    field === "email"
+      ? !!emailError || !!errorMessage
       : !!passwordError || !!errorMessage;
 
   return (
@@ -143,13 +149,13 @@ export default function Login() {
               <div
                 role="alert"
                 className={`flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm font-medium animate-in fade-in slide-in-from-top-2 duration-200 ${
-                  isBlockedError
+                  isInactiveError
                     ? "border-amber-200 bg-amber-50 text-amber-800"
                     : "border-rose-200 bg-rose-50 text-rose-600"
                 }`}
               >
                 <span className={`h-2 w-2 shrink-0 rounded-full mt-1.5 ${
-                  isBlockedError ? "bg-amber-500" : "bg-rose-500"
+                  isInactiveError ? "bg-amber-500" : "bg-rose-500"
                 }`} />
                 <span className="flex-1">{errorMessage}</span>
               </div>
@@ -162,35 +168,36 @@ export default function Login() {
               data-testid="login-form"
               className="space-y-4"
             >
-              {/* Username */}
+              {/* Email */}
               <div className="space-y-1.5">
                 <label
-                  htmlFor="identifier"
+                  htmlFor="email"
                   className="block text-xs font-bold uppercase tracking-widest text-slate-400"
                 >
-                  {T.fields.identifier.label}
+                  {T.fields.email.label}
                 </label>
                 <input
-                  id="identifier"
-                  type="text"
-                  name="identifier"
-                  placeholder={T.fields.identifier.placeholder}
-                  value={submitForm.identifier}
+                  id="email"
+                  type="email"
+                  name="email"
+                  autoComplete="email"
+                  placeholder={T.fields.email.placeholder}
+                  value={submitForm.email}
                   onChange={handleChange}
                   autoFocus
                   disabled={isPending}
-                  data-testid="identifier"
-                  aria-invalid={hasError("identifier")}
-                  aria-describedby={usernameError ? "identifier-err" : undefined}
+                  data-testid="email"
+                  aria-invalid={hasError("email")}
+                  aria-describedby={emailError ? "email-err" : undefined}
                   className={`w-full h-11 rounded-xl border px-4 text-sm text-slate-900 placeholder:text-slate-300 bg-slate-50 outline-none transition-all duration-200 hover:bg-white focus:bg-white focus:ring-4 disabled:opacity-50 ${
-                    hasError("identifier")
+                    hasError("email")
                       ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/10"
                       : "border-slate-200 focus:border-blue-500 focus:ring-blue-500/10"
                   }`}
                 />
-                {usernameError && (
-                  <p id="identifier-err" className="text-xs font-medium text-rose-500" role="alert">
-                    {usernameError}
+                {emailError && (
+                  <p id="email-err" className="text-xs font-medium text-rose-500" role="alert">
+                    {emailError}
                   </p>
                 )}
               </div>

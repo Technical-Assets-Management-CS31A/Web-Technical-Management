@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { TForgotPasswordUser } from "../../@types/types";
+import type { ForgotPasswordRequest } from "../../@types/types";
 import CloseButton from "../../components/CloseButton";
 import { FORGOT_PASSWORD_CONTENT as T } from "../../constants/forgotPasswordContent";
 
@@ -13,8 +13,8 @@ export default function ForgotPassword({ onClose }: ForgotPasswordProps) {
   // const [isForgotPasswordFormOpen, setIsForgotPasswordFormOpen] = useState<boolean>(true)
   const [emailError, setEmailError] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
-  const [submitForm, setSubmitForm] = useState<TForgotPasswordUser>({
-    username: "",
+  const [submitForm, setSubmitForm] = useState<ForgotPasswordRequest>({
+    email: "",
   });
 
   // Handle input change
@@ -22,7 +22,7 @@ export default function ForgotPassword({ onClose }: ForgotPasswordProps) {
     const { name, value } = e.target;
     setSubmitForm((prev) => ({ ...prev, [name]: value }));
 
-    if (name === "username") setEmailError("");
+    if (name === "email") setEmailError("");
   };
 
   // Validate email format
@@ -37,15 +37,15 @@ export default function ForgotPassword({ onClose }: ForgotPasswordProps) {
     setIsSubmitting(true);
     setSuccessMessage("");
 
-    if (submitForm.username === "") {
+    if (submitForm.email === "") {
       setEmailError(T.errors.required);
       setIsSubmitting(false);
       return;
     }
 
     try {
-      const submitUserData = {
-        email: submitForm.username,
+      const submitUserData: ForgotPasswordRequest = {
+        email: submitForm.email,
       };
 
       const response = await fetch(forgot_password_api, {
@@ -69,7 +69,7 @@ export default function ForgotPassword({ onClose }: ForgotPasswordProps) {
       const data = await response.json();
       if (data) {
         setSuccessMessage(T.success);
-        setSubmitForm({ username: "" });
+        setSubmitForm({ email: "" });
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -110,9 +110,9 @@ export default function ForgotPassword({ onClose }: ForgotPasswordProps) {
             <input
               autoFocus
               className={`w-full h-[56px] outline-0 border-[1px] border-gray-400 rounded-lg pl-4 bg-white hover:border-gray-600 hover:bg-gray-50 focus:border-blue-600 ${emailError ? "border-red-700" : ""}`}
-              type="text"
-              name="username"
-              value={submitForm.username}
+              type="email"
+              name="email"
+              value={submitForm.email}
               placeholder={T.placeholder}
               onChange={handleChange}
             />

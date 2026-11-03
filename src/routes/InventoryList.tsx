@@ -4,15 +4,17 @@ import {
   useCallback,
   useRef,
 } from "react";
-import AddItemForm from "../components/AddItem";
+import AssetFormDialog from "../components/AssetFormDialog";
 import SearchBar from "../components/SearchBar";
 import InventoryListSkeletonLoader from "../loader/InventoryListSkeletonLoader";
-import no_image_svg from "../assets/no-image-svgrepo-com.svg";
 import Pagination from "../components/Pagination";
 import ErrorTable from "../components/ErrorTables";
 import { showToast } from "../components/AppToast";
 import * as XLSX from "xlsx";
-import { useImportItem } from "../hooks/itemHooks";
+import { useImportAssets } from "../hooks/assetHooks";
+import { formatEnum } from "../lib/utils";
+import { UserData, canManageAssets } from "../utils/usersData/userData";
+import type { AssetCondition, AssetStatus } from "../@types/types";
 import SelectItemFilters from "../components/SelectItemFilters";
 import { InventoryTable } from "../components/InventoryTable";
 import { useAllInventoryItems, useFilteredItems } from "../data/inventory-data";
@@ -24,14 +26,20 @@ import {
   Loader2,
   MoreHorizontal,
   Package,
-  PackageOpen,
   Plus,
   Upload,
   Download,
-  X,
+  Truck,
 } from "lucide-react";
 
+const ASSET_STATUSES: AssetStatus[] = [
+  "IN_STORAGE", "AT_COUNTER", "IN_TRANSIT", "IN_ROOM_VERIFIED",
+  "LOCATION_ANOMALY", "OVERDUE", "MISSING", "MAINTENANCE", "RETIRED",
+];
+const ASSET_CONDITIONS: AssetCondition[] = ["GOOD", "FAIR", "DAMAGED"];
+
 export default function InventoryList() {
+  const viewer = UserData();
   const { items, isPending, isError } = useAllInventoryItems();
   const {
     filteredItems,
@@ -42,7 +50,7 @@ export default function InventoryList() {
     setSelectedCondition,
     selectedStatus,
     setSelectedStatus,
-  } = useFilteredItems();
+  } = useFilteredItems(items);
 
   const {
     currentPage,
@@ -55,50 +63,54 @@ export default function InventoryList() {
     setIsExporting,
     isMoreMenuOpen,
     setIsMoreMenuOpen,
-    showPrintBarcodeModal,
-    setShowPrintBarcodeModal,
-    printCurrentPage,
-    setPrintCurrentPage,
   } = useInventoryListState();
 
   const itemsPerPage = 10;
-  const itemsPerPrintPage = 15;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
-  const statusCounts = useMemo(() => ({
-    all: items.length,
-    available: items.filter((item) => item.status.toLowerCase() === "available").length,
-    borrowed: items.filter((item) => item.status.toLowerCase() === "borrowed").length,
-  }), [items]);
+  const statusOptions = useMemo(() => [
+    { value: "", label: "All Status", count: items.length },
+    ...ASSET_STATUSES.map((status) => ({
+      value: status,
+      label: formatEnum(status),
+      count: items.filter((item) => item.status === status).length,
+    })),
+  ], [items]);
 
-  const conditionCounts = useMemo(() => ({
-    New: items.filter((item) => item.condition === "New").length,
-    Good: items.filter((item) => item.condition === "Good").length,
-    Defective: items.filter((item) => item.condition === "Defective").length,
-    Refurbished: items.filter((item) => item.condition === "Refurbished").length,
-    NeedRepair: items.filter((item) => item.condition === "NeedRepair").length,
-  }), [items]);
+  const conditionOptions = useMemo(() => [
+    { value: "", label: "All Conditions", count: items.length },
+    ...ASSET_CONDITIONS.map((condition) => ({
+      value: condition,
+      label: formatEnum(condition),
+      count: items.filter((item) => item.condition === condition).length,
+    })),
+  ], [items]);
 
   const categories = useMemo(() => {
-    const counts = new Map<string, number>();
-    items.forEach((item) => counts.set(item.category, (counts.get(item.category) ?? 0) + 1));
-    return [...counts.entries()].map(([name, total]) => ({ name, total }));
+    const counts = new Map<string, { name: string; total: number }>();
+    items.forEach((item) => {
+      if (!item.category) return;
+      const entry = counts.get(item.category.id) ?? { name: item.category.name, total: 0 };
+      counts.set(item.category.id, { ...entry, total: entry.total + 1 });
+    });
+    return [...counts.entries()].map(([id, { name, total }]) => ({ id, name, total }));
   }, [items]);
 
+  const countOf = (...statuses: AssetStatus[]) => items.filter((item) => statuses.includes(item.status)).length;
   const stats = [
-    { label: T.stats.total, value: statusCounts.all, icon: Package },
-    { label: T.stats.available, value: statusCounts.available, icon: CheckCircle2 },
-    { label: T.stats.borrowed, value: statusCounts.borrowed, icon: PackageOpen },
+    { label: T.stats.total, value: items.length, icon: Package },
+    { label: T.stats.inStorage, value: countOf("IN_STORAGE"), icon: CheckCircle2 },
+    { label: T.stats.out, value: countOf("AT_COUNTER", "IN_TRANSIT", "IN_ROOM_VERIFIED"), icon: Truck },
     {
       label: T.stats.needsAttention,
-      value: conditionCounts.Defective + conditionCounts.NeedRepair,
+      value: countOf("LOCATION_ANOMALY", "OVERDUE", "MISSING", "MAINTENANCE"),
       icon: AlertTriangle,
       hint: T.stats.needsAttentionHint,
     },
   ];
 
-  const { mutate: importItem } = useImportItem();
+  const { mutate: importItem } = useImportAssets();
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const validCurrentPage = totalPages > 0 ? Math.min(currentPage, totalPages) : 1;
 
@@ -135,13 +147,6 @@ export default function InventoryList() {
   }, []);
 
   useEffect(() => {
-    if (showPrintBarcodeModal && items) {
-      const maxPage = Math.ceil(filteredItems.length / itemsPerPrintPage);
-      if (printCurrentPage > maxPage && maxPage > 0) setPrintCurrentPage(1);
-    }
-  }, [items, showPrintBarcodeModal, filteredItems.length, printCurrentPage, itemsPerPrintPage]);
-
-  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
         setIsMoreMenuOpen(false);
@@ -156,6 +161,7 @@ export default function InventoryList() {
     if (!file) return;
 
     const validTypes = [
+      "text/csv",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "application/vnd.ms-excel",
     ];
@@ -173,17 +179,6 @@ export default function InventoryList() {
     }
 
     setIsImporting(true);
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const arrayBuffer = event.target?.result;
-      if (!arrayBuffer) return;
-      const data = new Uint8Array(arrayBuffer as ArrayBuffer);
-      const workbook = XLSX.read(data, { type: "array" });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      XLSX.utils.sheet_to_json(worksheet);
-    };
-    reader.readAsArrayBuffer(file);
 
     const form = new FormData();
     form.append("file", file);
@@ -214,29 +209,32 @@ export default function InventoryList() {
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       const exportData = filteredItems.map((item) => ({
-        SerialNumber: item.serialNumber,
-        ItemName: item.itemName,
-        ItemType: item.itemType,
-        ItemMake: item.itemMake,
-        ItemModel: item.itemModel || "",
-        Description: item.description || "",
-        Category: item.category,
+        AssetCode: item.assetCode,
+        Name: item.name,
+        Category: item.category?.name ?? "",
+        Type: item.type,
+        Brand: item.brand ?? "",
+        Model: item.model ?? "",
+        SerialNo: item.serialNo ?? "",
+        RfidTagUid: item.rfidTagUid ?? "",
         Condition: item.condition,
-        Image: "",
-        CreatedDate: new Date(item.createdAt).toLocaleDateString(),
+        Status: item.status,
+        ReplacementCost: item.replacementCost,
+        AcquiredAt: item.acquiredAt ?? "",
+        Notes: item.notes ?? "",
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
       worksheet["!cols"] = [
-        { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
-        { wch: 30 }, { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 15 },
+        { wch: 12 }, { wch: 25 }, { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
+        { wch: 16 }, { wch: 10 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 30 },
       ];
 
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, T.exportSheetName);
 
       const date = new Date().toISOString().split("T")[0];
-      const filename = `inventory_export_${date}.xlsx`;
+      const filename = `assets_export_${date}.xlsx`;
       XLSX.writeFile(workbook, filename);
 
       showToast.success(
@@ -262,7 +260,7 @@ export default function InventoryList() {
       {/* Hidden file input */}
       <input
         type="file"
-        accept=".xlsx,.xls"
+        accept=".csv,.xlsx,.xls"
         ref={fileInputRef}
         onChange={handleFileChange}
         className="hidden"
@@ -279,14 +277,14 @@ export default function InventoryList() {
 
           {/* Action buttons */}
           <div className="flex items-center gap-2">
-            <button
+            {canManageAssets(viewer.role) && <button
               type="button"
               onClick={() => setIsAddItemFormOpen(true)}
               className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40"
             >
               <Plus className="h-4 w-4" />
               {T.newItem}
-            </button>
+            </button>}
 
             {/* More menu */}
             <div className="relative" ref={moreMenuRef}>
@@ -363,7 +361,7 @@ export default function InventoryList() {
                 <h2 className="text-base font-semibold text-slate-900">{T.table.title}</h2>
                 <p className="text-sm text-slate-500">
                   {T.table.count(filteredItems.length)}
-                  {selectedCategory && T.table.inCategory(selectedCategory)}
+                  {selectedCategory && T.table.inCategory(categories.find((c) => c.id === selectedCategory)?.name ?? "")}
                 </p>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -377,8 +375,8 @@ export default function InventoryList() {
                   onConditionChange={handleConditionChange}
                   selectedStatus={selectedStatus}
                   selectedCondition={selectedCondition}
-                  statusCounts={statusCounts}
-                  conditionCounts={conditionCounts}
+                  statuses={statusOptions}
+                  conditions={conditionOptions}
                 />
               </div>
             </div>
@@ -386,15 +384,15 @@ export default function InventoryList() {
             {/* Category chips */}
             {categories.length > 0 && (
               <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5 scrollbar-none">
-                {[{ name: "", total: items.length }, ...categories].map((category) => {
-                  const isSelected = selectedCategory === category.name;
+                {[{ id: "", name: "", total: items.length }, ...categories].map((category) => {
+                  const isSelected = selectedCategory === category.id;
                   return (
                     <button
-                      key={category.name || "all"}
+                      key={category.id || "all"}
                       type="button"
                       onClick={() => {
-                        if (category.name) {
-                          handleCategoryClick(category.name);
+                        if (category.id) {
+                          handleCategoryClick(category.id);
                         } else {
                           setSelectedCategory("");
                           setCurrentPage(1);
@@ -457,107 +455,9 @@ export default function InventoryList() {
 
       {/* Add item form */}
       {isAddItemFormOpen && (
-        <AddItemForm onClose={() => setIsAddItemFormOpen(false)} />
+        <AssetFormDialog onClose={() => setIsAddItemFormOpen(false)} />
       )}
 
-      {showPrintBarcodeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-xl w-full max-w-5xl h-[92vh] flex flex-col overflow-hidden">
-
-            {/* Modal header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">{T.printModal.title}</h2>
-                <p className="text-sm text-slate-500 mt-0.5">
-                  {T.printModal.readyToExport(filteredItems.length)}
-                </p>
-              </div>
-              <button
-                onClick={() => { setShowPrintBarcodeModal(false); setPrintCurrentPage(1); }}
-                className="h-9 w-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Preview area */}
-            <div className="flex-1 overflow-auto p-6 bg-slate-50/60">
-              <div
-                id="barcode-print-area"
-                className="bg-white p-6 mx-auto max-w-[210mm] min-h-[297mm] rounded-lg border border-slate-200"
-              >
-                <div className="grid grid-cols-3 gap-3">
-                  {filteredItems
-                    .slice(
-                      (printCurrentPage - 1) * itemsPerPrintPage,
-                      printCurrentPage * itemsPerPrintPage,
-                    )
-                    .map((item) => (
-                      <div
-                        key={item.id}
-                        className="border border-slate-200 rounded-lg p-3 flex flex-col items-center text-center bg-white"
-                      >
-                        <div className="text-[11px] font-semibold text-slate-800 mb-1.5 line-clamp-2 w-full h-8 flex items-center justify-center">
-                          {item.itemName}
-                        </div>
-                        <div className="w-full flex items-center justify-center">
-                          <img
-                            src={item.image || no_image_svg}
-                            alt={item.serialNumber}
-                            className="max-w-full h-16 object-contain"
-                          />
-                        </div>
-                        <div className="text-[9px] text-slate-600 mt-1.5 font-medium font-mono">
-                          {item.serialNumber}
-                        </div>
-                        <div className="text-[8px] text-slate-400 mt-0.5">
-                          {item.category}
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Modal footer */}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200">
-              {/* Print page pagination */}
-              <div>
-                {Math.ceil(filteredItems.length / itemsPerPrintPage) > 1 && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setPrintCurrentPage(Math.max(1, printCurrentPage - 1))}
-                      disabled={printCurrentPage === 1}
-                      className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {T.printModal.previous}
-                    </button>
-                    <span className="text-xs text-slate-500 font-medium px-1">
-                      {T.printModal.pageOf(printCurrentPage, Math.ceil(filteredItems.length / itemsPerPrintPage))}
-                    </span>
-                    <button
-                      onClick={() => setPrintCurrentPage(Math.min(Math.ceil(filteredItems.length / itemsPerPrintPage), printCurrentPage + 1))}
-                      disabled={printCurrentPage === Math.ceil(filteredItems.length / itemsPerPrintPage)}
-                      className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {T.printModal.next}
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => { setShowPrintBarcodeModal(false); setPrintCurrentPage(1); }}
-                  className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  {T.printModal.cancel}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

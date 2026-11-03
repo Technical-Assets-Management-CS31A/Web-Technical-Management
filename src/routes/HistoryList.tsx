@@ -2,69 +2,60 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import SearchBar from "../components/SearchBar";
 import HistoryListSkeletonLoader from "../loader/HistoryListSkeletonLoader";
 import { useQuery } from "@tanstack/react-query";
-import type { THistoryBorrwedItems } from "../@types/types";
+import type { LoanDto, LoanStatus } from "../@types/types";
 import HistoryTable from "../components/HistoryTable";
 import ErrorTable from "../components/ErrorTables";
 import Pagination from "../components/Pagination";
-import { useRecentlyBorrowItems } from "../hooks/itemHooks";
+import LoanDetailDialog from "../components/LoanDetailDialog";
+import { useAllLoans } from "../hooks/loanHooks";
 import { HISTORY_LIST_CONTENT as T } from "../constants/historyListContent";
 
-type StatusTab =
-  | "all"
-  | "pending"
-  | "approved"
-  | "borrowed"
-  | "returned"
-  | "denied"
+type StatusTab = "all" | LoanStatus;
+
+const TABS: { id: StatusTab; active: string; badge: string }[] = [
+  { id: "all", active: "border-blue-600 text-blue-600", badge: "bg-blue-100 text-blue-600" },
+  { id: "ACTIVE", active: "border-blue-600 text-blue-600", badge: "bg-blue-100 text-blue-600" },
+  { id: "OVERDUE", active: "border-orange-600 text-orange-600", badge: "bg-orange-100 text-orange-600" },
+  { id: "RETURNED", active: "border-green-600 text-green-600", badge: "bg-green-100 text-green-600" },
+  { id: "MISSING", active: "border-red-600 text-red-600", badge: "bg-red-100 text-red-600" },
+];
+
+const EMPTY: LoanDto[] = [];
 
 export default function HistoryList({
   title = T.title,
   description = T.description,
 }) {
   const [searchItem, setSearchItem] = useState("");
-  const [borrowedItem, setBorrowedItem] = useState<THistoryBorrwedItems[]>([]);
   const [activeTab, setActiveTab] = useState<StatusTab>("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [selectedLoanId, setSelectedLoanId] = useState<string | null>(null);
   const itemsPerPage = 10;
 
-  const { data, isPending, isError } = useQuery(useRecentlyBorrowItems());
+  const { data, isPending, isError } = useQuery(useAllLoans());
+  const loans = Array.isArray(data) ? data : EMPTY;
 
-  useEffect(() => {
-    if (data) setBorrowedItem(data);
-  }, [data]);
-
-  // Calculate counts for each status
   const statusCounts = useMemo(() => {
-    return {
-      all: borrowedItem.length,
-      pending: borrowedItem.filter(
-        (item) => item.status.toLowerCase() === "pending",
-      ).length,
-      approved: borrowedItem.filter(
-        (item) => item.status.toLowerCase() === "approved",
-      ).length,
-      borrowed: borrowedItem.filter(
-        (item) => item.status.toLowerCase() === "borrowed",
-      ).length,
-      returned: borrowedItem.filter(
-        (item) => item.status.toLowerCase() === "returned",
-      ).length,
-      denied: borrowedItem.filter(
-        (item) => item.status.toLowerCase() === "denied",
-      ).length
-    };
-  }, [borrowedItem]);
+    const counts: Record<StatusTab, number> = { all: loans.length, ACTIVE: 0, OVERDUE: 0, RETURNED: 0, MISSING: 0 };
+    loans.forEach((loan) => { counts[loan.status] += 1; });
+    return counts;
+  }, [loans]);
 
   const filteredItems = useMemo(() => {
-    return borrowedItem.filter((item) => {
-      const matchesSearch = item.borrowerFullName
-        ?.toLowerCase()
-        .includes(searchItem.toLowerCase());
-      const matchesStatus =
-        activeTab === "all" || item.status.toLowerCase() === activeTab;
-      return matchesSearch && matchesStatus;
-    });
-  }, [borrowedItem, searchItem, activeTab]);
+    const term = searchItem.toLowerCase();
+    return loans
+      .filter((loan) => {
+        const matchesSearch =
+          (loan.student?.fullName ?? loan.coordinator?.fullName ?? "").toLowerCase().includes(term) ||
+          (loan.student?.studentNo ?? "").toLowerCase().includes(term) ||
+          loan.asset.name.toLowerCase().includes(term) ||
+          loan.asset.assetCode.toLowerCase().includes(term) ||
+          loan.loanNo.toLowerCase().includes(term);
+        const matchesStatus = activeTab === "all" || loan.status === activeTab;
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => new Date(b.checkedOutAt).getTime() - new Date(a.checkedOutAt).getTime());
+  }, [loans, searchItem, activeTab]);
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
@@ -108,90 +99,23 @@ export default function HistoryList({
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6 border-b border-gray-200 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab("all")}
-            className={`px-4 py-3 font-semibold text-sm transition-all duration-200 border-b-2 whitespace-nowrap ${activeTab === "all"
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-          >
-            {T.tabs.all}
-            {statusCounts.all > 0 && (
-              <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded-full">
-                {statusCounts.all}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("pending")}
-            className={`px-4 py-3 font-semibold text-sm transition-all duration-200 border-b-2 whitespace-nowrap ${activeTab === "pending"
-                ? "border-yellow-600 text-yellow-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-          >
-            {T.tabs.pending}
-            {statusCounts.pending > 0 && (
-              <span className="ml-2 px-2 py-1 text-xs bg-yellow-100 text-yellow-600 rounded-full">
-                {statusCounts.pending}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("approved")}
-            className={`px-4 py-3 font-semibold text-sm transition-all duration-200 border-b-2 whitespace-nowrap ${activeTab === "approved"
-                ? "border-emerald-600 text-emerald-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-          >
-            {T.tabs.approved}
-            {statusCounts.approved > 0 && (
-              <span className="ml-2 px-2 py-1 text-xs bg-emerald-100 text-emerald-600 rounded-full">
-                {statusCounts.approved}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("borrowed")}
-            className={`px-4 py-3 font-semibold text-sm transition-all duration-200 border-b-2 whitespace-nowrap ${activeTab === "borrowed"
-                ? "border-blue-600 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-          >
-            {T.tabs.borrowed}
-            {statusCounts.borrowed > 0 && (
-              <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded-full">
-                {statusCounts.borrowed}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("returned")}
-            className={`px-4 py-3 font-semibold text-sm transition-all duration-200 border-b-2 whitespace-nowrap ${activeTab === "returned"
-                ? "border-green-600 text-green-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-          >
-            {T.tabs.returned}
-            {statusCounts.returned > 0 && (
-              <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-600 rounded-full">
-                {statusCounts.returned}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("denied")}
-            className={`px-4 py-3 font-semibold text-sm transition-all duration-200 border-b-2 whitespace-nowrap ${activeTab === "denied"
-                ? "border-red-600 text-red-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-          >
-            {T.tabs.denied}
-            {statusCounts.denied > 0 && (
-              <span className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-600 rounded-full">
-                {statusCounts.denied}
-              </span>
-            )}
-          </button>
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-3 font-semibold text-sm transition-all duration-200 border-b-2 whitespace-nowrap ${activeTab === tab.id
+                  ? tab.active
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
+            >
+              {T.tabs[tab.id]}
+              {statusCounts[tab.id] > 0 && (
+                <span className={`ml-2 px-2 py-1 text-xs rounded-full ${tab.badge}`}>
+                  {statusCounts[tab.id]}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
 
         {/* Pagination & Search */}
@@ -238,7 +162,7 @@ export default function HistoryList({
                     </td>
                   </tr>
                 ) : (
-                  <HistoryTable items={paginatedData} />
+                  <HistoryTable items={paginatedData} onSelect={setSelectedLoanId} />
                 )}
               </tbody>
             </table>
@@ -248,10 +172,11 @@ export default function HistoryList({
         <p className="mt-6 text-sm text-center text-slate-500">
           <span className="font-semibold">{T.footer.label}</span>{" "}
           {T.footer.intro} <em>{T.footer.eventDate}</em> {T.footer.eventDateDesc}{" "}
-          <em>{T.footer.condition}</em> {T.footer.conditionDesc}{" "}
           <em>{T.footer.status}</em> {T.footer.statusDesc}
         </p>
       </div>
+
+      {selectedLoanId && <LoanDetailDialog loanId={selectedLoanId} onClose={() => setSelectedLoanId(null)} />}
     </div>
   );
 }

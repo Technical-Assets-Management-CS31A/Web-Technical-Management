@@ -1,24 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useLoggedInUser } from "../hooks/userHooks";
-import { FormattedPhoneNumber } from "../components/FormatedPhoneNumber";
 import SettingsSkeletonLoader from "../loader/SettingsSkeletonLoader";
 import EditProfileModal from "../components/EditProfileModal";
 import InventorySettings from "../components/InventorySettings";
 import AppearanceSettings from "../components/AppearanceSettings";
 import { DetailSection, InfoRow } from "../components/ArchiveDetailShell";
-import type { TUsers } from "../@types/types";
+import type { UserDto } from "../@types/types";
+import { formatEnum, formatRole, fullName as toFullName, initials as toInitials } from "../lib/utils";
 import ErrorTable from "../components/ErrorTables";
 import { useSettingsState } from "../states/settings-state";
 import { SETTINGS_CONTENT as T } from "../constants/settingsContent";
 import {
   User,
   Mail,
-  Phone,
   Pencil,
   BadgeCheck,
-  Briefcase,
-  AtSign,
+  Hash,
+  CalendarCheck,
   CircleUserRound,
   Package,
   Palette,
@@ -51,32 +50,13 @@ export default function Settings() {
   const { showEditProfile, setShowEditProfile } = useSettingsState();
   const { data, isLoading, isError } = useQuery(useLoggedInUser());
 
-  const user: TUsers | null = useMemo(() => data ?? null, [data]);
+  const user: UserDto | null = useMemo(() => data ?? null, [data]);
 
   if (isLoading) return <SettingsSkeletonLoader />;
 
-  function handleProfileSubmit(values: {
-    firstName?: string | null;
-    lastName?: string | null;
-    middleName?: string | null;
-    username?: string | null;
-    email?: string | null;
-    phoneNumber?: string | null;
-  }) {
-    console.info("Profile update submitted", values);
-  }
-
-  const initials =
-    user?.firstName && user?.lastName
-      ? `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase()
-      : user?.username?.charAt(0)?.toUpperCase() ?? "U";
-
-  const fullName =
-    user?.firstName && user?.lastName
-      ? [user.firstName, user.middleName, user.lastName].filter(Boolean).join(" ")
-      : user?.username ?? T.fallbackName;
-
-  const isOnline = user?.status?.toLowerCase() === "online";
+  const initials = toInitials(user) || "U";
+  const fullName = toFullName(user) || T.fallbackName;
+  const isActive = user?.status === "ACTIVE";
 
   const editButton = (
     <button
@@ -165,23 +145,23 @@ export default function Settings() {
                       {initials}
                     </div>
                     <span
-                      className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full ring-4 ring-white ${isOnline ? "bg-emerald-500" : "bg-slate-300"}`}
+                      className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full ring-4 ring-white ${isActive ? "bg-emerald-500" : "bg-slate-300"}`}
                     />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs text-slate-500">{T.profileCard.signedInAs}</p>
                     <h3 className="truncate text-lg font-semibold tracking-tight text-slate-900">{fullName}</h3>
                     <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                      <span className="text-sm text-slate-500">@{user?.username}</span>
+                      <span className="text-sm text-slate-500">{user?.email}</span>
                       <span className="text-slate-300">·</span>
                       <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-200">
                         <ShieldCheck className="h-3 w-3 text-slate-500" />
-                        {user?.userRole ?? T.fallbackRole}
+                        {formatRole(user?.role) || T.fallbackRole}
                       </span>
-                      {user?.position && (
+                      {user?.isEventCoordinator && (
                         <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-200">
-                          <Briefcase className="h-3 w-3 text-slate-500" />
-                          {user.position}
+                          <CalendarCheck className="h-3 w-3 text-slate-500" />
+                          {T.accountInfo.eventCoordinator}
                         </span>
                       )}
                     </div>
@@ -192,21 +172,13 @@ export default function Settings() {
                 <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
                   <DetailSection title={T.personalInfo.title}>
                     <InfoRow icon={User} label={T.personalInfo.firstName} value={user?.firstName} />
-                    <InfoRow icon={User} label={T.personalInfo.middleName} value={user?.middleName} />
                     <InfoRow icon={User} label={T.personalInfo.lastName} value={user?.lastName} />
-                    <InfoRow
-                      icon={Phone}
-                      label={T.personalInfo.phoneNumber}
-                      value={user?.phoneNumber ? FormattedPhoneNumber(user.phoneNumber) : null}
-                      copyable
-                    />
                   </DetailSection>
 
                   <DetailSection title={T.accountInfo.title}>
-                    <InfoRow icon={AtSign} label={T.accountInfo.username} value={user?.username} copyable />
+                    <InfoRow icon={Hash} label={T.accountInfo.employeeNo} value={user?.employeeNo} copyable />
                     <InfoRow icon={Mail} label={T.accountInfo.email} value={user?.email} copyable />
-                    <InfoRow icon={BadgeCheck} label={T.accountInfo.role} value={user?.userRole} />
-                    <InfoRow icon={Briefcase} label={T.accountInfo.position} value={user?.position} />
+                    <InfoRow icon={BadgeCheck} label={T.accountInfo.role} value={formatRole(user?.role)} />
                   </DetailSection>
                 </div>
 
@@ -223,16 +195,16 @@ export default function Settings() {
                   </div>
                   <span
                     className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
-                      isOnline ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
+                      isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
                     }`}
                   >
                     <span className="relative flex h-1.5 w-1.5">
-                      {isOnline && (
+                      {isActive && (
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                       )}
-                      <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${isOnline ? "bg-emerald-500" : "bg-slate-400"}`} />
+                      <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${isActive ? "bg-emerald-500" : "bg-slate-400"}`} />
                     </span>
-                    {user?.status ?? T.fallbackStatus}
+                    {formatEnum(user?.status) || T.fallbackStatus}
                   </span>
                 </section>
 
@@ -247,21 +219,8 @@ export default function Settings() {
       {/* {showChangePassword && (
         <ChangePasswordModal id={user?.id} onClose={() => setShowChangePassword(false)} />
       )} */}
-      {showEditProfile && (
-        <EditProfileModal
-          initialValues={{
-            id: user?.id,
-            firstName: user?.firstName,
-            lastName: user?.lastName,
-            middleName: user?.middleName,
-            username: user?.username,
-            email: user?.email,
-            phoneNumber: user?.phoneNumber,
-            position: user?.position,
-          }}
-          onClose={() => setShowEditProfile(false)}
-          onSubmit={handleProfileSubmit}
-        />
+      {showEditProfile && user && (
+        <EditProfileModal user={user} onClose={() => setShowEditProfile(false)} />
       )}
     </div>
   );

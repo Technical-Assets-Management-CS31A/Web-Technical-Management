@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import type { TRecentBorrowItemProps } from "../@types/types";
 
 interface IActiveBorrowedItemsState {
   searchTerm: string;
@@ -11,8 +10,6 @@ interface IActiveBorrowedItemsState {
   selectedBorrowId: string | null;
   setSelectedBorrowId: (id: string | null) => void;
 
-  itemToReturn: TRecentBorrowItemProps | null;
-  setItemToReturn: (item: TRecentBorrowItemProps | null) => void;
 }
 
 const activeBorrowedItemsStore = create<IActiveBorrowedItemsState>((set) => ({
@@ -25,8 +22,6 @@ const activeBorrowedItemsStore = create<IActiveBorrowedItemsState>((set) => ({
   selectedBorrowId: null,
   setSelectedBorrowId: (id) => set(() => ({ selectedBorrowId: id })),
 
-  itemToReturn: null,
-  setItemToReturn: (item) => set(() => ({ itemToReturn: item })),
 }));
 
 export const useActiveBorrowedItemsState = () => {
@@ -39,8 +34,6 @@ export const useActiveBorrowedItemsState = () => {
   const selectedBorrowId = activeBorrowedItemsStore((state) => state.selectedBorrowId);
   const setSelectedBorrowId = activeBorrowedItemsStore((state) => state.setSelectedBorrowId);
 
-  const itemToReturn = activeBorrowedItemsStore((state) => state.itemToReturn);
-  const setItemToReturn = activeBorrowedItemsStore((state) => state.setItemToReturn);
 
   return {
     searchTerm,
@@ -49,7 +42,5 @@ export const useActiveBorrowedItemsState = () => {
     setCurrentPage,
     selectedBorrowId,
     setSelectedBorrowId,
-    itemToReturn,
-    setItemToReturn,
   };
 };
