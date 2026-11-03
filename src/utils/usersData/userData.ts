@@ -1,40 +1,28 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 import { useLoggedInUser } from "../../hooks/userHooks";
-import type { TUsers } from "../../@types/types";
+import type { UserDto, UserRole } from "../../@types/types";
 
-export const UserData = () => {
-    type TUserRequired = Pick<
-        TUsers,
-        | "id"
-        | "username"
-        | "lastName"
-        | "middleName"
-        | "firstName"
-        | "email"
-        | "phoneNumber"
-        | "userRole"
-        | "status"
-    >;
+type TSignedInUser = Pick<UserDto, "id" | "employeeNo" | "firstName" | "lastName" | "email" | "role" | "status" | "isEventCoordinator">;
 
-    const [userData, setUserData] = useState<TUserRequired>({
-        id: "",
-        username: "",
-        lastName: "",
-        middleName: "",
-        firstName: "",
-        email: "",
-        phoneNumber: "",
-        userRole: "",
-        status: "",
-    });
-
-    const { data } = useSuspenseQuery(useLoggedInUser());
-
-    useEffect(() => {
-        if (!data) console.log("User not found");
-        setUserData(data);
-    }, [data]);
-
-    return userData;
+const EMPTY_USER: TSignedInUser = {
+    id: "",
+    employeeNo: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    role: "" as UserRole,
+    status: "ACTIVE",
+    isEventCoordinator: false,
 };
+
+export const UserData = (): TSignedInUser => {
+    const { data } = useSuspenseQuery(useLoggedInUser());
+    if (!data) console.log("User not found");
+    return data ?? EMPTY_USER;
+};
+
+// Who may manage what on the People and Assets screens.
+export const canManageAccounts = (role: UserRole | "") => role === "ADMIN";
+export const canManageRoster = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
+export const canManageAssets = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF" || role === "CUSTODIAN";
+export const canResolvePenalties = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
