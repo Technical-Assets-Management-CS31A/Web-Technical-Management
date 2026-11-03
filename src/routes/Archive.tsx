@@ -1,44 +1,31 @@
-import { useMemo, useCallback } from "react";
-import no_image_svg from "../assets/no-image-svgrepo-com.svg";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import ArchiveSkeletonLoader from "../loader/ArchiveSkeletonLoader.tsx";
-import type { TUsers } from "../@types/types.ts";
-import { useDeleteItem } from "../hooks/itemHooks.ts";
-import { useRestoreItem } from "../hooks/itemHooks.ts";
-import { useRestoreUser } from "../hooks/userHooks.ts";
-import { useDeleteUser } from "../hooks/userHooks.ts";
+import { useAllAssets, useRestoreAsset } from "../hooks/assetHooks.ts";
+import { useAllStudents, useAllUsers, useRestoreStudent, useRestoreUser } from "../hooks/userHooks.ts";
 import ErrorTable from "../components/ErrorTables.tsx";
 import SearchBar from "../components/SearchBar.tsx";
 import Pagination from "../components/Pagination.tsx";
 import PopUpModal from "../components/PopUpModal.tsx";
-import PopUpModalDelete from "../components/PopUpModalDelete.tsx";
-import { ArchiveItemTable } from "../components/ArchiveItemTable.tsx";
-import { ArchiveTeacherTable } from "../components/ArchiveTeacherTable.tsx";
-import { ArchiveStudentTable } from "../components/ArchiveStudentTable.tsx";
-import ArchiveRowActions from "../components/ArchiveRowActions.tsx";
 import { RoleBadge, StatusBadge, UserIdentity } from "../components/ArchiveCells.tsx";
-import ArchiveStudentCredentialsPopup from "../components/ArchiveStudentCredentialsPopup.tsx";
-import ArchiveTeacherCredentialsPopup from "../components/ArchiveTeacherCredentialsPopup.tsx";
-import ArchiveItemDetailsPopup from "../components/ArchiveItemDetailsPopup.tsx";
+import ViewUserCredentials from "../components/ViewUserCredentials.tsx";
+import ViewStudentCredentials from "../components/ViewStudentCredentials.tsx";
+import { FormattedDateTime } from "../components/FormattedDateTime.ts";
 import { showToast } from "../components/AppToast";
-import {
-  useAllItemInArchive,
-  useAllUsersInArchive,
-  useFilteredItems,
-  useFilteredUsers,
-} from "../data/archive-data.ts";
-import { useArchiveState } from "../states/archive-state.ts";
+import { getErrorMessage } from "../components/form/FormKit";
+import { formatEnum, fullName } from "../lib/utils";
+import { UserData, canManageAccounts, canManageAssets, canManageRoster } from "../utils/usersData/userData";
 import { ARCHIVE_CONTENT as T } from "../constants/archiveContent";
-import { Package, Users, GraduationCap, BookOpen, Search, type LucideIcon } from "lucide-react";
+import { Package, Users, GraduationCap, RotateCcw, Search, type LucideIcon } from "lucide-react";
 
-type TStudentTypes = TUsers;
-type TNewUserTypes = Omit<TUsers, "course" | "section" | "year">;
+// Soft delete (PRD): records stay in place with deletedAt set. This page lists them and can restore them.
 
-type FilterKey = "items" | "users" | "teachers" | "students";
+type FilterKey = "assets" | "accounts" | "students";
 
 const filterTabs: { key: FilterKey; label: string; icon: LucideIcon }[] = [
-  { key: "items", label: T.tabs.items, icon: Package },
-  { key: "users", label: T.tabs.users, icon: Users },
-  { key: "teachers", label: T.tabs.teachers, icon: BookOpen },
+  { key: "assets", label: T.tabs.assets, icon: Package },
+  { key: "accounts", label: T.tabs.accounts, icon: Users },
   { key: "students", label: T.tabs.students, icon: GraduationCap },
 ];
 
@@ -46,179 +33,101 @@ const itemsPerPage = 10;
 
 const thClass = "border-b border-slate-200 px-5 py-3 font-medium text-slate-500";
 
+const byDeletedAt = <R extends { deletedAt: string | null }>(a: R, b: R) =>
+  new Date(b.deletedAt ?? 0).getTime() - new Date(a.deletedAt ?? 0).getTime();
+
 export default function Archive() {
-  const {
-    searchItem,
-    setSearchItem,
-    currentPage,
-    setCurrentPage,
-    isRestoreConfirmOpen,
-    setIsRestoreConfirmOpen,
-    restoreSelectedItemId,
-    setRestoreSelectedItemId,
-    selectedItemId,
-    setSelectedItemId,
-    isItemDetailsOpen,
-    setIsItemDetailsOpen,
-    isDeleteConfirmOpen,
-    setIsDeleteItemConfirmOpen,
-    deleteSelectedId,
-    setDeleteSelectedId,
-    isUserRestoreConfirmOpen,
-    setIsUserRestoreConfirmOpen,
-    userRestoreSelectedId,
-    setUserRestoreSelectedId,
-    isUserDeleteConfirmOpen,
-    setIsUserDeleteConfirmOpen,
-    userDeleteSelectedId,
-    setUserDeleteSelectedId,
-    isStudentCredentialsOpen,
-    setIsStudentCredentialsOpen,
-    selectedStudentId,
-    setSelectedStudentId,
-    isTeacherCredentialsOpen,
-    setIsTeacherCredentialsOpen,
-    selectedTeacherId,
-    setSelectedTeacherId,
-  } = useArchiveState();
+  const navigate = useNavigate();
+  const viewer = UserData();
+  const [activeFilter, setActiveFilter] = useState<FilterKey>("assets");
+  const [searchItem, setSearchItem] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [restoreTarget, setRestoreTarget] = useState<{ kind: FilterKey; id: string } | null>(null);
+  const [viewUserId, setViewUserId] = useState<string | null>(null);
+  const [viewStudentId, setViewStudentId] = useState<string | null>(null);
 
-  const restoreItemMutation = useRestoreItem();
-  const deleteItemMutation = useDeleteItem();
-  const deleteUserMutation = useDeleteUser();
-  const restoreUserMutation = useRestoreUser();
-  const { archiveItems, isPending, isError } = useAllItemInArchive();
-  const { archiveUsers, isUsersPending, isUsersError } = useAllUsersInArchive();
-  const { filteredItems } = useFilteredItems({ searchItem });
-  const { filteredUsers, activeFilter, setActiveFilter, setSelectedCategory } =
-    useFilteredUsers({ searchItem });
+  const assetsQuery = useQuery(useAllAssets(true));
+  const usersQuery = useQuery(useAllUsers(true));
+  const studentsQuery = useQuery(useAllStudents(true));
+  const restoreAsset = useRestoreAsset();
+  const restoreUser = useRestoreUser();
+  const restoreStudent = useRestoreStudent();
 
-  const tabCounts = useMemo(() => {
-    const counts: Record<FilterKey, number> = {
-      items: archiveItems.length,
-      users: 0,
-      teachers: 0,
-      students: 0,
-    };
-    for (const user of archiveUsers) {
-      const role = user.userRole?.toLowerCase();
-      if (role === "admin" || role === "staff") counts.users++;
-      else if (role === "teacher") counts.teachers++;
-      else if (role === "student") counts.students++;
-    }
-    return counts;
-  }, [archiveItems, archiveUsers]);
+  const deletedAssets = useMemo(() => (assetsQuery.data ?? []).filter((a) => a.deletedAt).sort(byDeletedAt), [assetsQuery.data]);
+  const deletedUsers = useMemo(() => (usersQuery.data ?? []).filter((u) => u.deletedAt).sort(byDeletedAt), [usersQuery.data]);
+  const deletedStudents = useMemo(() => (studentsQuery.data ?? []).filter((s) => s.deletedAt).sort(byDeletedAt), [studentsQuery.data]);
 
-  const activeCount = activeFilter === "items" ? filteredItems.length : filteredUsers.length;
-  const totalPages = Math.ceil(activeCount / itemsPerPage);
+  const term = searchItem.toLowerCase();
+  const filteredAssets = useMemo(
+    () => deletedAssets.filter((a) => `${a.name} ${a.assetCode} ${a.category?.name ?? ""}`.toLowerCase().includes(term)),
+    [deletedAssets, term],
+  );
+  const filteredUsers = useMemo(
+    () => deletedUsers.filter((u) => `${fullName(u)} ${u.email} ${u.employeeNo}`.toLowerCase().includes(term)),
+    [deletedUsers, term],
+  );
+  const filteredStudents = useMemo(
+    () => deletedStudents.filter((st) => `${fullName(st)} ${st.studentNo} ${st.section?.code ?? ""}`.toLowerCase().includes(term)),
+    [deletedStudents, term],
+  );
+  const rowCount = { assets: filteredAssets.length, accounts: filteredUsers.length, students: filteredStudents.length }[activeFilter];
+
+  const tabCounts: Record<FilterKey, number> = {
+    assets: deletedAssets.length,
+    accounts: deletedUsers.length,
+    students: deletedStudents.length,
+  };
+
+  const canRestore: Record<FilterKey, boolean> = {
+    assets: canManageAssets(viewer.role),
+    accounts: canManageAccounts(viewer.role),
+    students: canManageRoster(viewer.role),
+  };
+
+  const totalPages = Math.ceil(rowCount / itemsPerPage);
   const validCurrentPage = totalPages > 0 ? Math.min(currentPage, totalPages) : 1;
-
-  const paginatedItems = useMemo(
-    () =>
-      filteredItems
-        .slice()
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice((validCurrentPage - 1) * itemsPerPage, validCurrentPage * itemsPerPage),
-    [filteredItems, validCurrentPage],
-  );
-
-  const paginatedUsers = useMemo(
-    () => filteredUsers.slice((validCurrentPage - 1) * itemsPerPage, validCurrentPage * itemsPerPage),
-    [filteredUsers, validCurrentPage],
-  );
-
-  const handlePageChange = useCallback((page: number) => setCurrentPage(page), [setCurrentPage]);
-
-  const handleConfirmRestoreItem = useCallback(() => {
-    if (!restoreSelectedItemId) return;
-    restoreItemMutation.mutate(restoreSelectedItemId, {
-      onSuccess: (data) => {
-        setIsRestoreConfirmOpen(false);
-        setRestoreSelectedItemId(null);
-        showToast.success(T.toast.itemRestored, data.message);
-      },
-    });
-  }, [restoreItemMutation, restoreSelectedItemId, setIsRestoreConfirmOpen, setRestoreSelectedItemId]);
-
-  const handleConfirmDeleteItem = useCallback(() => {
-    if (!deleteSelectedId) return;
-    deleteItemMutation.mutate(deleteSelectedId, {
-      onSuccess: (data) => {
-        setIsDeleteItemConfirmOpen(false);
-        setDeleteSelectedId(null);
-        showToast.success(T.toast.itemDeleted, data.message);
-      },
-    });
-  }, [deleteItemMutation, deleteSelectedId, setIsDeleteItemConfirmOpen, setDeleteSelectedId]);
-
-  const handleConfirmRestoreUser = useCallback(() => {
-    if (!userRestoreSelectedId) return;
-    restoreUserMutation.mutateAsync(userRestoreSelectedId, {
-      onSuccess: (data) => {
-        setIsUserRestoreConfirmOpen(false);
-        setUserRestoreSelectedId(null);
-        showToast.success(T.toast.userRestored, data.message);
-      },
-    });
-  }, [restoreUserMutation, userRestoreSelectedId, setIsUserRestoreConfirmOpen, setUserRestoreSelectedId]);
-
-  const handleConfirmDeleteUser = useCallback(() => {
-    if (!userDeleteSelectedId) return;
-    deleteUserMutation.mutateAsync(userDeleteSelectedId, {
-      onSuccess: (data) => {
-        setIsUserDeleteConfirmOpen(false);
-        setUserDeleteSelectedId(null);
-        showToast.success(T.toast.userDeleted, data.message);
-      },
-    });
-  }, [deleteUserMutation, userDeleteSelectedId, setIsUserDeleteConfirmOpen, setUserDeleteSelectedId]);
-
-  // Handler helpers
-  const viewArchiveItemCredentials = (id: string) => { setSelectedItemId(id); setIsItemDetailsOpen(true); };
-  const viewArchiveTeacherCredentials = (id: string) => { setSelectedTeacherId(id); setIsTeacherCredentialsOpen(true); };
-  const handleCloseArchiveTeacherCredentials = () => { setSelectedTeacherId(null); setIsTeacherCredentialsOpen(false); };
-  const handleArchiveStudentCredentials = (id: string) => { setSelectedStudentId(id); setIsStudentCredentialsOpen(true); };
-  const handleCloseStudentCredentials = () => { setSelectedStudentId(null); setIsStudentCredentialsOpen(false); };
-  const handleRestoreItem = (id: string) => { setRestoreSelectedItemId(id); setIsRestoreConfirmOpen(true); };
-  const handleCancelRestore = () => { setIsRestoreConfirmOpen(false); setRestoreSelectedItemId(null); };
-  const handleDeleteItem = (id: string) => { setDeleteSelectedId(id); setIsDeleteItemConfirmOpen(true); };
-  const handleCancelDeleteItem = () => { setIsDeleteItemConfirmOpen(false); setDeleteSelectedId(null); };
-  const handleRestoreUser = (id: string) => { setUserRestoreSelectedId(id); setIsUserRestoreConfirmOpen(true); };
-  const handleCancelUserRestore = () => { setIsUserRestoreConfirmOpen(false); setUserRestoreSelectedId(null); };
-  const handleDeleteUser = (id: string) => { setUserDeleteSelectedId(id); setIsUserDeleteConfirmOpen(true); };
-  const handleCancelUserDelete = () => { setIsUserDeleteConfirmOpen(false); setUserDeleteSelectedId(null); };
+  const pageSlice = <R,>(list: R[]) => list.slice((validCurrentPage - 1) * itemsPerPage, validCurrentPage * itemsPerPage);
 
   const handleTabChange = (key: FilterKey) => {
     setActiveFilter(key);
     setCurrentPage(1);
     setSearchItem("");
-    setSelectedCategory("");
+  };
+
+  const confirmRestore = () => {
+    if (!restoreTarget) return;
+    const mutation = restoreTarget.kind === "assets" ? restoreAsset : restoreTarget.kind === "accounts" ? restoreUser : restoreStudent;
+    mutation.mutate(restoreTarget.id, {
+      onSuccess: () => showToast.success(T.toast.restored, T.toast.restoredMessage),
+      onError: (err) => showToast.error(T.toast.restoreFailed, getErrorMessage(err, T.toast.restoreFailed)),
+      onSettled: () => setRestoreTarget(null),
+    });
   };
 
   const activeTab = filterTabs.find((t) => t.key === activeFilter) ?? filterTabs[0];
   const activeLabel = activeTab.label.toLowerCase();
   const isEmpty = tabCounts[activeFilter] === 0;
-  const hasError = isError || isUsersError;
+  const hasError = assetsQuery.isError || usersQuery.isError || studentsQuery.isError;
+  const isRestoring = restoreAsset.isPending || restoreUser.isPending || restoreStudent.isPending;
 
-  if (isPending || isUsersPending) return <ArchiveSkeletonLoader />;
+  if (assetsQuery.isPending || usersQuery.isPending || studentsQuery.isPending) return <ArchiveSkeletonLoader />;
 
-  const renderEmptyRow = (colSpan: number) => (
-    <tr>
-      <td colSpan={colSpan}>
-        <EmptyState icon={activeTab.icon} label={activeLabel} isEmpty={isEmpty} />
-      </td>
-    </tr>
-  );
+  const headers = T.headers[activeFilter];
+  const restoreButton = (kind: FilterKey, id: string) =>
+    canRestore[kind] && (
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setRestoreTarget({ kind, id }); }}
+        disabled={isRestoring}
+        className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 disabled:opacity-50"
+      >
+        <RotateCcw className="h-3.5 w-3.5" />
+        {T.rowActions.restore}
+      </button>
+    );
 
-  const renderHead = (headers: readonly string[]) => (
-    <thead>
-      <tr className="sticky top-0 z-10 bg-slate-50">
-        {headers.map((h) => (
-          <th key={h} className={thClass}>{h}</th>
-        ))}
-        <th className={`${thClass} w-16`} />
-      </tr>
-    </thead>
-  );
+  const viewUser = deletedUsers.find((u) => u.id === viewUserId);
+  const viewStudent = deletedStudents.find((s) => s.id === viewStudentId);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -231,7 +140,7 @@ export default function Archive() {
         </header>
 
         {/* Stats — doubles as the tab switcher */}
-        <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {filterTabs.map(({ key, icon: Icon }) => {
             const isActive = activeFilter === key;
             return (
@@ -275,7 +184,7 @@ export default function Archive() {
           <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-base font-semibold text-slate-900">{T.table.title(activeLabel)}</h2>
-              <p className="text-sm text-slate-500">{T.table.count(activeCount, activeLabel)}</p>
+              <p className="text-sm text-slate-500">{T.table.count(rowCount, activeLabel)}</p>
             </div>
             <SearchBar
               key={activeFilter}
@@ -292,187 +201,86 @@ export default function Archive() {
                 <ErrorTable />
               ) : (
                 <table className="w-full text-left text-sm whitespace-nowrap">
-                  {/* Items */}
-                  {activeFilter === "items" && (
-                    <>
-                      {renderHead(T.headers.items)}
-                      <tbody className="divide-y divide-slate-100">
-                        {paginatedItems.length === 0
-                          ? renderEmptyRow(T.headers.items.length + 1)
-                          : paginatedItems.map((item) => (
-                            <tr
-                              key={item.id}
-                              onClick={() => viewArchiveItemCredentials(item.id)}
-                              className="cursor-pointer transition-colors hover:bg-slate-50"
-                            >
-                              <ArchiveItemTable
-                                id={item.id}
-                                archivedAt={item.createdAt}
-                                itemName={item.itemName}
-                                serialNumber={item.serialNumber}
-                                image={item.image || no_image_svg}
-                                description={item.description}
-                                category={item.category}
-                                condition={item.condition}
-                                onRestore={handleRestoreItem}
-                                onDelete={handleDeleteItem}
-                                isRestoring={restoreItemMutation.isPending}
-                                isDeleting={deleteItemMutation.isPending}
-                              />
-                            </tr>
-                          ))}
-                      </tbody>
-                    </>
-                  )}
-
-                  {/* Admin & staff */}
-                  {activeFilter === "users" && (
-                    <>
-                      {renderHead(T.headers.users)}
-                      <tbody className="divide-y divide-slate-100">
-                        {paginatedUsers.length === 0
-                          ? renderEmptyRow(T.headers.users.length + 1)
-                          : paginatedUsers.map((user: TNewUserTypes) => (
-                            <tr key={user.id} className="transition-colors hover:bg-slate-50">
-                              <td className="px-5 py-3">
-                                <UserIdentity
-                                  firstName={user.firstName}
-                                  middleName={user.middleName}
-                                  lastName={user.lastName}
-                                  subtitle={user.id}
-                                />
-                              </td>
-                              <td className="px-5 py-3 text-slate-700">{user.username}</td>
-                              <td className="px-5 py-3 text-slate-600">{user.email}</td>
-                              <td className="px-5 py-3 text-slate-600 tabular-nums">{user.phoneNumber}</td>
-                              <td className="px-5 py-3"><RoleBadge role={user.userRole} /></td>
-                              <td className="px-5 py-3"><StatusBadge status={user.status} /></td>
-                              <td className="px-5 py-3 text-right">
-                                <ArchiveRowActions
-                                  restoreLabel={T.rowActions.restoreUser}
-                                  deleteLabel={T.rowActions.deleteUser}
-                                  onRestore={() => handleRestoreUser(user.id)}
-                                  onDelete={() => handleDeleteUser(user.id)}
-                                  isRestoring={restoreUserMutation.isPending}
-                                  isDeleting={deleteUserMutation.isPending}
-                                />
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </>
-                  )}
-
-                  {/* Teachers */}
-                  {activeFilter === "teachers" && (
-                    <>
-                      {renderHead(T.headers.teachers)}
-                      <tbody className="divide-y divide-slate-100">
-                        {paginatedUsers.length === 0
-                          ? renderEmptyRow(T.headers.teachers.length + 1)
-                          : paginatedUsers.map((user: TNewUserTypes) => (
-                            <tr
-                              key={user.id}
-                              onClick={() => viewArchiveTeacherCredentials(user.id)}
-                              className="cursor-pointer transition-colors hover:bg-slate-50"
-                            >
-                              <ArchiveTeacherTable
-                                id={user.id}
-                                firstName={user.firstName}
-                                middleName={user.middleName}
-                                lastName={user.lastName}
-                                username={user.username}
-                                status={user.status}
-                                onDelete={handleDeleteUser}
-                                onRestore={handleRestoreUser}
-                                isRestoring={restoreUserMutation.isPending}
-                                isDeleting={deleteUserMutation.isPending}
-                              />
-                            </tr>
-                          ))}
-                      </tbody>
-                    </>
-                  )}
-
-                  {/* Students */}
-                  {activeFilter === "students" && (
-                    <>
-                      {renderHead(T.headers.students)}
-                      <tbody className="divide-y divide-slate-100">
-                        {paginatedUsers.length === 0
-                          ? renderEmptyRow(T.headers.students.length + 1)
-                          : paginatedUsers.map((user: TStudentTypes) => (
-                            <tr
-                              key={user.id}
-                              onClick={() => handleArchiveStudentCredentials(user.id)}
-                              className="cursor-pointer transition-colors hover:bg-slate-50"
-                            >
-                              <ArchiveStudentTable
-                                id={user.id}
-                                firstName={user.firstName}
-                                middleName={user.middleName}
-                                lastName={user.lastName}
-                                course={user.course}
-                                section={user.section}
-                                year={user.year}
-                                status={user.status}
-                                onDelete={handleDeleteUser}
-                                onRestore={handleRestoreUser}
-                                isRestoring={restoreUserMutation.isPending}
-                                isDeleting={deleteUserMutation.isPending}
-                              />
-                            </tr>
-                          ))}
-                      </tbody>
-                    </>
-                  )}
+                  <thead>
+                    <tr className="sticky top-0 z-10 bg-slate-50">
+                      {headers.map((h) => (
+                        <th key={h} className={thClass}>{h}</th>
+                      ))}
+                      <th className={`${thClass} w-16`} />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {rowCount === 0 ? (
+                      <tr>
+                        <td colSpan={headers.length + 1}>
+                          <EmptyState icon={activeTab.icon} label={activeLabel} isEmpty={isEmpty} />
+                        </td>
+                      </tr>
+                    ) : activeFilter === "assets" ? (
+                      pageSlice(filteredAssets).map((asset) => (
+                        <tr key={asset.id} onClick={() => navigate({ to: "/home/item/$id", params: { id: asset.id } })} className="cursor-pointer transition-colors hover:bg-slate-50">
+                          <td className="px-5 py-3">
+                            <p className="font-medium text-slate-900">{asset.name}</p>
+                            <p className="font-mono text-xs text-slate-500">{asset.assetCode}</p>
+                          </td>
+                          <td className="px-5 py-3 text-slate-600">{asset.category?.name}</td>
+                          <td className="px-5 py-3 text-slate-600">{formatEnum(asset.condition)}</td>
+                          <td className="px-5 py-3 text-slate-600">{FormattedDateTime(asset.deletedAt ?? "")}</td>
+                          <td className="px-5 py-3 text-right">{restoreButton("assets", asset.id)}</td>
+                        </tr>
+                      ))
+                    ) : activeFilter === "accounts" ? (
+                      pageSlice(filteredUsers).map((user) => (
+                        <tr key={user.id} onClick={() => setViewUserId(user.id)} className="cursor-pointer transition-colors hover:bg-slate-50">
+                          <td className="px-5 py-3"><UserIdentity firstName={user.firstName} lastName={user.lastName} subtitle={user.employeeNo} /></td>
+                          <td className="px-5 py-3 text-slate-600">{user.email}</td>
+                          <td className="px-5 py-3"><RoleBadge role={user.role} /></td>
+                          <td className="px-5 py-3"><StatusBadge status={user.status} /></td>
+                          <td className="px-5 py-3 text-slate-600">{FormattedDateTime(user.deletedAt ?? "")}</td>
+                          <td className="px-5 py-3 text-right">{restoreButton("accounts", user.id)}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      pageSlice(filteredStudents).map((student) => (
+                        <tr key={student.id} onClick={() => setViewStudentId(student.id)} className="cursor-pointer transition-colors hover:bg-slate-50">
+                          <td className="px-5 py-3"><UserIdentity firstName={student.firstName} lastName={student.lastName} subtitle={student.studentNo} /></td>
+                          <td className="px-5 py-3 text-slate-600">{student.section?.code}</td>
+                          <td className="px-5 py-3"><StatusBadge status={student.status} /></td>
+                          <td className="px-5 py-3 text-slate-600">{FormattedDateTime(student.deletedAt ?? "")}</td>
+                          <td className="px-5 py-3 text-right">{restoreButton("students", student.id)}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
                 </table>
               )}
             </div>
           </div>
 
-          {/* Pagination footer */}
-          {!hasError && activeCount > 0 && (
+          {rowCount > 0 && (
             <Pagination
               totalPages={totalPages}
               currentPage={validCurrentPage}
-              totalItems={activeCount}
+              totalItems={rowCount}
               itemsPerPage={itemsPerPage}
-              handlePageChange={handlePageChange}
+              handlePageChange={setCurrentPage}
             />
           )}
         </section>
       </div>
 
-      {/* Modals */}
-      {isRestoreConfirmOpen && (
-        <PopUpModal {...T.modals.restoreItem}
-          onHandleCancelAction={handleCancelRestore} onHandleConfirmAction={handleConfirmRestoreItem}
-          isLoading={restoreItemMutation.isPending} />
+      {restoreTarget && (
+        <PopUpModal
+          title={T.modal.title}
+          label="restore"
+          noun={T.modal.noun[restoreTarget.kind]}
+          onHandleCancelAction={() => setRestoreTarget(null)}
+          onHandleConfirmAction={confirmRestore}
+          isLoading={isRestoring}
+        />
       )}
-      {isDeleteConfirmOpen && (
-        <PopUpModalDelete {...T.modals.deleteItem}
-          onHandleCancelAction={handleCancelDeleteItem} onHandleConfirmAction={handleConfirmDeleteItem} />
-      )}
-      {isUserRestoreConfirmOpen && (
-        <PopUpModal {...T.modals.restoreUser}
-          onHandleCancelAction={handleCancelUserRestore} onHandleConfirmAction={handleConfirmRestoreUser}
-          isLoading={restoreUserMutation.isPending} />
-      )}
-      {isUserDeleteConfirmOpen && (
-        <PopUpModalDelete {...T.modals.deleteUser}
-          onHandleCancelAction={handleCancelUserDelete} onHandleConfirmAction={handleConfirmDeleteUser} />
-      )}
-      {isStudentCredentialsOpen && selectedStudentId && (
-        <ArchiveStudentCredentialsPopup studentId={selectedStudentId} isOpen={isStudentCredentialsOpen} onClose={handleCloseStudentCredentials} />
-      )}
-      {isTeacherCredentialsOpen && selectedTeacherId && (
-        <ArchiveTeacherCredentialsPopup teacherId={selectedTeacherId} isOpen={isTeacherCredentialsOpen} onClose={handleCloseArchiveTeacherCredentials} />
-      )}
-      {isItemDetailsOpen && selectedItemId && (
-        <ArchiveItemDetailsPopup itemId={selectedItemId} isOpen={isItemDetailsOpen}
-          onClose={() => { setIsItemDetailsOpen(false); setSelectedItemId(null); }} />
-      )}
+      {viewUser && <ViewUserCredentials user={viewUser} isOpen onClose={() => setViewUserId(null)} />}
+      {viewStudent && <ViewStudentCredentials student={viewStudent} isOpen onClose={() => setViewStudentId(null)} />}
     </div>
   );
 }
