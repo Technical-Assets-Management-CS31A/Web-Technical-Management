@@ -8,15 +8,11 @@ import InventoryList from "./InventoryList";
 import UserManagement from "./UserManagement";
 import HistoryList from "./HistoryList";
 import Archive from "./Archive";
-import BorrowItem from "./BorrowItem";
-import PendingReservations from "./PendingReservations";
 import Settings from "./Settings";
-import Registration from "./Registration";
 import { ProtectedRoute, PublicRoute } from "../utils/middleware/accessAuth";
 import ViewItem from "../components/ViewItem";
 import ActivityLogs from "./ActivityLogs";
 import ActivityLogDetail from "./ActivityLogDetail";
-import BorrowLogs from "./BorrowLogs"
 import ActiveBorrowedItems from "./ActiveBorrowedItems";
 import RfidController from "./RfidController";
 import Reports from "./Reports";
@@ -76,28 +72,10 @@ const ArchiveRoute = createRoute({
     component: Archive,
 });
 
-const BorrowItemRoute = createRoute({
-    getParentRoute: () => homeRoute,
-    path: "borrow-item",
-    component: BorrowItem,
-});
-
-const PendingReservationRoute = createRoute({
-    getParentRoute: () => homeRoute,
-    path: "pending-reservations",
-    component: PendingReservations,
-});
-
 const SettingsRoute = createRoute({
     getParentRoute: () => homeRoute,
     path: "settings",
     component: Settings,
-});
-
-const RegistrationModuleRoute = createRoute({
-    getParentRoute: () => homeRoute,
-    path: "registration-module",
-    component: Registration,
 });
 
 export const ViewItemRoute = createRoute({
@@ -116,12 +94,6 @@ const ActivityLogDetailRoute = createRoute({
     getParentRoute: () => homeRoute,
     path: "activity-logs/$id",
     component: ActivityLogDetail
-})
-
-const BorrowLogsRoute = createRoute({
-    getParentRoute: () => homeRoute,
-    path: "borrow-logs",
-    component: BorrowLogs
 })
 
 const ActiveBorrowedItemsRoute = createRoute({
@@ -150,14 +122,10 @@ export const routeTree = Route.addChildren([
         UserManagementRoute,
         HistoryListRoute,
         ArchiveRoute,
-        BorrowItemRoute,
-        PendingReservationRoute,
         SettingsRoute,
-        RegistrationModuleRoute,
         ViewItemRoute,
         ActivityLogsRoute,
         ActivityLogDetailRoute,
-        BorrowLogsRoute,
         ActiveBorrowedItemsRoute,
         RfidControllerRoute,
         ReportsRoute
