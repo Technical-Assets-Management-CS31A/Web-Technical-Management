@@ -1,12 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRecentlyBorrowItems } from "./itemHooks";
-import type { THistoryBorrwedItems } from "../@types/types";
+import { useAllLoans } from "./loanHooks";
 
+// Loans still out: ACTIVE plus OVERDUE.
 export const useActiveBorrowCount = () => {
-    const { data } = useQuery(useRecentlyBorrowItems());
+    const { data } = useQuery(useAllLoans());
 
     if (!data) return 0;
 
-    const items = data as THistoryBorrwedItems[];
-    return items.filter((item) => item.status === "Borrowed").length;
+    return data.filter((loan) => loan.status === "ACTIVE" || loan.status === "OVERDUE").length;
 };
