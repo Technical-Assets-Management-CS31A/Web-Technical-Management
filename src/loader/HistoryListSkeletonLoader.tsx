@@ -48,7 +48,7 @@ const HistoryListSkeletonLoader = () => {
                                     <td className="py-3 px-6">
                                         <div className="h-4 w-20 bg-gray-200 rounded animate-pulse"></div>
                                     </td>
-                                    {/* Teacher Column */}
+                                    {/* Instructor Column */}
                                     <td className="py-3 px-6">
                                         <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
                                     </td>
