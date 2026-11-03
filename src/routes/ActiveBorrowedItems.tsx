@@ -1,39 +1,34 @@
-import React, { useMemo, useCallback, useEffect, useState } from "react";
-import no_image_svg from "../assets/no-image-svgrepo-com.svg";
-import { useRecentlyBorrowItems } from "../hooks/itemHooks";
+import { useMemo, useCallback, useEffect, useState } from "react";
+import { useAllLoans } from "../hooks/loanHooks";
 import { FormattedDateTime } from "../components/FormattedDateTime.ts";
-import { ViewRecentBorrowItems } from "../components/ViewRecentBorrowItems";
+import LoanDetailDialog from "../components/LoanDetailDialog";
 import SearchBar from "../components/SearchBar";
 import Pagination from "../components/Pagination";
 import ErrorTable from "../components/ErrorTables";
+import { SlugStatus } from "../components/SlugStatus";
 import {
+  AlarmClock,
   BookOpen,
-  CalendarClock,
   ChevronRight,
-  Hourglass,
   Info,
   PackageOpen,
-  RotateCcw,
   SearchX,
-  Users,
+  Truck,
+  TriangleAlert,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import type { TRecentBorrowItemProps } from "../@types/types";
-import { useReturnItemMutation } from "../query/patch/useReturnItemMutation";
-import { showToast } from "../components/AppToast";
-import ReturnConfirmationModal from "../components/ReturnConfirmationModal";
+import type { LoanDto } from "../@types/types";
 import ActiveBorrowedItemsSkeletonLoader from "../loader/ActiveBorrowedItemsSkeletonLoader";
 import { useActiveBorrowedItemsState } from "../states/active-borrowed-items-state";
-import { truncateRemarks } from "../components/truncateRemarks.tsx";
+import { formatEnum } from "../lib/utils";
+import { UserData } from "../utils/usersData/userData";
 import { ACTIVE_BORROWED_ITEMS_CONTENT as T } from "../constants/activeBorrowedItemsContent";
 
 const tableHeaders = T.tableHeaders;
 
 const itemsPerPage = 10;
-const HOUR_MS = 60 * 60 * 1000;
-const LONG_HELD_MS = 24 * HOUR_MS;
 
-type SortOrder = "newest" | "oldest";
+type SortOrder = "due" | "newest";
 
 const AVATAR_COLORS = [
   "bg-blue-100 text-blue-700",
@@ -57,24 +52,20 @@ const getAvatarColor = (name?: string) => {
   return AVATAR_COLORS[sum % AVATAR_COLORS.length];
 };
 
-const formatElapsed = (ms: number) => {
-  const minutes = Math.max(0, Math.floor(ms / 60000));
+const formatDuration = (ms: number) => {
+  const minutes = Math.floor(Math.abs(ms) / 60000);
   if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ${minutes % 60}m`;
   return `${Math.floor(hours / 24)}d ${hours % 24}h`;
 };
 
-// Pill color escalates the longer an item has been out
-const elapsedTone = (ms: number) => {
-  if (ms >= LONG_HELD_MS) return { pill: "bg-amber-50 text-amber-700 ring-amber-200", dot: "bg-amber-500" };
-  if (ms >= 4 * HOUR_MS) return { pill: "bg-blue-50 text-blue-700 ring-blue-200", dot: "bg-blue-500" };
-  return { pill: "bg-emerald-50 text-emerald-700 ring-emerald-200", dot: "bg-emerald-500" };
-};
-
-const lentTime = (item: TRecentBorrowItemProps) => (item.lentAt ? new Date(item.lentAt).getTime() : NaN);
+const time = (iso: string | null) => (iso ? new Date(iso).getTime() : NaN);
+const borrowerName = (loan: LoanDto) => loan.student?.fullName ?? loan.coordinator?.fullName ?? "—";
 
 export default function ActiveBorrowedItems() {
+  const viewer = UserData();
+  const isInstructor = viewer.role === "INSTRUCTOR";
   const {
     searchTerm,
     setSearchTerm,
@@ -82,65 +73,63 @@ export default function ActiveBorrowedItems() {
     setCurrentPage,
     selectedBorrowId,
     setSelectedBorrowId,
-    itemToReturn,
-    setItemToReturn,
   } = useActiveBorrowedItemsState();
 
-  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("due");
   const [now, setNow] = useState(() => Date.now());
 
-  // Tick every minute so "Time Out" stays live
+  // Tick every 30 s so the transit and due countdowns stay live
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 60_000);
+    const id = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(id);
   }, []);
 
-  const { data, isPending, isError } = useQuery(useRecentlyBorrowItems());
-  const returnItemMutation = useReturnItemMutation();
+  // Instructors see only the loans they approved
+  const { data, isPending, isError } = useQuery(useAllLoans(isInstructor ? { approvedBy: "me" } : {}));
 
-  const borrowedItems: TRecentBorrowItemProps[] = useMemo(
-    () => (Array.isArray(data) ? data.filter((item: TRecentBorrowItemProps) => item.status === "Borrowed") : []),
+  const loans: LoanDto[] = useMemo(
+    () => (Array.isArray(data) ? data.filter((loan) => loan.status === "ACTIVE" || loan.status === "OVERDUE") : []),
     [data],
   );
 
-  const stats = useMemo(() => {
-    const startOfToday = new Date(now).setHours(0, 0, 0, 0);
-    return [
-      { label: T.stats.active, value: borrowedItems.length, icon: PackageOpen, tone: "bg-blue-50 text-blue-600" },
-      {
-        label: T.stats.today,
-        value: borrowedItems.filter((item) => lentTime(item) >= startOfToday).length,
-        icon: CalendarClock,
-        tone: "bg-emerald-50 text-emerald-600",
-      },
-      {
-        label: T.stats.longHeld,
-        value: borrowedItems.filter((item) => now - lentTime(item) >= LONG_HELD_MS).length,
-        icon: Hourglass,
-        tone: "bg-amber-50 text-amber-600",
-      },
-      {
-        label: T.stats.borrowers,
-        value: new Set(borrowedItems.map((item) => item.borrowerFullName).filter(Boolean)).size,
-        icon: Users,
-        tone: "bg-violet-50 text-violet-600",
-      },
-    ];
-  }, [borrowedItems, now]);
+  const stats = useMemo(() => [
+    { label: T.stats.active, value: loans.length, icon: PackageOpen, tone: "bg-blue-50 text-blue-600" },
+    {
+      label: T.stats.inTransit,
+      value: loans.filter((loan) => loan.custodyState === "AWAITING_ARRIVAL").length,
+      icon: Truck,
+      tone: "bg-sky-50 text-sky-600",
+    },
+    {
+      label: T.stats.anomaly,
+      value: loans.filter((loan) => loan.custodyState === "ANOMALY").length,
+      icon: TriangleAlert,
+      tone: "bg-amber-50 text-amber-600",
+    },
+    {
+      label: T.stats.overdue,
+      value: loans.filter((loan) => loan.status === "OVERDUE").length,
+      icon: AlarmClock,
+      tone: "bg-rose-50 text-rose-600",
+    },
+  ], [loans]);
 
   const filteredData = useMemo(() => {
     const term = searchTerm.toLowerCase();
-    const matches = borrowedItems.filter(
-      (item) =>
-        item.item.itemName?.toLowerCase().includes(term) ||
-        item.item.serialNumber?.toLowerCase().includes(term) ||
-        item.borrowerFullName?.toLowerCase().includes(term),
+    const matches = loans.filter(
+      (loan) =>
+        loan.asset.name.toLowerCase().includes(term) ||
+        loan.asset.assetCode.toLowerCase().includes(term) ||
+        loan.loanNo.toLowerCase().includes(term) ||
+        borrowerName(loan).toLowerCase().includes(term) ||
+        (loan.student?.studentNo ?? "").toLowerCase().includes(term),
     );
-    return matches.sort((a, b) => {
-      const diff = (lentTime(a) || 0) - (lentTime(b) || 0);
-      return sortOrder === "newest" ? -diff : diff;
-    });
-  }, [borrowedItems, searchTerm, sortOrder]);
+    return matches.sort((a, b) =>
+      sortOrder === "due"
+        ? (time(a.dueAt) || 0) - (time(b.dueAt) || 0)
+        : (time(b.checkedOutAt) || 0) - (time(a.checkedOutAt) || 0),
+    );
+  }, [loans, searchTerm, sortOrder]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const validCurrentPage = totalPages > 0 ? Math.min(currentPage, totalPages) : 1;
@@ -152,35 +141,11 @@ export default function ActiveBorrowedItems() {
 
   const handlePageChange = useCallback((page: number) => setCurrentPage(page), [setCurrentPage]);
 
-  const handleReturnClick = useCallback(
-    (e: React.MouseEvent, item: TRecentBorrowItemProps) => {
-      e.stopPropagation();
-      if (!item.id) {
-        showToast.error(T.toast.errorTitle, T.toast.idNotFound);
-        return;
-      }
-      setItemToReturn(item);
-    },
-    [setItemToReturn],
-  );
-
-  const handleConfirmReturn = useCallback(async () => {
-    if (!itemToReturn?.id) return;
-    try {
-      await returnItemMutation.mutateAsync(itemToReturn.id);
-      showToast.success(T.toast.returnedTitle, T.toast.returnedMessage(itemToReturn.item.itemName));
-      setItemToReturn(null);
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : T.toast.returnFailed;
-      showToast.error(T.toast.returnFailedTitle, msg);
-    }
-  }, [itemToReturn, returnItemMutation, setItemToReturn]);
-
   if (isPending) return <ActiveBorrowedItemsSkeletonLoader />;
 
   const sortOptions: { id: SortOrder; label: string }[] = [
+    { id: "due", label: T.sort.due },
     { id: "newest", label: T.sort.newest },
-    { id: "oldest", label: T.sort.oldest },
   ];
 
   return (
@@ -190,7 +155,7 @@ export default function ActiveBorrowedItems() {
         {/* Header */}
         <header>
           <p className="text-xs font-medium uppercase tracking-wider text-blue-600">{T.eyebrow}</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{T.title}</h1>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{isInstructor ? T.instructorTitle : T.title}</h1>
           <p className="mt-1 text-sm text-slate-500">{T.description}</p>
         </header>
 
@@ -276,106 +241,87 @@ export default function ActiveBorrowedItems() {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {paginatedData.length > 0 ? (
-                        paginatedData.map((item, idx) => {
-                          const elapsed = now - lentTime(item);
-                          const hasElapsed = Number.isFinite(elapsed);
-                          const longHeld = hasElapsed && elapsed >= LONG_HELD_MS;
-                          const tone = elapsedTone(elapsed);
+                        paginatedData.map((loan) => {
+                          const untilDue = time(loan.dueAt) - now;
+                          const untilTransit = time(loan.transitDeadlineAt) - now;
+                          const isOverdue = loan.status === "OVERDUE";
+                          const name = borrowerName(loan);
 
                           return (
                             <tr
-                              key={item.id ?? idx}
-                              onClick={() => setSelectedBorrowId(item.id)}
+                              key={loan.id}
+                              onClick={() => setSelectedBorrowId(loan.id)}
                               className={`group cursor-pointer transition-colors ${
-                                longHeld ? "bg-amber-50/50 hover:bg-amber-50" : "hover:bg-slate-50"
+                                isOverdue ? "bg-rose-50/50 hover:bg-rose-50" : loan.custodyState === "ANOMALY" ? "bg-amber-50/50 hover:bg-amber-50" : "hover:bg-slate-50"
                               }`}
                             >
-                              {/* Item */}
+                              {/* Asset */}
                               <td className="px-5 py-3">
-                                <div className="flex items-center gap-3">
-                                  <img
-                                    src={typeof item.item.image === "string" ? item.item.image : no_image_svg}
-                                    alt={item.item.itemName}
-                                    className="h-10 w-10 shrink-0 rounded-lg border border-slate-200 bg-slate-50 object-cover transition-transform group-hover:scale-105"
-                                    onError={(e) => { e.currentTarget.src = no_image_svg; }}
-                                  />
-                                  <div className="min-w-0">
-                                    <p className="font-medium text-slate-900">{item.item.itemName ?? "—"}</p>
-                                    <p className="font-mono text-xs text-slate-500">{item.item.serialNumber ?? "—"}</p>
-                                  </div>
-                                </div>
+                                <p className="font-medium text-slate-900">{loan.asset.name}</p>
+                                <p className="font-mono text-xs text-slate-500">{loan.asset.assetCode} · {loan.loanNo}</p>
                               </td>
 
                               {/* Borrower */}
                               <td className="px-5 py-3">
                                 <div className="flex items-center gap-3">
-                                  <span
-                                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${getAvatarColor(item.borrowerFullName)}`}
-                                  >
-                                    {getInitials(item.borrowerFullName)}
-                                  </span>
+                                  {loan.photoUrl ? (
+                                    <img src={loan.photoUrl} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
+                                  ) : (
+                                    <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${getAvatarColor(name)}`}>
+                                      {getInitials(name)}
+                                    </span>
+                                  )}
                                   <div className="min-w-0">
-                                    <p className="text-slate-900">{item.borrowerFullName ?? "—"}</p>
+                                    <p className="text-slate-900">{name}</p>
                                     <p className="text-xs text-slate-500">
-                                      {item.teacherFullName ? `${T.teacherPrefix} ${item.teacherFullName}` : T.noTeacher}
+                                      {loan.type === "EVENT" ? T.eventLoan(loan.event?.title) : loan.student?.sectionCode ?? "—"}
                                     </p>
                                   </div>
                                 </div>
                               </td>
 
+                              {/* Instructor */}
+                              <td className="px-5 py-3 text-slate-600">{loan.approvedBy?.fullName ?? <span className="text-slate-400">—</span>}</td>
+
                               {/* Room */}
                               <td className="px-5 py-3">
-                                {item.room ? (
+                                {loan.destinationRoom ? (
                                   <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
-                                    {item.room}
+                                    {loan.destinationRoom.code}
                                   </span>
                                 ) : (
                                   <span className="text-slate-400">—</span>
                                 )}
                               </td>
 
-                              {/* Lent At */}
-                              <td className="px-5 py-3 text-slate-600">
-                                {item.lentAt ? FormattedDateTime(item.lentAt) : <span className="text-slate-400">—</span>}
-                              </td>
+                              {/* Checked out */}
+                              <td className="px-5 py-3 text-slate-600">{FormattedDateTime(loan.checkedOutAt)}</td>
 
-                              {/* Time Out */}
+                              {/* Custody */}
                               <td className="px-5 py-3">
-                                {hasElapsed ? (
-                                  <div className="flex items-center gap-2">
-                                    <span
-                                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium tabular-nums ring-1 ring-inset ${tone.pill}`}
-                                    >
-                                      <span className={`h-1.5 w-1.5 rounded-full ${tone.dot}`} />
-                                      {formatElapsed(elapsed)}
-                                    </span>
-                                    {longHeld && (
-                                      <span className="text-xs font-medium text-amber-700">{T.longHeldBadge}</span>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <span className="text-slate-400">—</span>
+                                <span className={`rounded px-2 py-0.5 text-xs font-medium ${SlugStatus(loan.custodyState)}`}>
+                                  {formatEnum(loan.custodyState)}
+                                </span>
+                                {loan.custodyState === "AWAITING_ARRIVAL" && Number.isFinite(untilTransit) && (
+                                  <span className={`ml-2 text-xs tabular-nums ${untilTransit < 0 ? "text-amber-700" : "text-slate-500"}`}>
+                                    {untilTransit < 0 ? T.transitLate(formatDuration(untilTransit)) : T.transitLeft(formatDuration(untilTransit))}
+                                  </span>
                                 )}
                               </td>
 
-                              {/* Remarks */}
-                              <td className="max-w-48 truncate px-5 py-3 text-slate-500">
-                                {truncateRemarks(item.remarks || "-")}
+                              {/* Due */}
+                              <td className="px-5 py-3">
+                                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium tabular-nums ring-1 ring-inset ${
+                                  isOverdue ? "bg-rose-50 text-rose-700 ring-rose-200" : untilDue < 15 * 60_000 ? "bg-amber-50 text-amber-700 ring-amber-200" : "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                                }`}>
+                                  <span className={`h-1.5 w-1.5 rounded-full ${isOverdue ? "bg-rose-500" : untilDue < 15 * 60_000 ? "bg-amber-500" : "bg-emerald-500"}`} />
+                                  {isOverdue ? T.overdueBy(formatDuration(untilDue)) : T.dueIn(formatDuration(untilDue))}
+                                </span>
                               </td>
 
-                              {/* Actions */}
+                              {/* Open */}
                               <td className="px-5 py-3">
-                                <div className="flex items-center justify-end gap-2">
-                                  <button
-                                    onClick={(e) => handleReturnClick(e, item)}
-                                    className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-amber-300 hover:bg-amber-50 hover:text-amber-700"
-                                    title={T.returnButtonTitle}
-                                  >
-                                    <RotateCcw className="h-3.5 w-3.5 transition-transform group-hover:-rotate-45" />
-                                    {T.returnButton}
-                                  </button>
-                                  <ChevronRight className="h-4 w-4 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-slate-500" />
-                                </div>
+                                <ChevronRight className="ml-auto h-4 w-4 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-slate-500" />
                               </td>
                             </tr>
                           );
@@ -423,21 +369,8 @@ export default function ActiveBorrowedItems() {
 
       {/* Detail Modal */}
       {selectedBorrowId && (
-        <ViewRecentBorrowItems
-          itemId={selectedBorrowId}
-          isOpen={!!selectedBorrowId}
-          onClose={() => setSelectedBorrowId(null)}
-        />
+        <LoanDetailDialog loanId={selectedBorrowId} onClose={() => setSelectedBorrowId(null)} />
       )}
-
-      {/* Return Confirmation Modal */}
-      <ReturnConfirmationModal
-        isOpen={!!itemToReturn}
-        item={itemToReturn}
-        onConfirm={handleConfirmReturn}
-        onCancel={() => setItemToReturn(null)}
-        isLoading={returnItemMutation.isPending}
-      />
     </div>
   );
 }
