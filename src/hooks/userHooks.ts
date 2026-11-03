@@ -3,215 +3,255 @@ import {
   useQueryClient,
   useMutation,
 } from "@tanstack/react-query";
+import { changePasswordApi, meApi } from "../api/auth_api";
 import {
+  addAuthCardApi,
+  allSectionsApi,
+  allStudentsApi,
   allUsersApi,
-  allUsersArchiveApi,
-  archiveUserApi,
+  cancelKioskSessionApi,
+  clearMarkApi,
+  clearWarningApi,
+  createSectionApi,
+  createStudentApi,
+  createUserApi,
+  deleteStudentApi,
   deleteUserApi,
-  getArchiveUserInfo,
-  userLoggedIn,
-  resetPasswordUser,
-  registerUserApi,
+  getKioskSessionApi,
+  getStudentApi,
+  getStudentStandingApi,
+  getUserApi,
+  importStudentsApi,
+  liftFreezeApi,
+  liftHoldApi,
+  resetTermWarningsApi,
+  restoreStudentApi,
   restoreUserApi,
+  settleLiabilityApi,
+  startEnrollmentApi,
+  updateAuthCardApi,
   updateStudentApi,
-  updateTeacherApi,
   updateUserApi,
-  importUser,
-  blockUserApi,
-  unblockUserApi,
-  createStudentRfidSessionApi,
-  getStudentRfidSessionApi,
-  cancelStudentRfidSessionApi,
 } from "../api/user_api";
 
-export const useAllUsers = () => {
-  return queryOptions({
-    queryFn: allUsersApi,
-    queryKey: ["users"],
-    staleTime: 0,
-    gcTime: 5 * 60 * 1000 
-  });
-};
+export const USERS_KEY = ["users"] as const;
+export const STUDENTS_KEY = ["students"] as const;
+export const SECTIONS_KEY = ["sections"] as const;
 
-export const useAllUsersArchive = () => {
-  return queryOptions({
-    queryFn: allUsersArchiveApi,
-    queryKey: ["archiveusers"],
-    staleTime: 5 * 60 * 1000
-  });
-};
-
-export const useArchiveUser = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: archiveUserApi,
-    mutationKey: ["archive"],
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["teachers"] });
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-    },
-  });
-};
-
-export const useDeleteUser = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: deleteUserApi,
-    mutationKey: ["archiveusers"],
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["archiveusers"] });
-    },
-  });
-};
-
-export const useGetArchiveUserInfo = (id: string) => {
-  return queryOptions({
-    queryFn: () => getArchiveUserInfo(id),
-    queryKey: ["ArchiveUsers", id],
-    staleTime: 0, 
-    gcTime: 5 * 60 * 1000
-  });
-};
+// ── Signed-in account ────────────────────────────────────────────────────────
 
 export const useLoggedInUser = () => {
   return queryOptions({
-    queryFn: userLoggedIn,
+    queryFn: meApi,
     queryKey: ["me"],
     staleTime: 5 * 60 * 1000
   });
 };
 
-export const useResetUserPassword = () => {
-  const queryClient = useQueryClient();
+export const useChangePassword = () => {
   return useMutation({
-    mutationFn: resetPasswordUser,
+    mutationFn: changePasswordApi,
     mutationKey: ["change-password"],
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-    },
   });
 };
 
-export const useRegisterUser = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: registerUserApi,
-    mutationKey: ["register"],
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-    },
+// ── Staff and instructor accounts ────────────────────────────────────────────
+
+export const useAllUsers = (includeDeleted = false) => {
+  return queryOptions({
+    queryFn: () => allUsersApi({ includeDeleted }),
+    queryKey: [...USERS_KEY, { includeDeleted }],
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000
   });
 };
 
-export const useRestoreUser = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: restoreUserApi,
-    mutationKey: ["restore"],
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["archiveusers"] });
-    },
+export const useGetUser = (id: string) => {
+  return queryOptions({
+    queryFn: () => getUserApi(id),
+    queryKey: [...USERS_KEY, id],
+    enabled: !!id,
   });
 };
 
-export const useUpdateStudent = () => {
+const useInvalidateUsers = () => {
   const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: updateStudentApi,
-    mutationKey: ["profile"],
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-    },
-  });
+  return () => {
+    queryClient.invalidateQueries({ queryKey: USERS_KEY });
+    queryClient.invalidateQueries({ queryKey: ["me"] });
+  };
 };
 
-export const useUpdateTeacher = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: updateTeacherApi,
-    mutationKey: ["profile"],
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-    },
-  });
+export const useCreateUser = () => {
+  const onSuccess = useInvalidateUsers();
+  return useMutation({ mutationFn: createUserApi, mutationKey: ["create-user"], onSuccess });
 };
 
 export const useUpdateUser = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: updateUserApi,
-    mutationKey: ["admin-or-staff"],
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["me"] });
-    },
-  });
+  const onSuccess = useInvalidateUsers();
+  return useMutation({ mutationFn: updateUserApi, mutationKey: ["update-user"], onSuccess });
 };
 
-export const useImportUser = () => {
-  const querClient = useQueryClient();
-  return useMutation({
-    mutationFn: importUser,
-    mutationKey: ["students"],
-    onSuccess: () => {
-      querClient.invalidateQueries({ queryKey: ["students"] });
-    },
-  });
+export const useDeleteUser = () => {
+  const onSuccess = useInvalidateUsers();
+  return useMutation({ mutationFn: deleteUserApi, mutationKey: ["delete-user"], onSuccess });
 };
 
-export const useBlockUser = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { reason: string; isPermanent: boolean; blockedUntil?: string } }) =>
-      blockUserApi(id, data),
-    mutationKey: ["block-user"],
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-      queryClient.invalidateQueries({ queryKey: ["teachers"] });
-    },
-  });
+export const useRestoreUser = () => {
+  const onSuccess = useInvalidateUsers();
+  return useMutation({ mutationFn: restoreUserApi, mutationKey: ["restore-user"], onSuccess });
 };
 
-export const useUnblockUser = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: unblockUserApi,
-    mutationKey: ["unblock-user"],
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-      queryClient.invalidateQueries({ queryKey: ["teachers"] });
-    },
-  });
+export const useAddAuthCard = () => {
+  const onSuccess = useInvalidateUsers();
+  return useMutation({ mutationFn: addAuthCardApi, mutationKey: ["auth-card"], onSuccess });
 };
 
-export const useCreateStudentRfidSession = () => {
-  return useMutation({
-    mutationFn: createStudentRfidSessionApi,
-    mutationKey: ["studentRfidSession"],
-  });
+export const useUpdateAuthCard = () => {
+  const onSuccess = useInvalidateUsers();
+  return useMutation({ mutationFn: updateAuthCardApi, mutationKey: ["auth-card"], onSuccess });
 };
 
-export const useGetStudentRfidSession = (sessionId: string) => {
+export const useLiftFreeze = () => {
+  const onSuccess = useInvalidateUsers();
+  return useMutation({ mutationFn: liftFreezeApi, mutationKey: ["lift-freeze"], onSuccess });
+};
+
+// ── Students ─────────────────────────────────────────────────────────────────
+
+export const useAllStudents = (includeDeleted = false) => {
   return queryOptions({
-    queryFn: () => getStudentRfidSessionApi(sessionId),
-    queryKey: ["studentRfidSession", sessionId],
+    queryFn: () => allStudentsApi({ includeDeleted }),
+    queryKey: [...STUDENTS_KEY, { includeDeleted }],
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000
+  });
+};
+
+export const useGetStudent = (id: string) => {
+  return queryOptions({
+    queryFn: () => getStudentApi(id),
+    queryKey: [...STUDENTS_KEY, id],
+    enabled: !!id,
+  });
+};
+
+const useInvalidateStudents = () => {
+  const queryClient = useQueryClient();
+  return () => {
+    queryClient.invalidateQueries({ queryKey: STUDENTS_KEY });
+  };
+};
+
+export const useCreateStudent = () => {
+  const onSuccess = useInvalidateStudents();
+  return useMutation({ mutationFn: createStudentApi, mutationKey: ["create-student"], onSuccess });
+};
+
+export const useUpdateStudent = () => {
+  const onSuccess = useInvalidateStudents();
+  return useMutation({ mutationFn: updateStudentApi, mutationKey: ["update-student"], onSuccess });
+};
+
+export const useDeleteStudent = () => {
+  const onSuccess = useInvalidateStudents();
+  return useMutation({ mutationFn: deleteStudentApi, mutationKey: ["delete-student"], onSuccess });
+};
+
+export const useRestoreStudent = () => {
+  const onSuccess = useInvalidateStudents();
+  return useMutation({ mutationFn: restoreStudentApi, mutationKey: ["restore-student"], onSuccess });
+};
+
+export const useImportStudents = () => {
+  const onSuccess = useInvalidateStudents();
+  return useMutation({ mutationFn: importStudentsApi, mutationKey: ["import-students"], onSuccess });
+};
+
+export const useAllSections = () => {
+  return queryOptions({
+    queryFn: allSectionsApi,
+    queryKey: SECTIONS_KEY,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useCreateSection = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createSectionApi,
+    mutationKey: ["create-section"],
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: SECTIONS_KEY }),
+  });
+};
+
+// ── Standing and penalties ───────────────────────────────────────────────────
+
+export const useStudentStanding = (id: string) => {
+  return queryOptions({
+    queryFn: () => getStudentStandingApi(id),
+    queryKey: ["standing", id],
+    enabled: !!id,
+    staleTime: 0,
+  });
+};
+
+// Resolving any penalty changes the student's standing and counters.
+const useInvalidateStanding = () => {
+  const queryClient = useQueryClient();
+  return () => {
+    queryClient.invalidateQueries({ queryKey: ["standing"] });
+    queryClient.invalidateQueries({ queryKey: STUDENTS_KEY });
+  };
+};
+
+export const useClearWarning = () => {
+  const onSuccess = useInvalidateStanding();
+  return useMutation({ mutationFn: clearWarningApi, mutationKey: ["clear-warning"], onSuccess });
+};
+
+export const useClearMark = () => {
+  const onSuccess = useInvalidateStanding();
+  return useMutation({ mutationFn: clearMarkApi, mutationKey: ["clear-mark"], onSuccess });
+};
+
+export const useLiftHold = () => {
+  const onSuccess = useInvalidateStanding();
+  return useMutation({ mutationFn: liftHoldApi, mutationKey: ["lift-hold"], onSuccess });
+};
+
+export const useSettleLiability = () => {
+  const onSuccess = useInvalidateStanding();
+  return useMutation({ mutationFn: settleLiabilityApi, mutationKey: ["settle-liability"], onSuccess });
+};
+
+export const useResetTermWarnings = () => {
+  const onSuccess = useInvalidateStanding();
+  return useMutation({ mutationFn: resetTermWarningsApi, mutationKey: ["reset-term"], onSuccess });
+};
+
+// ── Fingerprint enrollment ───────────────────────────────────────────────────
+
+export const useStartEnrollment = () => {
+  return useMutation({
+    mutationFn: startEnrollmentApi,
+    mutationKey: ["enrollment"],
+  });
+};
+
+export const useGetKioskSession = (sessionId: string) => {
+  return queryOptions({
+    queryFn: () => getKioskSessionApi(sessionId),
+    queryKey: ["kioskSession", sessionId],
     enabled: !!sessionId,
     staleTime: 0,
     refetchInterval: 2000,
   });
 };
 
-export const useCancelStudentRfidSession = () => {
+export const useCancelKioskSession = () => {
   return useMutation({
-    mutationFn: cancelStudentRfidSessionApi,
-    mutationKey: ["studentRfidSession"],
+    mutationFn: cancelKioskSessionApi,
+    mutationKey: ["kioskSession"],
   });
 };
