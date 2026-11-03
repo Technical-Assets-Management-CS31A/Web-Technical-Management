@@ -4,29 +4,31 @@ import EditUser from "../components/EditUser";
 import SearchBar from "../components/SearchBar";
 import { SelectUserStatus } from "../components/SelectUserStatus";
 import { UserSkeletonLoader } from "../loader/UserSkeletonLoader";
-import { useArchiveUser, useBlockUser, useUnblockUser } from "../hooks/userHooks";
+import { useDeleteUser } from "../hooks/userHooks";
 import UserTable from "../components/UserTable";
 import ErrorTable from "../components/ErrorTables";
 import PopUpModal from "../components/PopUpModal";
-import BlockUserModal from "../components/BlockUserModal";
 import ViewUserCredentials from "../components/ViewUserCredentials";
 import { showToast } from "../components/AppToast";
+import { getErrorMessage } from "../components/form/FormKit";
 import { useAllUsersManagement, useFilteredUser } from "../data/user-management-data";
 import { useAllUsersManagementState } from "../states/user-management-state";
-import RegistrationModule from "../components/RegistrationModule";
+import StudentRoster from "../components/StudentRoster";
+import { UserData, canManageAccounts } from "../utils/usersData/userData";
 import { USER_MANAGEMENT_CONTENT as T } from "../constants/userManagementContent";
 import {
   Users,
   Search,
   Shield,
-  ShieldCheck,
+  Snowflake,
   GraduationCap,
   Info,
   UserPlus,
-  Wifi,
+  Presentation,
 } from "lucide-react";
 
 export default function UserManagement() {
+  const viewer = UserData();
   const {
     activeTab,
     setActiveTab,
@@ -36,52 +38,41 @@ export default function UserManagement() {
     setIsEditUserOpen,
     isViewCredentialsOpen,
     setIsViewCredentialsOpen,
-    isArchiveModalOpen,
-    setIsArchiveModalOpen,
-    isBlockModalOpen,
-    setIsBlockModalOpen,
+    isDeleteModalOpen,
+    setIsDeleteModalOpen,
     selectedUserId,
     setSelectedUserId,
-    archiveUserId,
-    setArchiveUserId,
-    blockUserId,
-    setBlockUserId,
+    deleteUserId,
+    setDeleteUserId,
   } = useAllUsersManagementState();
 
-  const { mutate, isPending: isArchiving } = useArchiveUser();
-  const { mutate: blockUser, isPending: isBlocking } = useBlockUser();
-  const { mutate: unblockUser } = useUnblockUser();
+  const { mutate, isPending: isDeleting } = useDeleteUser();
   const { users, isPending, isError } = useAllUsersManagement();
-  const { filteredUser, setSearchUser, setSelectedStatus, selectedRole, setSelectedRole } = useFilteredUser();
+  const { filteredUser, setSearchUser, setSelectedStatus, selectedRole, setSelectedRole } = useFilteredUser(users);
 
   const selectedUser = useMemo(
     () => users.find((u) => u.id === selectedUserId),
     [users, selectedUserId],
   );
 
-  const blockUserData = useMemo(
-    () => users.find((u) => u.id === blockUserId),
-    [users, blockUserId],
-  );
-
-  const confirmArchiveUser = useCallback(() => {
-    mutate(archiveUserId, {
-      onSuccess: (d) => {
-        setIsArchiveModalOpen(false);
-        setArchiveUserId("");
-        showToast.success(T.toast.archivedTitle, d.message);
+  const confirmDeleteUser = useCallback(() => {
+    mutate(deleteUserId, {
+      onSuccess: () => {
+        showToast.success(T.toast.deletedTitle, T.toast.deletedMessage);
       },
-      onError: () => {
-        setIsArchiveModalOpen(false);
-        setArchiveUserId("");
-        showToast.error(T.toast.actionFailed, T.toast.cannotArchiveSelf);
+      onError: (err) => {
+        showToast.error(T.toast.actionFailed, getErrorMessage(err, T.toast.deleteFailed));
+      },
+      onSettled: () => {
+        setIsDeleteModalOpen(false);
+        setDeleteUserId("");
       },
     });
-  }, [archiveUserId, mutate, setIsArchiveModalOpen, setArchiveUserId]);
+  }, [deleteUserId, mutate, setIsDeleteModalOpen, setDeleteUserId]);
 
-  const cancelArchiveUser = () => {
-    setIsArchiveModalOpen(false);
-    setArchiveUserId("");
+  const cancelDeleteUser = () => {
+    setIsDeleteModalOpen(false);
+    setDeleteUserId("");
   };
 
   const handleViewUserCredentials = (id: string) => {
@@ -89,72 +80,23 @@ export default function UserManagement() {
     setIsViewCredentialsOpen(true);
   };
 
-  const handleBlockUser = (id: string) => {
-    setBlockUserId(id);
-    setIsBlockModalOpen(true);
-  };
-
-  const handleUnblockUser = (id: string) => {
-    unblockUser(id, {
-      onSuccess: () => {
-        showToast.success(T.toast.unblockedTitle, T.toast.unblockedMessage);
-      },
-      onError: (error: any) => {
-        showToast.error(T.toast.actionFailed, error?.response?.data?.message || T.toast.unblockFailed);
-      },
-    });
-  };
-
-  const confirmBlockUser = (data: { reason: string; isPermanent: boolean; blockedUntil?: string }) => {
-    blockUser(
-      { id: blockUserId, data },
-      {
-        onSuccess: () => {
-          setIsBlockModalOpen(false);
-          setBlockUserId("");
-          showToast.success(T.toast.blockedTitle, T.toast.blockedMessage);
-        },
-        onError: (error: any) => {
-          setIsBlockModalOpen(false);
-          setBlockUserId("");
-          showToast.error(T.toast.actionFailed, error?.response?.data?.message || T.toast.blockFailed);
-        },
-      },
-    );
-  };
-
-  const cancelBlockUser = () => {
-    setIsBlockModalOpen(false);
-    setBlockUserId("");
-  };
-
-  const tableUsers = filteredUser.filter(
-    (user) => (user.userRole === "Admin" || user.userRole === "Staff") && user.status?.toLowerCase() !== "archived",
-  );
-
-  const staffUsers = users.filter((u) => u.userRole === "Staff" && u.status?.toLowerCase() !== "archived");
-  const adminUsers = users.filter((u) => u.userRole === "Admin" && u.status?.toLowerCase() !== "archived");
-  const staffOnlineCount = staffUsers.filter((u) => u.status?.toLowerCase() === "online").length;
-  const adminOnlineCount = adminUsers.filter((u) => u.status?.toLowerCase() === "online").length;
-  const totalAccounts = staffUsers.length + adminUsers.length;
-  const totalOnline = staffOnlineCount + adminOnlineCount;
-  const totalBlocked = [...staffUsers, ...adminUsers].filter((u) => u.isBlocked).length;
+  const liveUsers = users.filter((u) => !u.deletedAt);
+  const instructors = liveUsers.filter((u) => u.role === "INSTRUCTOR");
+  const staff = liveUsers.filter((u) => u.role !== "INSTRUCTOR");
+  const frozenCount = instructors.filter((u) => u.isFrozen).length;
+  const noCardCount = instructors.filter((u) => !u.authCards?.some((c) => c.status === "ACTIVE")).length;
+  const activeCount = (list: typeof users) => list.filter((u) => u.status === "ACTIVE").length;
 
   const stats = [
-    { label: T.stats.total, value: totalAccounts, sub: T.stats.blockedSub(totalBlocked), icon: Users },
-    { label: T.stats.admins, value: adminUsers.length, sub: T.stats.onlineSub(adminOnlineCount), icon: ShieldCheck },
-    { label: T.stats.staff, value: staffUsers.length, sub: T.stats.onlineSub(staffOnlineCount), icon: Shield },
-    {
-      label: T.stats.online,
-      value: totalOnline,
-      sub: T.stats.onlineShare(totalAccounts ? Math.round((totalOnline / totalAccounts) * 100) : 0),
-      icon: Wifi,
-    },
+    { label: T.stats.total, value: liveUsers.length, sub: T.stats.activeSub(activeCount(liveUsers)), icon: Users },
+    { label: T.stats.staff, value: staff.length, sub: T.stats.activeSub(activeCount(staff)), icon: Shield },
+    { label: T.stats.instructors, value: instructors.length, sub: T.stats.noCardSub(noCardCount), icon: Presentation },
+    { label: T.stats.frozen, value: frozenCount, sub: T.stats.frozenSub, icon: Snowflake },
   ];
 
   const tabs = [
-    { id: "staff" as const, label: T.tabs.staff, icon: ShieldCheck },
-    { id: "registered" as const, label: T.tabs.registered, icon: GraduationCap },
+    { id: "accounts" as const, label: T.tabs.accounts, icon: Users },
+    { id: "students" as const, label: T.tabs.students, icon: GraduationCap },
   ];
 
   if (isPending) return <UserSkeletonLoader />;
@@ -170,14 +112,14 @@ export default function UserManagement() {
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{T.title}</h1>
             <p className="mt-1 max-w-xl text-sm text-slate-500">{T.description}</p>
           </div>
-          <button
+          {canManageAccounts(viewer.role) && <button
             type="button"
             onClick={() => setIsAddUserOpen(true)}
             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-blue-600/20 transition-all hover:bg-blue-700 active:scale-[0.98]"
           >
             <UserPlus className="h-4 w-4" />
             {T.newUser}
-          </button>
+          </button>}
         </header>
 
         {/* Summary */}
@@ -218,15 +160,15 @@ export default function UserManagement() {
           })}
         </div>
 
-        {/* ── Staff & Admins tab ── */}
-        {activeTab === "staff" && (
+        {/* ── Accounts tab ── */}
+        {activeTab === "accounts" && (
           <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
 
             {/* Toolbar */}
             <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="text-base font-semibold text-slate-900">{T.tableTitle}</h2>
-                <p className="mt-0.5 text-xs text-slate-500">{T.countLabel(tableUsers.length)}</p>
+                <p className="mt-0.5 text-xs text-slate-500">{T.countLabel(filteredUser.length)}</p>
               </div>
 
               <div className="flex flex-col flex-wrap items-stretch gap-2 sm:flex-row sm:items-center lg:justify-end">
@@ -261,7 +203,7 @@ export default function UserManagement() {
               <div className="max-h-[60vh] min-h-[45vh] overflow-y-auto">
                 {isError ? (
                   <ErrorTable />
-                ) : tableUsers.length === 0 ? (
+                ) : filteredUser.length === 0 ? (
                   <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
                     <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
                       <Search className="h-5 w-5 text-slate-400" />
@@ -282,34 +224,24 @@ export default function UserManagement() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {tableUsers.map((user) => (
+                      {filteredUser.map((user) => (
                         <tr
                           key={user.id}
                           onClick={() => handleViewUserCredentials(user.id)}
                           className={`group cursor-pointer transition-colors ${
-                            user.isBlocked ? "bg-rose-50/40 hover:bg-rose-50/70" : "hover:bg-slate-50"
+                            user.isFrozen ? "bg-sky-50/40 hover:bg-sky-50/70" : "hover:bg-slate-50"
                           }`}
                         >
                           <UserTable
-                            id={user.id}
-                            firstName={user.firstName}
-                            lastName={user.lastName}
-                            username={user.username}
-                            email={user.email}
-                            userRole={user.userRole}
-                            status={user.status}
-                            isBlocked={user.isBlocked}
-                            onSetEditUserId={(userId) => {
+                            user={user}
+                            onEdit={(userId) => {
                               setSelectedUserId(userId);
                               setIsEditUserOpen(true);
                             }}
-                            onSetIsEditUserOpen={setIsEditUserOpen}
-                            onMutate={(userId) => {
-                              setArchiveUserId(userId);
-                              setIsArchiveModalOpen(true);
+                            onDelete={(userId) => {
+                              setDeleteUserId(userId);
+                              setIsDeleteModalOpen(true);
                             }}
-                            onBlockUser={handleBlockUser}
-                            onUnblockUser={handleUnblockUser}
                           />
                         </tr>
                       ))}
@@ -327,10 +259,8 @@ export default function UserManagement() {
           </section>
         )}
 
-        {/* ── Registered Users tab ── */}
-        {activeTab === "registered" && (
-          <RegistrationModule embedded />
-        )}
+        {/* ── Students tab ── */}
+        {activeTab === "students" && <StudentRoster />}
       </div>
 
       {/* Modals */}
@@ -345,25 +275,15 @@ export default function UserManagement() {
         />
       )}
 
-      {isArchiveModalOpen && (
+      {isDeleteModalOpen && (
         <PopUpModal
-          title={T.archiveModal.title}
-          label={T.archiveModal.label}
-          noun={T.archiveModal.noun}
-          destination={T.archiveModal.destination}
-          onHandleCancelAction={cancelArchiveUser}
-          onHandleConfirmAction={confirmArchiveUser}
-          isLoading={isArchiving}
-        />
-      )}
-
-      {blockUserData && (
-        <BlockUserModal
-          isOpen={isBlockModalOpen}
-          onClose={cancelBlockUser}
-          onConfirm={confirmBlockUser}
-          userName={`${blockUserData.firstName} ${blockUserData.lastName}`}
-          isLoading={isBlocking}
+          title={T.deleteModal.title}
+          label={T.deleteModal.label}
+          noun={T.deleteModal.noun}
+          destination={T.deleteModal.destination}
+          onHandleCancelAction={cancelDeleteUser}
+          onHandleConfirmAction={confirmDeleteUser}
+          isLoading={isDeleting}
         />
       )}
 
