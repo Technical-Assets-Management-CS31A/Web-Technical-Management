@@ -7,9 +7,10 @@ import {
   MdInventory,
   MdDashboardCustomize,
   MdAssessment,
+  MdMeetingRoom,
 } from "react-icons/md";
 import { BiLogoSass } from "react-icons/bi";
-import { BsPersonCircle, BsClipboardCheck } from "react-icons/bs";
+import { BsPersonCircle, BsClipboardCheck, BsPersonBadge } from "react-icons/bs";
 import { FaWifi } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import SidebarSkeletonLoader from "../loader/SidebarSkeletonLoader";
@@ -49,6 +50,8 @@ export default function Sidebar() {
 
   const administrativeLinks: NavLink[] = [
     { label: "People", link: "/home/user-management", icon: CiUser },
+    { label: "Auth cards", link: "/home/auth-cards", icon: BsPersonBadge },
+    { label: "Rooms & stations", link: "/home/rooms", icon: MdMeetingRoom },
     { label: "Reports", link: "/home/reports", icon: MdAssessment },
     { label: "Deleted records", link: "/home/archive-table", icon: MdInventory },
   ];
