@@ -35,6 +35,7 @@ export const LOGIN_CONTENT = {
   errors: {
     inactive: "Your account is inactive. Contact an administrator.",
     invalid: "Invalid email or password.",
+    staffOnly: "This sign-in is for staff and instructor accounts. Students borrow at the kiosk with their RFID card.",
   },
   footer: {
     copyright: "© 2025 ACLC College of Mandaue. All rights reserved.",

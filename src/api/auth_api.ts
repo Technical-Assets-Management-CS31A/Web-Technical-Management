@@ -7,12 +7,14 @@ export const LoginUserApi = async (data: LoginRequest) => {
   return response.data;
 };
 
+// The local session ends even if the server call fails, so a dead backend cannot keep someone signed in.
 export const logoutUserApi = async () => {
-  const response = await api.post("/auth/logout");
-  if (response) {
+  try {
+    const response = await api.post("/auth/logout");
+    return response.data;
+  } finally {
     removeToken();
   }
-  return response.data;
 };
 
 export const meApi = async (): Promise<UserDto> => {
