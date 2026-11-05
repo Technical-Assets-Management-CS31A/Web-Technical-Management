@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useLoggedInUser } from "../../hooks/userHooks";
 import type { UserDto, UserRole } from "../../@types/types";
+import { USER_ROLES } from "../../components/form/accountForm";
 
 type TSignedInUser = Pick<UserDto, "id" | "employeeNo" | "firstName" | "lastName" | "email" | "role" | "status" | "isEventCoordinator">;
 
@@ -20,6 +21,9 @@ export const UserData = (): TSignedInUser => {
     if (!data) console.log("User not found");
     return data ?? EMPTY_USER;
 };
+
+// Only users-table accounts sign in to the web; students are roster records with no login.
+export const isAccountRole = (role: unknown): role is UserRole => USER_ROLES.includes(role as UserRole);
 
 // Who may manage what on the People and Assets screens.
 export const canManageAccounts = (role: UserRole | "") => role === "ADMIN";
