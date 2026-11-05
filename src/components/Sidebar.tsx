@@ -74,10 +74,10 @@ export default function Sidebar() {
     setIsLoggingOut(true);
     setTimeout(() => {
       mutate(undefined, {
-        onSuccess: () => navigate({ to: "/" }),
-        onError: (err) => {
-          console.error(err.message);
-          setIsLoggingOut(false);
+        // The token is cleared either way, so leave for the login page even when the server call fails.
+        onSettled: (_data, err) => {
+          if (err) console.error(err.message);
+          navigate({ to: "/" });
         },
       });
     }, 2200);
