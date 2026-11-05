@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import type { CardStatus, UserDto } from "../@types/types";
 import { FormattedDateTime } from "./FormattedDateTime";
-import { formatEnum, formatRole, fullName, initials } from "../lib/utils";
+import { formatEnum, formatRole, fullName, initials, normalizeHexUid } from "../lib/utils";
+import CardStatusPill from "./CardStatusPill";
 import { ArchiveDialog, DeletedNotice, DetailHeader, DetailSection, InfoRow, InitialsAvatar, NeutralBadge } from "./ArchiveDetailShell";
 import { useAddAuthCard, useLiftFreeze, useUpdateAuthCard } from "../hooks/userHooks";
 import { useAllRooms } from "../hooks/assetHooks";
@@ -28,12 +29,6 @@ type ViewUserCredentialsProps = {
     user: UserDto;
     isOpen: boolean;
     onClose: () => void;
-};
-
-const CARD_TONE: Record<CardStatus, string> = {
-    ACTIVE: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-    LOST: "bg-amber-50 text-amber-700 ring-amber-200",
-    REVOKED: "bg-slate-100 text-slate-600 ring-slate-200",
 };
 
 const ViewUserCredentials = ({ user, isOpen, onClose }: ViewUserCredentialsProps) => {
@@ -52,8 +47,7 @@ const ViewUserCredentials = ({ user, isOpen, onClose }: ViewUserCredentialsProps
     const defaultRoom = rooms.find((room) => room.id === user.defaultRoomId);
 
     const handleAddCard = () => {
-        // Card UIDs are uppercase hex with no separators, like asset tags
-        const cardUid = newCardUid.replace(/[^0-9a-f]/gi, "").toUpperCase();
+        const cardUid = normalizeHexUid(newCardUid);
         if (!cardUid) return;
         addCard.mutate(
             { userId: user.id, data: { cardUid, status: "ACTIVE" } },
@@ -143,7 +137,7 @@ const ViewUserCredentials = ({ user, isOpen, onClose }: ViewUserCredentialsProps
                                     <p className="truncate font-mono text-sm font-medium text-slate-900">{card.cardUid}</p>
                                     <p className="text-xs text-slate-500">Issued {FormattedDateTime(card.issuedAt)}</p>
                                 </div>
-                                <span className={`rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${CARD_TONE[card.status]}`}>{formatEnum(card.status)}</span>
+                                <CardStatusPill status={card.status} />
                                 {canManage && card.status === "ACTIVE" && (
                                     <div className="flex gap-1">
                                         <button type="button" onClick={() => handleCardStatus(card.id, "LOST")} className="rounded-md px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50">Lost</button>
