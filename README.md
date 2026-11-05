@@ -1,7 +1,7 @@
 # 🧰 Technical Assets Management System
 
 A web application that helps schools manage their technical equipment, such as HDMI cables, projectors, laptops, microphones and other stored items.
-Staff can **add, track, lend and receive returned assets** for events and classroom use, and every borrow is recorded.
+Staff **add and track assets** and watch loans in real time. Students borrow at the RFID kiosk with an instructor's approval, and every loan is recorded.
 
 This repository contains the **frontend**. It talks to a separate C# / ASP.NET backend over REST and SignalR.
 
@@ -13,23 +13,23 @@ The **Technical Assets Management System** records school-owned technical items 
 Each item and borrow is logged, so missing or misused equipment can be traced to a borrower.
 
 ### ✨ Key Features
-- 📊 **Dashboard** – Summary badges, item status overview and borrowing activity charts.
-- 📦 **Inventory Management** – Add, edit, view and archive items, set their status and condition, and bulk-import items from Excel.
-- 🛒 **Borrowing** – Staff can lend items directly or walk a guest through the step-by-step borrow wizard.
-- 📡 **RFID / Scan Controller** – Scan items and student RFID cards to speed up borrowing and returns.
-- ⏳ **Pending Reservations** – Approve or deny borrow requests, with countdowns and due-soon reminders.
-- ✅ **Active Borrows** – Track items currently out and process returns.
-- 🔔 **Real-time Notifications** – Admins and staff get live updates through SignalR.
-- 🗂️ **Archives** – Restore or permanently delete archived items, students and teachers.
-- 📜 **Logs & History** – Activity logs and borrowing logs with detail views and filters.
-- 📑 **Reports** – Export reports to PDF and Excel.
+- 📊 **Dashboard** – Live status board with summary badges, room occupancy and station health.
+- 📦 **Assets** – Add, edit, view and delete assets (RFID tag UID and QR label), set their status, and bulk-import from Excel.
+- 📡 **Counter** – Watch active kiosk checkout sessions and attach the checkout photo from the counter webcam.
+- ✅ **Loans** – Track items currently out, mark a loan missing or change its room. Loans are created only by a kiosk session, never from the web.
+- 🧑‍🎓 **People** – Staff accounts and instructor RFID cards, plus the student roster (no student logins) with standing, warnings, marks, holds and liabilities.
+- 🔔 **Real-time Notifications** – Staff get live updates through SignalR (anomalies, late arrivals, overdue loans, station health).
+- 🗂️ **Deleted records** – Restore soft-deleted assets, accounts and students.
+- 📜 **Logs & History** – Activity logs and loan history with detail views and filters.
 - 🔍 **Search, Filter & Pagination** – On all major tables.
 - 🎨 **Appearance Settings** – Light and dark themes, profile editing and password changes.
 
 ### 👥 Users & Roles
-- 🛡️ **SuperAdmin / Admin** – Full access to users, items, reservations, reports and archives.
-- 🧑‍💼 **Staff** – Day-to-day operations: inventory, borrowing, returns and reservations.
-- 🧑‍🏫 **Teacher** and 🎓 **Student** – Borrowers. They can be registered one by one or imported from Excel, and students can be linked to RFID cards.
+- 🛡️ **Admin** – Full access, including staff and instructor accounts.
+- 🧑‍💼 **Tech Staff** – Assets, the student roster and resolving student penalties.
+- 📦 **Custodian** – Asset management.
+- 🧑‍🏫 **Instructor** – Approves borrow requests on their phone; sees the loans they approved.
+- 🎓 **Students** are roster records only. They have no login and borrow by tapping their RFID card at the kiosk. Their standing (good, warned, blocked) is computed by the backend from warnings and marks; there is no manual blocking.
 - 🔐 JWT-based login, forgot-password flow and role-based access.
 
 ---
@@ -46,7 +46,7 @@ Each item and borrow is logged, so missing or misused equipment can be traced to
 | **State** | Zustand |
 | **Real-time** | SignalR (`@microsoft/signalr`) |
 | **Charts** | Chart.js (`react-chartjs-2`) |
-| **Export / Import** | jsPDF, html2canvas, SheetJS (`xlsx`) |
+| **Import / Export** | SheetJS (`xlsx`) |
 | **Testing** | Vitest, React Testing Library |
 | **Backend** | C# (ASP.NET), in a separate repository |
 | **Database** | SQL |
@@ -107,12 +107,12 @@ cp .env.example .env
 ```
 src/
 ├── api/          # Axios instance and API calls (auth, items, users, logs, settings)
-├── components/   # Reusable UI: tables, modals, forms, sidebar, wizards
+├── components/   # Reusable UI: tables, modals, forms, sidebar
 ├── constants/    # Page text and toast messages
 ├── context/      # React context (sidebar)
 ├── hooks/        # TanStack Query hooks and custom hooks (SignalR, counts)
 ├── loader/       # Skeleton loaders for each page
-├── routes/       # Pages (Dashboard, Inventory, Borrow, Reports, Settings, ...)
+├── routes/       # Pages (Dashboard, Assets, Loans, Counter, People, Settings, ...)
 ├── services/     # SignalR connection service
 ├── states/       # Zustand stores
 ├── theme/        # Theme configuration
@@ -122,7 +122,7 @@ src/
 
 More docs:
 - [SIGNALR_SETUP.md](SIGNALR_SETUP.md) – Real-time notification setup
-- [GENERATED_PASSWORD_VERIFICATION.md](GENERATED_PASSWORD_VERIFICATION.md) – Generated password flow
+- [DATA_MODELS.md](DATA_MODELS.md) – PRD data model and what it replaced
 
 ---
 

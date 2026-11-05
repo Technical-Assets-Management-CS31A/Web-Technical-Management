@@ -154,7 +154,7 @@ export const WebcamCapture = ({ onCapture, capturedPreview }: WebcamCaptureProps
         <p className="text-sm font-medium text-gray-700">Photo captured</p>
         <img
           src={capturedPreview}
-          alt="Captured guest photo"
+          alt="Captured checkout photo"
           className="w-64 h-48 object-cover rounded-lg shadow-md border border-gray-200"
         />
         <button
@@ -172,7 +172,7 @@ export const WebcamCapture = ({ onCapture, capturedPreview }: WebcamCaptureProps
   return (
     <div className="flex flex-col items-center gap-4">
       <p className="text-sm text-gray-600 text-center">
-        Capture a photo of the guest for identification. A photo is required before proceeding.
+        Capture a photo of the borrower for the checkout record. A photo is required before proceeding.
       </p>
 
       {/* Camera selector — only shown once the stream is live and multiple cameras exist */}
