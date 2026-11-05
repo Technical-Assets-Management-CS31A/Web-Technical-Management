@@ -6,6 +6,7 @@ import type {
   AssetType,
   CardStatus,
   RecordStatus,
+  StationType,
   UserRole,
 } from "./tams";
 
@@ -112,6 +113,25 @@ export type AssetCategoryForm = {
   name: string;
   description: string;
   isBorrowable: boolean;
+};
+
+// ── Rooms and stations ───────────────────────────────────────────────────────
+
+export type RoomForm = {
+  code: string;
+  name: string;
+  building: string;
+  floor: string;
+  isStorage: boolean;
+  status: RecordStatus;
+};
+
+// Health, heartbeat and firmware are reported by the station itself.
+export type StationForm = {
+  stationCode: string;
+  type: StationType;
+  roomId: string;
+  ipAddress: string;
 };
 
 // ── Loans ────────────────────────────────────────────────────────────────────

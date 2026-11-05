@@ -18,6 +18,8 @@ Each item and borrow is logged, so missing or misused equipment can be traced to
 - 📡 **Counter** – Watch active kiosk checkout sessions and attach the checkout photo from the counter webcam.
 - ✅ **Loans** – Track items currently out, mark a loan missing or change its room. Loans are created only by a kiosk session, never from the web.
 - 🧑‍🎓 **People** – Staff accounts and instructor RFID cards, plus the student roster (no student logins) with standing, warnings, marks, holds and liabilities.
+- 🏫 **Rooms & Stations** – Classrooms and storage rooms with live occupancy, and the RFID stations in each room with their health and heartbeat.
+- 🪪 **Authorization Cards** – Register instructor RFID cards, and mark them lost, found or revoked.
 - 🔔 **Real-time Notifications** – Staff get live updates through SignalR (anomalies, late arrivals, overdue loans, station health).
 - 🗂️ **Deleted records** – Restore soft-deleted assets, accounts and students.
 - 📜 **Logs & History** – Activity logs and loan history with detail views and filters.

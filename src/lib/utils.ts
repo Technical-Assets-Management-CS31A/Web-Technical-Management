@@ -36,3 +36,8 @@ export function initials(person: { firstName?: string | null; lastName?: string 
   if (!person) return ""
   return `${person.firstName?.charAt(0) ?? ""}${person.lastName?.charAt(0) ?? ""}`.toUpperCase()
 }
+
+// RFID tag and card UIDs are stored as uppercase hex with no separators, e.g. "04:a3:b2" -> "04A3B2".
+export function normalizeHexUid(value: string) {
+  return value.replace(/[^0-9a-f]/gi, "").toUpperCase()
+}

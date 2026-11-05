@@ -60,7 +60,7 @@ const AdminNotificationListener = () => {
                 refresh('loans', 'assets', 'dashboard', 'kioskSessions');
             }),
             subscribe('room.occupancyChanged', () => {
-                refresh('dashboard', 'loans');
+                refresh('dashboard', 'loans', 'room-occupancy');
             }),
             subscribe('anomaly.raised', (e: AnomalyEvent) => {
                 showToast.warning('Location Anomaly', [formatEnum(e.type), e.assetCode, e.roomCode].filter(Boolean).join(' · '), { autoClose: 10000 });
@@ -82,7 +82,7 @@ const AdminNotificationListener = () => {
             }),
             subscribe('station.healthChanged', (e: StationHealthChangedEvent) => {
                 if (e.health === 'OFFLINE') showToast.error('Station Offline', e.stationCode);
-                refresh('dashboard');
+                refresh('dashboard', 'stations');
             }),
         ];
 

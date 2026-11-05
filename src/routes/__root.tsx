@@ -16,6 +16,8 @@ import ActivityLogDetail from "./ActivityLogDetail";
 import ActiveBorrowedItems from "./ActiveBorrowedItems";
 import RfidController from "./RfidController";
 import Reports from "./Reports";
+import Rooms from "./Rooms";
+import AuthCards from "./AuthCards";
 
 
 export const Route = createRootRoute({
@@ -114,6 +116,18 @@ const ReportsRoute = createRoute({
     component: Reports
 })
 
+const RoomsRoute = createRoute({
+    getParentRoute: () => homeRoute,
+    path: "rooms",
+    component: Rooms
+})
+
+const AuthCardsRoute = createRoute({
+    getParentRoute: () => homeRoute,
+    path: "auth-cards",
+    component: AuthCards
+})
+
 export const routeTree = Route.addChildren([
     indexRoute,
     homeRoute.addChildren([
@@ -128,6 +142,8 @@ export const routeTree = Route.addChildren([
         ActivityLogDetailRoute,
         ActiveBorrowedItemsRoute,
         RfidControllerRoute,
-        ReportsRoute
+        ReportsRoute,
+        RoomsRoute,
+        AuthCardsRoute
     ]),
 ]);
