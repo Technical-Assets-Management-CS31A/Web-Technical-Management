@@ -13,16 +13,10 @@ import { UserData } from "../utils/usersData/userData";
 import { Link } from "@tanstack/react-router";
 import { FormattedDateTime } from "../components/FormattedDateTime";
 import { formatEnum } from "../lib/utils";
-import type { StationHealth } from "../@types/types";
+import { HEALTH_DOT } from "../components/stationHealth";
 import { DASHBOARD_CONTENT as T } from "../constants/dashboardContent";
 
 const TABLE_HEADERS = T.tableHeaders;
-
-const HEALTH_DOT: Record<StationHealth, string> = {
-  ONLINE: "bg-emerald-500",
-  WARNING: "bg-amber-500",
-  OFFLINE: "bg-rose-500",
-};
 
 const getGreeting = () => {
   const hour = Number(new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone: "Asia/Manila" }).format(new Date()));
