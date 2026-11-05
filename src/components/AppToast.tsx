@@ -11,10 +11,10 @@
  * Usage:
  *   import { showToast } from "../components/AppToast";
  *
- *   showToast.success("Reservation Approved", "Your request has been approved!");
+ *   showToast.success("Asset Added", "The asset was saved.");
  *   showToast.error("Action Failed", "Could not process the request.");
- *   showToast.warning("Reservation Expired", "The reservation window has passed.");
- *   showToast.info("New Request", "A new borrow request is waiting.");
+ *   showToast.warning("Loan Overdue", "PRJ-004 · Juan Dela Cruz");
+ *   showToast.info("Late Arrival Warning #1", "A student arrived late.");
  */
 
 import { toast, type ToastOptions } from "react-toastify";
