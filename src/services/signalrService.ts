@@ -1,4 +1,5 @@
 import * as signalR from '@microsoft/signalr';
+import { getToken } from '../utils/token';
 
 /**
  * SignalR Service — singleton managing the hub connection.
@@ -8,7 +9,7 @@ import * as signalR from '@microsoft/signalr';
  * - on() queues handlers registered before the connection is ready and
  *   replays them once connected, so callers never miss events due to timing.
  * - The singleton is never torn down on component unmount — it lives for the
- *   full browser session and is shared across all components.
+ *   full browser session and is shared across all components. Logout closes it.
  */
 class SignalRService {
     private connection: signalR.HubConnection | null = null;
@@ -28,7 +29,8 @@ class SignalRService {
 
         this.connection = new signalR.HubConnectionBuilder()
             .withUrl(`${apiUrl}/notificationHub`, {
-                accessTokenFactory: () => token,
+                // Read the cookie on every (re)connect so a silently refreshed token is picked up.
+                accessTokenFactory: () => getToken() ?? token,
                 transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
             })
             .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
