@@ -32,16 +32,8 @@ export const useSignalR = () => {
         await signalRService.joinAdminStaffGroup();
     }, []);
 
-    const joinUserGroup = useCallback(async (userId: string) => {
-        await signalRService.joinUserGroup(userId);
-    }, []);
-
     const leaveAdminStaffGroup = useCallback(async () => {
         await signalRService.leaveAdminStaffGroup();
-    }, []);
-
-    const leaveUserGroup = useCallback(async (userId: string) => {
-        await signalRService.leaveUserGroup(userId);
     }, []);
 
     return {
@@ -49,8 +41,6 @@ export const useSignalR = () => {
         subscribe,
         joinAdminStaffGroup,
         leaveAdminStaffGroup,
-        joinUserGroup,
-        leaveUserGroup,
         isConnected: signalRService.isConnected(),
     };
 };
