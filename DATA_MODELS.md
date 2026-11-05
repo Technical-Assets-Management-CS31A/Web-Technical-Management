@@ -34,7 +34,8 @@ Endpoints the web calls that the PRD does not list (team calls): `GET /auth/me`,
 `POST /auth/forgot-password`, `PUT/DELETE /users/{id}`, `POST /users/{id}/restore`, `POST /users/{id}/auth-cards`,
 `PUT /auth-cards/{id}`, `POST /students/{id}/restore`, `POST /assets/{id}/restore`, `PUT /assets/{id}/status`,
 `POST /assets:import`, `/asset-categories`, `GET /dashboard/summary`, `GET /audit-log`,
-`GET /kiosk/sessions?active=true`, `POST /kiosk/sessions` (type `ENROLLMENT`), `POST /kiosk/sessions/{id}/cancel`.
+`GET /kiosk/sessions?active=true`, `POST /kiosk/sessions` (type `ENROLLMENT`), `POST /kiosk/sessions/{id}/cancel`,
+`POST /rooms`, `PUT/DELETE /rooms/{id}`, `GET /stations` (full `StationDto` list), `POST /stations`, `PUT/DELETE /stations/{id}`.
 
 ### Team calls still open
 
