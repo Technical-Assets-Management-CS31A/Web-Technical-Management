@@ -2,11 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import logo from "../../assets/newAclcLogo.webp";
-import Cookies from "js-cookie";
 import { isAxiosError } from "axios";
 import type { LoginRequest, LoginResponse } from "../../@types/types";
 import { useLogin } from "../../hooks/authHooks";
+import { logoutUserApi } from "../../api/auth_api";
 import { LOGIN_CONTENT as T } from "../../constants/loginContent";
+import { setToken } from "../../utils/token";
+import { isAccountRole } from "../../utils/usersData/userData";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -38,11 +40,25 @@ export default function Login() {
 
     mutate(submitForm, {
       onSuccess: (res: { data?: LoginResponse }) => {
-        if (res?.data?.accessToken) {
-          Cookies.set(import.meta.env.VITE_ACCESS_TOKEN_KEY, res.data.accessToken);
+        const accessToken = res?.data?.accessToken;
+        const role = res?.data?.role;
+        if (!accessToken) {
+          setErrorMessage(T.errors.invalid);
+          return;
         }
+        setToken(accessToken);
+
+        // Staff-only web: anything other than a users-table role (e.g. a student) is signed straight
+        // back out, which also clears the refresh-token cookie so the route guard can't revive it.
+        if (!isAccountRole(role)) {
+          logoutUserApi().catch(() => undefined);
+          setErrorMessage(T.errors.staffOnly);
+          setIsInactiveError(true);
+          return;
+        }
+
         // Instructors land on their own loans; staff and admins on the live board.
-        navigate({ to: res?.data?.role === "INSTRUCTOR" ? "/home/active-borrowed-items" : "/home/dashboard" });
+        navigate({ to: role === "INSTRUCTOR" ? "/home/active-borrowed-items" : "/home/dashboard" });
       },
       onError: (error) => {
         // 403 means the account exists but is INACTIVE
