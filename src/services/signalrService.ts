@@ -75,20 +75,6 @@ class SignalRService {
         } catch { /* ignore */ }
     }
 
-    async joinUserGroup(userId: string): Promise<void> {
-        if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
-            return;
-        }
-        await this.connection.invoke('JoinUserGroup', userId);
-    }
-
-    async leaveUserGroup(userId: string): Promise<void> {
-        if (!this.connection) return;
-        try {
-            await this.connection.invoke('LeaveUserGroup', userId);
-        } catch { /* ignore */ }
-    }
-
     on(eventName: string, callback: (data: any) => void): void {
         if (this.connection?.state === signalR.HubConnectionState.Connected) {
             // Connection already exists - register immediately
