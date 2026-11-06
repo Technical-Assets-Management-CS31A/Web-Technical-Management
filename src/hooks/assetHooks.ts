@@ -1,4 +1,5 @@
-import { queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { AssetListParams } from "../@types/types";
 import {
   addAssetApi,
   addCategoryApi,
@@ -10,6 +11,7 @@ import {
   deleteCategoryApi,
   getAssetApi,
   importAssetsApi,
+  listAssetsApi,
   restoreAssetApi,
   setAssetStatusApi,
   updateAssetApi,
@@ -36,6 +38,24 @@ export const useAllAssets = (includeDeleted = false) => {
     staleTime: 5 * 60 * 1000
   });
 };
+
+/** One page of assets for the Assets screen; keeps the previous page on screen while the next loads. */
+export const useAssetPage = (params: AssetListParams) =>
+  queryOptions({
+    queryFn: () => listAssetsApi(params),
+    queryKey: [...ASSETS_KEY, "page", params],
+    placeholderData: keepPreviousData,
+    staleTime: 30 * 1000,
+  });
+
+/** Just the number of assets matching the filters (summary cards). */
+export const useAssetCount = (params: Omit<AssetListParams, "page" | "pageSize"> = {}) =>
+  queryOptions({
+    queryFn: () => listAssetsApi({ ...params, page: 1, pageSize: 1 }),
+    queryKey: [...ASSETS_KEY, "count", params],
+    select: (page) => page.total,
+    staleTime: 30 * 1000,
+  });
 
 export const useGetAsset = (id: string) => {
   return queryOptions({
