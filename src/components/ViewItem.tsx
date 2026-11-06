@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { AssetDto, LedgerEvent, StaffAssetStatus } from "../@types/types";
 import { useAllRooms, useAssetHistory, useGetAsset, useSetAssetStatus } from "../hooks/assetHooks";
-import { assetQrApi } from "../api/asset_api";
+import { fetchAndPrintQrLabel } from "./qrLabel";
 import ViewItemSkeletonLoader from "../loader/ViewItemSkeletonLoader";
 import AssetFormDialog from "./AssetFormDialog";
 import { FormattedDateTime } from "./FormattedDateTime";
@@ -32,9 +32,6 @@ import {
 } from "lucide-react";
 
 const php = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
-
-const escapeHtml = (text: string) =>
-  text.replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch] ?? ch);
 
 const LEDGER_TONE: Record<LedgerEvent, string> = {
   CHECKOUT: "bg-blue-500",
@@ -105,13 +102,7 @@ export default function ViewItem() {
 
   const printQrLabel = async () => {
     try {
-      const blob = await assetQrApi(item.id);
-      const url = URL.createObjectURL(blob);
-      const win = window.open("", "_blank", "width=420,height=520");
-      if (!win) return;
-      // QR encodes tams:asset:<uuid>
-      win.document.write(`<title>${escapeHtml(item.assetCode)}</title><body style="margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif"><img src="${url}" style="width:240px;height:240px" onload="window.print()"/><p style="font:600 16px monospace;margin:8px 0 0">${escapeHtml(item.assetCode)}</p><p style="font-size:12px;margin:2px 0;color:#555">${escapeHtml(item.name)}</p></body>`);
-      win.document.close();
+      await fetchAndPrintQrLabel(item);
     } catch (err) {
       showToast.error("QR Label", getErrorMessage(err, "Could not load the QR label."));
     }

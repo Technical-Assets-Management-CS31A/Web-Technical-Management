@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { AlertCircle, CheckCircle2, ChevronDown, Loader2, Save, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, ChevronDown, Loader2, Save, X } from "lucide-react";
 
 // Shared building blocks for the edit forms (user, profile, instructor, student, item)
 
@@ -16,7 +16,15 @@ type FormDialogProps = {
   /** Blocks closing (backdrop, Esc, X, Cancel) — e.g. while saving or an RFID scan is running */
   preventClose?: boolean;
   submitLabel?: string;
+  /** Icon on the submit button; defaults to Save */
+  submitIcon?: React.ElementType;
   submitDisabled?: boolean;
+  /** Label for the close button in the footer; defaults to Cancel */
+  cancelLabel?: string;
+  /** Shows a Back button for multi-step dialogs */
+  onBack?: () => void;
+  /** Content between the header and the form body, e.g. a step indicator */
+  headerExtra?: React.ReactNode;
   submitTestId?: string;
   footerNote?: React.ReactNode;
   children: React.ReactNode;
@@ -32,7 +40,11 @@ export function FormDialog({
   isSubmitting = false,
   preventClose = false,
   submitLabel = "Save changes",
+  submitIcon: SubmitIcon = Save,
   submitDisabled = false,
+  cancelLabel = "Cancel",
+  onBack,
+  headerExtra,
   submitTestId,
   footerNote,
   children,
@@ -85,6 +97,8 @@ export function FormDialog({
           </button>
         </div>
 
+        {headerExtra && <div className="shrink-0 border-b border-slate-200 px-6 py-3">{headerExtra}</div>}
+
         <form onSubmit={onSubmit} noValidate className="flex min-h-0 flex-1 flex-col">
           <div className="scrollbar-thin flex-1 space-y-6 overflow-y-auto px-6 py-5">{children}</div>
 
@@ -98,15 +112,26 @@ export function FormDialog({
                 disabled={locked}
                 className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Cancel
+                {cancelLabel}
               </button>
+              {onBack && (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  disabled={isSubmitting}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back
+                </button>
+              )}
               <button
                 type="submit"
                 disabled={isSubmitting || submitDisabled}
                 data-testid={submitTestId}
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <SubmitIcon className="h-4 w-4" />}
                 {isSubmitting ? "Saving..." : submitLabel}
               </button>
             </div>
@@ -233,8 +258,12 @@ export function FormAlert({ tone, children }: { tone: "error" | "success"; child
   );
 }
 
-/** Pulls a readable message out of an axios / fetch error */
+/** Pulls a readable message out of an axios / fetch error (RFC 7807 problem details or { message }) */
 export function getErrorMessage(error: unknown, fallback: string) {
-  const err = error as { response?: { data?: { message?: string } }; message?: string } | null;
-  return err?.response?.data?.message || err?.message || fallback;
+  const err = error as {
+    response?: { data?: { detail?: string; title?: string; message?: string } };
+    message?: string;
+  } | null;
+  const data = err?.response?.data;
+  return data?.detail || data?.message || data?.title || err?.message || fallback;
 }
