@@ -106,6 +106,34 @@ export type AssetForm = {
   notes: string;
 };
 
+// ── Lists ────────────────────────────────────────────────────────────────────
+
+// PRD 6.3: every list endpoint supports page, pageSize, sort and q.
+export type ListParams = {
+  page: number;
+  pageSize: number;
+  /** Field name, prefixed with "-" for descending, e.g. "-createdAt" */
+  sort?: string;
+  q?: string;
+};
+
+export type Paged<T> = {
+  items: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+};
+
+export type AssetListParams = ListParams & {
+  /** Several statuses are sent comma-separated */
+  status?: AssetStatus | AssetStatus[];
+  condition?: AssetCondition;
+  type?: AssetType;
+  categoryId?: string;
+  includeDeleted?: boolean;
+};
+
 // Staff set only MAINTENANCE and RETIRED; IN_STORAGE brings an asset back.
 export type StaffAssetStatus = Extract<AssetStatus, "MAINTENANCE" | "RETIRED" | "IN_STORAGE">;
 

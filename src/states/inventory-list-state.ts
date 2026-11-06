@@ -1,8 +1,38 @@
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
+import type { AssetCondition, AssetStatus, AssetType } from "../@types/types";
+
+// Assets screen state. Filters live here (not in the component) so they survive
+// opening an asset and coming back. Changing any filter goes back to page 1.
+
+export type AssetSort = "-createdAt" | "createdAt" | "name" | "assetCode" | "-updatedAt";
+
+export type AssetFilters = {
+    search: string
+    categoryId: string
+    status: AssetStatus | ""
+    condition: AssetCondition | ""
+    type: AssetType | ""
+    showDeleted: boolean
+    sort: AssetSort
+}
+
+export const DEFAULT_ASSET_FILTERS: AssetFilters = {
+    search: "",
+    categoryId: "",
+    status: "",
+    condition: "",
+    type: "",
+    showDeleted: false,
+    sort: "-createdAt",
+}
 
 interface IInventoryList {
     currentPage: number
     setCurrentPage: (value: number) => void
+    filters: AssetFilters
+    setFilter: <K extends keyof AssetFilters>(key: K, value: AssetFilters[K]) => void
+    clearFilters: () => void
     isAddItemFormOpen: boolean
     setIsAddItemFormOpen: (value: boolean) => void
     isImporting: boolean
@@ -15,49 +45,22 @@ interface IInventoryList {
 
 const inventoryListState = create<IInventoryList>((set) => ({
     currentPage: 1,
-    setCurrentPage: (value) => set(() => ({
-        currentPage: value
+    setCurrentPage: (value) => set(() => ({ currentPage: value })),
+    filters: DEFAULT_ASSET_FILTERS,
+    setFilter: (key, value) => set((state) => ({ filters: { ...state.filters, [key]: value }, currentPage: 1 })),
+    // Keeps search, sort and the deleted toggle; clears the narrowing filters.
+    clearFilters: () => set((state) => ({
+        filters: { ...DEFAULT_ASSET_FILTERS, search: state.filters.search, sort: state.filters.sort, showDeleted: state.filters.showDeleted },
+        currentPage: 1,
     })),
     isAddItemFormOpen: false,
-    setIsAddItemFormOpen: (value) => set(() => ({
-        isAddItemFormOpen: value
-    })),
+    setIsAddItemFormOpen: (value) => set(() => ({ isAddItemFormOpen: value })),
     isImporting: false,
-    setIsImporting: (value) => set(() => ({
-        isImporting: value
-    })),
+    setIsImporting: (value) => set(() => ({ isImporting: value })),
     isExporting: false,
-    setIsExporting: (value) => set(() => ({
-        isExporting: value
-    })),
+    setIsExporting: (value) => set(() => ({ isExporting: value })),
     isMoreMenuOpen: false,
-    setIsMoreMenuOpen: (value) => set(() => ({
-        isMoreMenuOpen: value
-    })),
+    setIsMoreMenuOpen: (value) => set(() => ({ isMoreMenuOpen: value })),
 }))
 
-export const useInventoryListState = () => {
-    const currentPage = inventoryListState((state) => state.currentPage)
-    const setCurrentPage = inventoryListState((state) => state.setCurrentPage)
-    const isAddItemFormOpen = inventoryListState((state) => state.isAddItemFormOpen)
-    const setIsAddItemFormOpen = inventoryListState((state) => state.setIsAddItemFormOpen)
-    const isImporting = inventoryListState((state) => state.isImporting)
-    const setIsImporting = inventoryListState((state) => state.setIsImporting)
-    const isExporting = inventoryListState((state) => state.isExporting)
-    const setIsExporting = inventoryListState((state) => state.setIsExporting)
-    const isMoreMenuOpen = inventoryListState((state) => state.isMoreMenuOpen)
-    const setIsMoreMenuOpen = inventoryListState((state) => state.setIsMoreMenuOpen)
-
-    return {
-        currentPage,
-        setCurrentPage,
-        isAddItemFormOpen,
-        setIsAddItemFormOpen,
-        isImporting,
-        isExporting,
-        setIsImporting,
-        setIsExporting,
-        isMoreMenuOpen,
-        setIsMoreMenuOpen,
-    };
-};
+export const useInventoryListState = () => inventoryListState(useShallow((state) => state))

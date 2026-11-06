@@ -4,9 +4,11 @@ type SearchProps = {
   onChangeValue: (value: string) => void;
   name?: string;
   placeholder?: string;
+  /** Initial text, e.g. a search kept in screen state */
+  defaultValue?: string;
 };
 
-const SearchBar = ({ onChangeValue, name, placeholder }: SearchProps) => {
+const SearchBar = ({ onChangeValue, name, placeholder, defaultValue }: SearchProps) => {
   return (
     <div className="flex items-center py-2 px-4 w-full sm:w-auto sm:min-w-[280px] rounded-xl shadow-inner bg-slate-100">
       <FaSearch className="mr-3 text-lg text-slate-500 flex-shrink-0" />
@@ -15,6 +17,8 @@ const SearchBar = ({ onChangeValue, name, placeholder }: SearchProps) => {
         type="search"
         name={name}
         placeholder={placeholder}
+        defaultValue={defaultValue}
+        aria-label={placeholder}
         onChange={(e) => onChangeValue(e.target.value)}
       />
     </div>

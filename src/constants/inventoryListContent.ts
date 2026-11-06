@@ -22,12 +22,34 @@ export const INVENTORY_LIST_CONTENT = {
     count: (count: number) => `${count} asset${count !== 1 ? "s" : ""}`,
     inCategory: (category: string) => ` in ${category}`,
     searchPlaceholder: "Search name, code, serial or tag...",
+    includingDeleted: ", including deleted",
+    updating: "Updating…",
+  },
+  filters: {
+    status: "Status",
+    condition: "Condition",
+    type: "Type",
+    showDeleted: "Show deleted",
+  },
+  sort: {
+    label: "Sort",
+    options: [
+      { value: "-createdAt", label: "Newest first" },
+      { value: "createdAt", label: "Oldest first" },
+      { value: "-updatedAt", label: "Recently updated" },
+      { value: "name", label: "Name A–Z" },
+      { value: "assetCode", label: "Asset code" },
+    ],
   },
   empty: {
     title: "No assets found",
     description:
       "Try adjusting your search or filters. New assets will appear here once created.",
     clearFilters: "Clear all filters",
+  },
+  error: {
+    title: "Could not load assets",
+    retry: "Try again",
   },
   exportSheetName: "Assets",
   toast: {
