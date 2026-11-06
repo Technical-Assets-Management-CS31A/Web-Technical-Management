@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Nfc, Trash2 } from "lucide-react";
-import { useAllRooms, useDeleteAsset } from "../hooks/assetHooks";
+import { ArchiveRestore, Loader2, Nfc, Trash2 } from "lucide-react";
+import { useAllRooms, useDeleteAsset, useRestoreAsset } from "../hooks/assetHooks";
 import { SlugCondition } from "./SlugCondition";
 import { SlugStatus } from "./SlugStatus";
 import { UserData, canManageAssets } from "../utils/usersData/userData";
@@ -29,6 +29,14 @@ export const InventoryTable = ({ item }: InventoryTableProps) => {
     const canDelete = canManageAssets(viewer.role);
 
     const { mutate, isPending: isDeleting } = useDeleteAsset();
+    const restore = useRestoreAsset();
+
+    const handleRestore = (id: string, label: string) => {
+        restore.mutate(id, {
+            onSuccess: () => showToast.success("Asset Restored", `${label} is back in the asset list.`),
+            onError: (error) => showToast.error("Restore Failed", getErrorMessage(error, "Failed to restore asset.")),
+        });
+    };
 
     const handleConfirmDelete = () => {
         if (!selectedItemId) return;
@@ -57,15 +65,22 @@ export const InventoryTable = ({ item }: InventoryTableProps) => {
                 <tbody className="divide-y divide-slate-100">
                     {item.map((row) => {
                         const isLocked = LOCKED_STATUSES.includes(row.status);
+                        const isDeleted = !!row.deletedAt;
+                        const isRestoring = restore.isPending && restore.variables === row.id;
                         return (
                             <tr
                                 key={row.id}
                                 onClick={() => navigate({ to: `/home/item/$id`, params: { id: row.id } })}
-                                className="cursor-pointer transition-colors hover:bg-slate-50"
+                                className={`cursor-pointer transition-colors hover:bg-slate-50 ${isDeleted ? "bg-slate-50/60 text-slate-400" : ""}`}
                             >
                                 <td className="px-5 py-3">
                                     <div className="min-w-0">
-                                        <p className="font-medium text-slate-900">{row.name}</p>
+                                        <p className={`flex items-center gap-2 font-medium ${isDeleted ? "text-slate-500 line-through decoration-slate-300" : "text-slate-900"}`}>
+                                            {row.name}
+                                            {isDeleted && (
+                                                <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[11px] font-medium text-slate-600 no-underline">Deleted</span>
+                                            )}
+                                        </p>
                                         <p className="flex items-center gap-1.5 text-xs text-slate-500">
                                             <span className="font-mono">{row.assetCode}</span>
                                             {row.rfidTagUid && <Nfc className="h-3 w-3 text-slate-400" aria-label="RFID tagged" />}
@@ -89,7 +104,19 @@ export const InventoryTable = ({ item }: InventoryTableProps) => {
                                     </span>
                                 </td>
                                 <td className="px-5 py-3 text-right">
-                                    {canDelete && (
+                                    {canDelete && isDeleted && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleRestore(row.id, row.assetCode);
+                                            }}
+                                            disabled={restore.isPending}
+                                            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                                        >
+                                            {isRestoring ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArchiveRestore className="h-3.5 w-3.5" />} Restore
+                                        </button>
+                                    )}
+                                    {canDelete && !isDeleted && (
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -114,7 +141,7 @@ export const InventoryTable = ({ item }: InventoryTableProps) => {
                     title="Delete asset"
                     label="delete"
                     noun="asset"
-                    destination="Deleted records page"
+                    destination="Show deleted filter on Assets"
                     onHandleCancelAction={() => setSelectedItemId(null)}
                     onHandleConfirmAction={handleConfirmDelete}
                     isLoading={isDeleting}
