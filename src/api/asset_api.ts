@@ -1,4 +1,5 @@
 import { api } from "./axios";
+import { fetchAllPages, toListQuery, toPaged } from "./paging";
 import type {
   AssetCategoryDto,
   AssetCategoryForm,
@@ -27,80 +28,14 @@ const toAssetBody = (data: AssetForm) => ({
 
 // ── Assets ───────────────────────────────────────────────────────────────────
 
-// Drops empty filters and sends multi-value filters comma-separated.
-const toListQuery = (params: AssetListParams) =>
-  Object.fromEntries(
-    Object.entries(params)
-      .map(([key, value]) => [key, Array.isArray(value) ? value.join(",") : value])
-      .filter(([, value]) => value !== undefined && value !== "" && value !== false),
-  );
-
-type PageMeta = { page?: number; pageSize?: number; total?: number; totalCount?: number; totalPages?: number };
-
-const slice = <T>(all: T[], page: number, pageSize: number): Paged<T> => ({
-  items: all.slice((page - 1) * pageSize, page * pageSize),
-  page,
-  pageSize,
-  total: all.length,
-  totalPages: Math.max(1, Math.ceil(all.length / pageSize)),
-});
-
-/**
- * The paged envelope is not pinned down in the PRD yet (TAMS-38), so this accepts
- * { data: T[], meta }, { data: { items, ...meta } } and { items, ...meta }.
- * A list without a total means the server is not paging yet: it is sliced here.
- */
-const toPaged = <T>(body: unknown, { page, pageSize }: { page: number; pageSize: number }): Paged<T> => {
-  if (Array.isArray(body)) return slice(body as T[], page, pageSize);
-
-  const root = (body ?? {}) as { data?: unknown; items?: T[]; meta?: PageMeta } & PageMeta;
-  const inner = root.data as ({ items?: T[] } & PageMeta) | T[] | undefined;
-
-  let items: T[];
-  let meta: PageMeta;
-  if (Array.isArray(inner)) {
-    items = inner;
-    meta = root.meta ?? root;
-  } else if (inner && Array.isArray(inner.items)) {
-    items = inner.items;
-    meta = inner;
-  } else {
-    items = root.items ?? [];
-    meta = root.meta ?? root;
-  }
-
-  const total = meta.total ?? meta.totalCount;
-  if (total === undefined) return slice(items, page, pageSize);
-
-  const size = meta.pageSize ?? pageSize;
-  return {
-    items,
-    page: meta.page ?? page,
-    pageSize: size,
-    total,
-    totalPages: meta.totalPages ?? Math.max(1, Math.ceil(total / size)),
-  };
-};
-
 export const listAssetsApi = async (params: AssetListParams): Promise<Paged<AssetDto>> => {
   const response = await api.get(asset_end_point, { params: toListQuery(params) });
   return toPaged<AssetDto>(response.data, params);
 };
 
-const ALL_PAGE_SIZE = 100;
-
 /** Every asset matching the filters, fetched page by page (exports, pickers, duplicate checks). */
-export const allAssetsApi = async (params: Omit<AssetListParams, "page" | "pageSize"> = {}): Promise<AssetDto[]> => {
-  const first = await listAssetsApi({ ...params, page: 1, pageSize: ALL_PAGE_SIZE });
-  if (first.totalPages <= 1 || first.items.length >= first.total) return first.items;
-
-  const rest = await Promise.all(
-    Array.from({ length: first.totalPages - 1 }, (_, i) =>
-      listAssetsApi({ ...params, page: i + 2, pageSize: ALL_PAGE_SIZE }),
-    ),
-  );
-  return [first, ...rest].flatMap((p) => p.items);
-};
+export const allAssetsApi = async (params: Omit<AssetListParams, "page" | "pageSize"> = {}): Promise<AssetDto[]> =>
+  fetchAllPages(listAssetsApi, params);
 
 export const getAssetApi = async (id: string): Promise<AssetDto> => {
   const response = await api.get(`${asset_end_point}/${id}`);

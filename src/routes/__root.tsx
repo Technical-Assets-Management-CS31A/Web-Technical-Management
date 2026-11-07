@@ -7,7 +7,6 @@ import Home from "./Home";
 import InventoryList from "./InventoryList";
 import UserManagement from "./UserManagement";
 import HistoryList from "./HistoryList";
-import Archive from "./Archive";
 import Settings from "./Settings";
 import { ProtectedRoute, PublicRoute } from "../utils/middleware/accessAuth";
 import ViewItem from "../components/ViewItem";
@@ -66,12 +65,6 @@ const HistoryListRoute = createRoute({
     getParentRoute: () => homeRoute,
     path: "history-list",
     component: HistoryList,
-});
-
-const ArchiveRoute = createRoute({
-    getParentRoute: () => homeRoute,
-    path: "archive-table",
-    component: Archive,
 });
 
 const SettingsRoute = createRoute({
@@ -135,7 +128,6 @@ export const routeTree = Route.addChildren([
         InventoryListRoute,
         UserManagementRoute,
         HistoryListRoute,
-        ArchiveRoute,
         SettingsRoute,
         ViewItemRoute,
         ActivityLogsRoute,

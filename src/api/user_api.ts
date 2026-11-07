@@ -1,17 +1,23 @@
 import { api } from "./axios";
+import { fetchAllPages, toListQuery, toPaged } from "./paging";
 import type {
   AuthCardRequest,
   CheckoutSessionDto,
   CreateUserRequest,
+  Paged,
+  RosterImportIssue,
+  RosterImportResult,
   ResolveRequest,
   SectionDto,
   SectionForm,
   SettleLiabilityRequest,
   StudentDto,
   StudentForm,
+  StudentListParams,
   StudentStandingDto,
   UpdateUserRequest,
   UserDto,
+  UserListParams,
   UserRole,
 } from "../@types/types";
 
@@ -19,12 +25,15 @@ type ListOptions = { includeDeleted?: boolean };
 
 // ── Staff and instructor accounts (users table) ──────────────────────────────
 
+export const listUsersApi = async (params: UserListParams): Promise<Paged<UserDto>> => {
+  const response = await api.get("/users", { params: toListQuery(params) });
+  return toPaged<UserDto>(response.data, params);
+};
+
+// Accounts are a short list (staff plus instructors), so the screen loads them all.
 export const allUsersApi = async (
   { role, includeDeleted }: ListOptions & { role?: UserRole } = {},
-): Promise<UserDto[]> => {
-  const response = await api.get("/users", { params: { role, includeDeleted } });
-  return response.data.data;
-};
+): Promise<UserDto[]> => fetchAllPages(listUsersApi, { role, includeDeleted, sort: "lastName" });
 
 export const getUserApi = async (id: string): Promise<UserDto> => {
   const response = await api.get(`/users/${id}`);
@@ -70,10 +79,13 @@ export const liftFreezeApi = async ({ id, data }: { id: string; data: ResolveReq
 
 // ── Students (roster records, no login) ──────────────────────────────────────
 
-export const allStudentsApi = async ({ includeDeleted }: ListOptions = {}): Promise<StudentDto[]> => {
-  const response = await api.get("/students", { params: { includeDeleted } });
-  return response.data.data;
+export const listStudentsApi = async (params: StudentListParams): Promise<Paged<StudentDto>> => {
+  const response = await api.get("/students", { params: toListQuery(params) });
+  return toPaged<StudentDto>(response.data, params);
 };
+
+export const allStudentsApi = async ({ includeDeleted }: ListOptions = {}): Promise<StudentDto[]> =>
+  fetchAllPages(listStudentsApi, { includeDeleted });
 
 export const getStudentApi = async (id: string): Promise<StudentDto> => {
   const response = await api.get(`/students/${id}`);
@@ -100,14 +112,44 @@ export const restoreStudentApi = async (id: string) => {
   return response.data;
 };
 
-export const importStudentsApi = async (formData: FormData) => {
+const num = (value: unknown) => (typeof value === "number" ? value : null);
+
+/**
+ * The import report shape is not in the PRD yet. Accepts counts named
+ * created/inserted, updated, skipped and an errors (or rowErrors) list.
+ */
+const toImportResult = (body: unknown): RosterImportResult => {
+  const root = (body ?? {}) as Record<string, unknown>;
+  const data = (root.data && typeof root.data === "object" ? root.data : root) as Record<string, unknown>;
+  const rawErrors = (data.errors ?? data.rowErrors ?? []) as unknown[];
+  const errors: RosterImportIssue[] = Array.isArray(rawErrors)
+    ? rawErrors.map((e) => {
+        const err = (e ?? {}) as Record<string, unknown>;
+        return {
+          line: num(err.line) ?? num(err.row) ?? num(err.rowNumber),
+          studentNo: (err.studentNo as string | undefined) ?? null,
+          message: String(err.message ?? err.detail ?? err.error ?? e),
+        };
+      })
+    : [];
+  return {
+    created: num(data.created) ?? num(data.inserted) ?? num(data.createdCount),
+    updated: num(data.updated) ?? num(data.updatedCount),
+    skipped: num(data.skipped) ?? num(data.skippedCount),
+    sectionsCreated: num(data.sectionsCreated),
+    errors,
+  };
+};
+
+// CSV upload (FR-9.3). Columns: studentNo, firstName, lastName, sectionCode, schoolYear.
+export const importStudentsApi = async (formData: FormData): Promise<RosterImportResult> => {
   const response = await api.post("/students:import", formData);
-  return response.data;
+  return toImportResult(response.data);
 };
 
 export const allSectionsApi = async (): Promise<SectionDto[]> => {
-  const response = await api.get("/sections");
-  return response.data.data;
+  const response = await api.get("/sections", { params: { page: 1, pageSize: 200, sort: "code" } });
+  return toPaged<SectionDto>(response.data, { page: 1, pageSize: 200 }).items;
 };
 
 export const createSectionApi = async (data: SectionForm): Promise<SectionDto> => {
@@ -149,8 +191,11 @@ export const resetTermWarningsApi = async (data: ResolveRequest) => {
 
 // ── Fingerprint enrollment (kiosk ENROLLMENT session started by an admin) ────
 
-export const startEnrollmentApi = async (studentId: string): Promise<CheckoutSessionDto> => {
-  const response = await api.post("/kiosk/sessions", { type: "ENROLLMENT", studentId });
+// PRD 6.3: POST /kiosk/{stationCode}/sessions with session_type ENROLLMENT, on the counter kiosk.
+export const startEnrollmentApi = async (
+  { studentId, stationCode }: { studentId: string; stationCode: string },
+): Promise<CheckoutSessionDto> => {
+  const response = await api.post(`/kiosk/${encodeURIComponent(stationCode)}/sessions`, { type: "ENROLLMENT", studentId });
   return response.data.data;
 };
 

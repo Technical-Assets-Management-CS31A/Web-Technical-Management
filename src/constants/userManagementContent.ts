@@ -6,6 +6,7 @@ export const USER_MANAGEMENT_CONTENT = {
   tabs: {
     accounts: "Accounts",
     students: "Students",
+    sections: "Sections",
   },
   newUser: "New account",
   stats: {
@@ -16,6 +17,14 @@ export const USER_MANAGEMENT_CONTENT = {
     activeSub: (count: number) => `${count} active`,
     noCardSub: (count: number) => `${count} without a card`,
     frozenSub: "Cannot approve on mobile",
+    students: "Students",
+    studentsSub: "On the roster",
+    notEnrolled: "Not enrolled",
+    notEnrolledSub: "Cannot borrow yet",
+    warned: "Warned",
+    warnedSub: "1 mark",
+    blocked: "Blocked",
+    blockedSub: "2 marks; refused at the kiosk",
   },
   roleFilters: [
     { value: "all", label: "All" },
@@ -26,6 +35,7 @@ export const USER_MANAGEMENT_CONTENT = {
   ],
   tableTitle: "Accounts",
   countLabel: (count: number) => `${count} account${count !== 1 ? "s" : ""}`,
+  includingDeleted: ", including deleted",
   searchName: "Search accounts",
   searchPlaceholder: "Search by name, email, employee no. or role",
   empty: {
@@ -41,12 +51,15 @@ export const USER_MANAGEMENT_CONTENT = {
     title: "Delete Account",
     label: "delete",
     noun: "account",
-    destination: "Deleted records page",
+    destination: "Show deleted filter on Accounts",
   },
   toast: {
     deletedTitle: "Account Deleted",
     deletedMessage: "The account can no longer sign in.",
     actionFailed: "Action Failed",
     deleteFailed: "Failed to delete account.",
+    restoredTitle: "Account Restored",
+    restoredMessage: (email: string) => `${email || "The account"} is back on the People list.`,
+    restoreFailed: "Failed to restore account.",
   },
 } as const;

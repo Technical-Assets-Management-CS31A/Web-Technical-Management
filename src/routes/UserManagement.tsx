@@ -1,10 +1,11 @@
 import { useCallback, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AddUsers } from "../components/AddUser";
 import EditUser from "../components/EditUser";
 import SearchBar from "../components/SearchBar";
 import { SelectUserStatus } from "../components/SelectUserStatus";
 import { UserSkeletonLoader } from "../loader/UserSkeletonLoader";
-import { useDeleteUser } from "../hooks/userHooks";
+import { useDeleteUser, useRestoreUser, useStudentCount } from "../hooks/userHooks";
 import UserTable from "../components/UserTable";
 import ErrorTable from "../components/ErrorTables";
 import PopUpModal from "../components/PopUpModal";
@@ -14,9 +15,15 @@ import { getErrorMessage } from "../components/form/FormKit";
 import { useAllUsersManagement, useFilteredUser } from "../data/user-management-data";
 import { useAllUsersManagementState } from "../states/user-management-state";
 import StudentRoster from "../components/StudentRoster";
+import SectionsPanel from "../components/SectionsPanel";
+import { ShowDeletedToggle } from "../components/DeletedRecords";
 import { UserData, canManageAccounts } from "../utils/usersData/userData";
 import { USER_MANAGEMENT_CONTENT as T } from "../constants/userManagementContent";
 import {
+  Fingerprint,
+  Layers,
+  ShieldAlert,
+  ShieldX,
   Users,
   Search,
   Shield,
@@ -44,11 +51,22 @@ export default function UserManagement() {
     setSelectedUserId,
     deleteUserId,
     setDeleteUserId,
+    showDeletedAccounts,
+    setShowDeletedAccounts,
   } = useAllUsersManagementState();
 
+  const canManage = canManageAccounts(viewer.role);
+  const showDeleted = canManage && showDeletedAccounts;
   const { mutate, isPending: isDeleting } = useDeleteUser();
-  const { users, isPending, isError } = useAllUsersManagement();
-  const { filteredUser, setSearchUser, setSelectedStatus, selectedRole, setSelectedRole } = useFilteredUser(users);
+  const restoreUser = useRestoreUser();
+  const { users, isPending, isError } = useAllUsersManagement(showDeleted);
+  const { filteredUser, setSearchUser, setSelectedStatus, selectedRole, setSelectedRole } = useFilteredUser(users, showDeleted);
+
+  // Roster summary (server counts, so they cover every page).
+  const studentTotal = useQuery(useStudentCount());
+  const notEnrolled = useQuery(useStudentCount({ enrolled: false }));
+  const warned = useQuery(useStudentCount({ standing: "WARNED" }));
+  const blocked = useQuery(useStudentCount({ standing: "BLOCKED" }));
 
   const selectedUser = useMemo(
     () => users.find((u) => u.id === selectedUserId),
@@ -75,6 +93,14 @@ export default function UserManagement() {
     setDeleteUserId("");
   };
 
+  const handleRestoreUser = (id: string) => {
+    const user = users.find((u) => u.id === id);
+    restoreUser.mutate(id, {
+      onSuccess: () => showToast.success(T.toast.restoredTitle, T.toast.restoredMessage(user ? user.email : "")),
+      onError: (err) => showToast.error(T.toast.actionFailed, getErrorMessage(err, T.toast.restoreFailed)),
+    });
+  };
+
   const handleViewUserCredentials = (id: string) => {
     setSelectedUserId(id);
     setIsViewCredentialsOpen(true);
@@ -87,16 +113,24 @@ export default function UserManagement() {
   const noCardCount = instructors.filter((u) => !u.authCards?.some((c) => c.status === "ACTIVE")).length;
   const activeCount = (list: typeof users) => list.filter((u) => u.status === "ACTIVE").length;
 
-  const stats = [
+  const accountStats = [
     { label: T.stats.total, value: liveUsers.length, sub: T.stats.activeSub(activeCount(liveUsers)), icon: Users },
     { label: T.stats.staff, value: staff.length, sub: T.stats.activeSub(activeCount(staff)), icon: Shield },
     { label: T.stats.instructors, value: instructors.length, sub: T.stats.noCardSub(noCardCount), icon: Presentation },
     { label: T.stats.frozen, value: frozenCount, sub: T.stats.frozenSub, icon: Snowflake },
   ];
+  const studentStats = [
+    { label: T.stats.students, value: studentTotal.data, sub: T.stats.studentsSub, icon: GraduationCap },
+    { label: T.stats.notEnrolled, value: notEnrolled.data, sub: T.stats.notEnrolledSub, icon: Fingerprint },
+    { label: T.stats.warned, value: warned.data, sub: T.stats.warnedSub, icon: ShieldAlert },
+    { label: T.stats.blocked, value: blocked.data, sub: T.stats.blockedSub, icon: ShieldX },
+  ];
+  const stats = activeTab === "accounts" ? accountStats : studentStats;
 
   const tabs = [
     { id: "accounts" as const, label: T.tabs.accounts, icon: Users },
     { id: "students" as const, label: T.tabs.students, icon: GraduationCap },
+    { id: "sections" as const, label: T.tabs.sections, icon: Layers },
   ];
 
   if (isPending) return <UserSkeletonLoader />;
@@ -112,7 +146,7 @@ export default function UserManagement() {
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{T.title}</h1>
             <p className="mt-1 max-w-xl text-sm text-slate-500">{T.description}</p>
           </div>
-          {canManageAccounts(viewer.role) && <button
+          {canManage && activeTab === "accounts" && <button
             type="button"
             onClick={() => setIsAddUserOpen(true)}
             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm shadow-blue-600/20 transition-all hover:bg-blue-700 active:scale-[0.98]"
@@ -131,7 +165,9 @@ export default function UserManagement() {
             >
               <div className="min-w-0">
                 <p className="truncate text-sm text-slate-500">{stat.label}</p>
-                <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">{stat.value}</p>
+                <p className="mt-1.5 text-2xl font-semibold tracking-tight text-slate-900 tabular-nums">
+                  {stat.value === undefined ? <span className="text-slate-300">—</span> : stat.value.toLocaleString()}
+                </p>
                 <p className="mt-0.5 truncate text-xs text-slate-400">{stat.sub}</p>
               </div>
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
@@ -148,6 +184,8 @@ export default function UserManagement() {
             return (
               <button
                 key={tab.id}
+                type="button"
+                aria-pressed={isActive}
                 onClick={() => setActiveTab(tab.id)}
                 className={`inline-flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-all sm:flex-none ${
                   isActive ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
@@ -168,7 +206,10 @@ export default function UserManagement() {
             <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="text-base font-semibold text-slate-900">{T.tableTitle}</h2>
-                <p className="mt-0.5 text-xs text-slate-500">{T.countLabel(filteredUser.length)}</p>
+                <p className="mt-0.5 text-xs text-slate-500">
+                  {T.countLabel(filteredUser.length)}
+                  {showDeleted && T.includingDeleted}
+                </p>
               </div>
 
               <div className="flex flex-col flex-wrap items-stretch gap-2 sm:flex-row sm:items-center lg:justify-end">
@@ -195,6 +236,7 @@ export default function UserManagement() {
                   name={T.searchName}
                   placeholder={T.searchPlaceholder}
                 />
+                {canManage && <ShowDeletedToggle checked={showDeletedAccounts} onChange={setShowDeletedAccounts} />}
               </div>
             </div>
 
@@ -229,7 +271,7 @@ export default function UserManagement() {
                           key={user.id}
                           onClick={() => handleViewUserCredentials(user.id)}
                           className={`group cursor-pointer transition-colors ${
-                            user.isFrozen ? "bg-sky-50/40 hover:bg-sky-50/70" : "hover:bg-slate-50"
+                            user.deletedAt ? "bg-slate-50/60 hover:bg-slate-50" : user.isFrozen ? "bg-sky-50/40 hover:bg-sky-50/70" : "hover:bg-slate-50"
                           }`}
                         >
                           <UserTable
@@ -242,6 +284,8 @@ export default function UserManagement() {
                               setDeleteUserId(userId);
                               setIsDeleteModalOpen(true);
                             }}
+                            onRestore={handleRestoreUser}
+                            isRestoring={restoreUser.isPending && restoreUser.variables === user.id}
                           />
                         </tr>
                       ))}
@@ -261,6 +305,9 @@ export default function UserManagement() {
 
         {/* ── Students tab ── */}
         {activeTab === "students" && <StudentRoster />}
+
+        {/* ── Sections tab ── */}
+        {activeTab === "sections" && <SectionsPanel />}
       </div>
 
       {/* Modals */}

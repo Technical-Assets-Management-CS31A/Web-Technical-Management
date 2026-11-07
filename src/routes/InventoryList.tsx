@@ -9,6 +9,7 @@ import { getErrorMessage } from "../components/form/FormKit";
 import { showToast } from "../components/AppToast";
 import SelectItemFilters, { type FilterGroup } from "../components/SelectItemFilters";
 import { InventoryTable } from "../components/InventoryTable";
+import { ShowDeletedToggle } from "../components/DeletedRecords";
 import { allAssetsApi } from "../api/asset_api";
 import { useAssetCount, useAssetPage, useGetCategories, useImportAssets } from "../hooks/assetHooks";
 import { formatEnum } from "../lib/utils";
@@ -18,7 +19,6 @@ import { useInventoryListState, type AssetSort } from "../states/inventory-list-
 import { INVENTORY_LIST_CONTENT as T } from "../constants/inventoryListContent";
 import {
   AlertTriangle,
-  ArchiveRestore,
   CheckCircle2,
   Download,
   Loader2,
@@ -368,19 +368,7 @@ export default function InventoryList() {
                   ))}
                 </select>
                 {canManage && (
-                  <button
-                    type="button"
-                    onClick={() => setFilter("showDeleted", !filters.showDeleted)}
-                    aria-pressed={filters.showDeleted}
-                    className={`inline-flex h-[42px] items-center justify-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors ${
-                      filters.showDeleted
-                        ? "border-amber-400 bg-amber-50 text-amber-800"
-                        : "border-slate-300 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-700"
-                    }`}
-                  >
-                    <ArchiveRestore className="h-4 w-4" />
-                    {T.filters.showDeleted}
-                  </button>
+                  <ShowDeletedToggle checked={filters.showDeleted} onChange={(value) => setFilter("showDeleted", value)} />
                 )}
               </div>
             </div>

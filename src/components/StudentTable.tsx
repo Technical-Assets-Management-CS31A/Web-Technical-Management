@@ -4,15 +4,18 @@ import type { StudentDto } from "../@types/types";
 import { UserData, canManageRoster } from "../utils/usersData/userData";
 import { fullName } from "../lib/utils";
 import StandingPill from "./StandingPill";
+import { DeletedBadge, RestoreButton } from "./DeletedRecords";
 
 type StudentTableProps = {
     student: StudentDto;
     onEdit: (id: string) => void;
     onEnroll: (id: string) => void;
     onDelete: (id: string) => void;
+    onRestore: (id: string) => void;
+    isRestoring?: boolean;
 };
 
-export const StudentTable = ({ student, onEdit, onEnroll, onDelete }: StudentTableProps) => {
+export const StudentTable = ({ student, onEdit, onEnroll, onDelete, onRestore, isRestoring = false }: StudentTableProps) => {
     const viewer = UserData();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -28,6 +31,7 @@ export const StudentTable = ({ student, onEdit, onEnroll, onDelete }: StudentTab
     }, [isMenuOpen]);
 
     const canManage = canManageRoster(viewer.role);
+    const isDeleted = !!student.deletedAt;
     const run = (action: (id: string) => void) => (e: React.MouseEvent) => {
         e.stopPropagation();
         action(student.id);
@@ -37,7 +41,10 @@ export const StudentTable = ({ student, onEdit, onEnroll, onDelete }: StudentTab
     return (
         <>
             <td className="px-6 py-4">
-                <p className="font-medium text-slate-900">{fullName(student)}</p>
+                <p className={`flex items-center gap-2 font-medium ${isDeleted ? "text-slate-500" : "text-slate-900"}`}>
+                    {fullName(student)}
+                    {isDeleted && <DeletedBadge />}
+                </p>
                 <p className="font-mono text-xs text-slate-500">{student.studentNo}</p>
             </td>
             <td className="px-6 py-4 text-slate-600">
@@ -59,10 +66,18 @@ export const StudentTable = ({ student, onEdit, onEnroll, onDelete }: StudentTab
                 {student.activeWarningCount} / {student.activeMarkCount}
             </td>
             <td className="px-6 py-4">
-                <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${student.enrolledFingerCount ? "text-slate-700" : "text-amber-700"}`}>
-                    <Fingerprint className="h-3.5 w-3.5" />
-                    {student.enrolledFingerCount ? `${student.enrolledFingerCount} enrolled` : "Not enrolled"}
-                </span>
+                {/* Templates never reach the web; only the enrolled-finger count does. */}
+                {student.enrolledFingerCount ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                        <Fingerprint className="h-3 w-3" />
+                        Enrolled · {student.enrolledFingerCount} finger{student.enrolledFingerCount === 1 ? "" : "s"}
+                    </span>
+                ) : (
+                    <span title="Cannot borrow until a fingerprint is enrolled at the kiosk" className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-200">
+                        <Fingerprint className="h-3 w-3" />
+                        Not enrolled
+                    </span>
+                )}
             </td>
             <td className="px-6 py-4">
                 <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${student.status === "ACTIVE" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
@@ -71,7 +86,8 @@ export const StudentTable = ({ student, onEdit, onEnroll, onDelete }: StudentTab
                 </span>
             </td>
             <td className="px-6 py-4 text-right">
-                {canManage && (
+                {canManage && isDeleted && <RestoreButton onRestore={() => onRestore(student.id)} isRestoring={isRestoring} />}
+                {canManage && !isDeleted && (
                     <div className="relative" ref={menuRef}>
                         <button
                             onClick={(e) => { e.stopPropagation(); setIsMenuOpen(!isMenuOpen); }}

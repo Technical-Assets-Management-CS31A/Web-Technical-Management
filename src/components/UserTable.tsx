@@ -3,6 +3,7 @@ import { Snowflake, MoreVertical, Pencil, Trash2, ShieldCheck, Shield, Wrench, B
 import { useState, useRef, useEffect } from "react";
 import { formatRole, fullName as toFullName, initials as toInitials } from "../lib/utils";
 import type { UserDto, UserRole } from "../@types/types";
+import { DeletedBadge, RestoreButton } from "./DeletedRecords";
 
 const ROLE_STYLES: Record<UserRole, { badge: string; icon: typeof Shield }> = {
     ADMIN: { badge: "bg-amber-50 text-amber-700 ring-amber-200", icon: ShieldCheck },
@@ -29,9 +30,11 @@ type UserTableProps = {
     user: UserDto;
     onEdit: (id: string) => void;
     onDelete: (id: string) => void;
+    onRestore: (id: string) => void;
+    isRestoring?: boolean;
 };
 
-export default function UserTable({ user, onEdit, onDelete }: UserTableProps) {
+export default function UserTable({ user, onEdit, onDelete, onRestore, isRestoring = false }: UserTableProps) {
     const viewer = UserData();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -58,6 +61,7 @@ export default function UserTable({ user, onEdit, onDelete }: UserTableProps) {
     const canDelete = canEdit && viewer.id !== user.id;
 
     const name = toFullName(user);
+    const isDeleted = !!user.deletedAt;
     const isActive = user.status === "ACTIVE";
     const roleStyle = ROLE_STYLES[user.role] ?? ROLE_STYLES.TECH_STAFF;
     const activeCards = user.authCards?.filter((card) => card.status === "ACTIVE").length ?? 0;
@@ -75,7 +79,10 @@ export default function UserTable({ user, onEdit, onDelete }: UserTableProps) {
                         </span>
                     </div>
                     <div className="min-w-0">
-                        <p className="font-medium text-slate-900">{name || "—"}</p>
+                        <p className={`flex items-center gap-2 font-medium ${isDeleted ? "text-slate-500" : "text-slate-900"}`}>
+                            {name || "—"}
+                            {isDeleted && <DeletedBadge />}
+                        </p>
                         <p className="font-mono text-xs text-slate-500">{user.employeeNo}</p>
                     </div>
                 </div>
@@ -131,7 +138,8 @@ export default function UserTable({ user, onEdit, onDelete }: UserTableProps) {
 
             {/* Actions */}
             <td className="px-5 py-3 text-right">
-                {canEdit && (
+                {canEdit && isDeleted && <RestoreButton onRestore={() => onRestore(user.id)} isRestoring={isRestoring} />}
+                {canEdit && !isDeleted && (
                     <div className="relative" ref={menuRef}>
                         <button
                             onClick={(e) => {

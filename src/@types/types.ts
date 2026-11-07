@@ -7,6 +7,7 @@ import type {
   CardStatus,
   RecordStatus,
   StationType,
+  StudentStanding,
   UserRole,
 } from "./tams";
 
@@ -132,6 +133,44 @@ export type AssetListParams = ListParams & {
   type?: AssetType;
   categoryId?: string;
   includeDeleted?: boolean;
+};
+
+export type UserListParams = ListParams & {
+  role?: UserRole;
+  status?: RecordStatus;
+  includeDeleted?: boolean;
+};
+
+export type StudentListParams = ListParams & {
+  sectionId?: string;
+  standing?: StudentStanding;
+  /** true = at least one finger enrolled, false = none yet */
+  enrolled?: boolean;
+  includeDeleted?: boolean;
+};
+
+// ── Roster import (POST /students:import, FR-9.3) ────────────────────────────
+
+/** One CSV row as the web reads it before upload. */
+export type RosterRow = {
+  /** 1-based line in the file, header is line 1 */
+  line: number;
+  studentNo: string;
+  firstName: string;
+  lastName: string;
+  sectionCode: string;
+  schoolYear: string;
+};
+
+export type RosterImportIssue = { line: number | null; studentNo?: string | null; message: string };
+
+/** The backend's import report; fields are optional until the import endpoint is pinned down. */
+export type RosterImportResult = {
+  created: number | null;
+  updated: number | null;
+  skipped: number | null;
+  sectionsCreated: number | null;
+  errors: RosterImportIssue[];
 };
 
 // Staff set only MAINTENANCE and RETIRED; IN_STORAGE brings an asset back.
