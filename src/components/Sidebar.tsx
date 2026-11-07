@@ -4,7 +4,6 @@ import { CiLogout, CiUser } from "react-icons/ci";
 import { GiArchiveRegister } from "react-icons/gi";
 import {
   MdHistory,
-  MdInventory,
   MdDashboardCustomize,
   MdAssessment,
   MdMeetingRoom,
@@ -53,7 +52,6 @@ export default function Sidebar() {
     { label: "Auth cards", link: "/home/auth-cards", icon: BsPersonBadge },
     { label: "Rooms & stations", link: "/home/rooms", icon: MdMeetingRoom },
     { label: "Reports", link: "/home/reports", icon: MdAssessment },
-    { label: "Deleted records", link: "/home/archive-table", icon: MdInventory },
   ];
 
   const logsLinks: NavLink[] = [
