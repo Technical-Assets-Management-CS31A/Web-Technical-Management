@@ -1,4 +1,5 @@
 import {
+  keepPreviousData,
   queryOptions,
   useQueryClient,
   useMutation,
@@ -22,6 +23,7 @@ import {
   getStudentStandingApi,
   getUserApi,
   importStudentsApi,
+  listStudentsApi,
   liftFreezeApi,
   liftHoldApi,
   resetTermWarningsApi,
@@ -33,6 +35,7 @@ import {
   updateStudentApi,
   updateUserApi,
 } from "../api/user_api";
+import type { StudentListParams } from "../@types/types";
 
 export const USERS_KEY = ["users"] as const;
 export const STUDENTS_KEY = ["students"] as const;
@@ -127,6 +130,24 @@ export const useAllStudents = (includeDeleted = false) => {
     gcTime: 5 * 60 * 1000
   });
 };
+
+/** One page of the roster; keeps the previous page on screen while the next loads. */
+export const useStudentPage = (params: StudentListParams) =>
+  queryOptions({
+    queryFn: () => listStudentsApi(params),
+    queryKey: [...STUDENTS_KEY, "page", params],
+    placeholderData: keepPreviousData,
+    staleTime: 30 * 1000,
+  });
+
+/** Just the number of students matching the filters (summary cards). */
+export const useStudentCount = (params: Omit<StudentListParams, "page" | "pageSize"> = {}) =>
+  queryOptions({
+    queryFn: () => listStudentsApi({ ...params, page: 1, pageSize: 1 }),
+    queryKey: [...STUDENTS_KEY, "count", params],
+    select: (page) => page.total,
+    staleTime: 30 * 1000,
+  });
 
 export const useGetStudent = (id: string) => {
   return queryOptions({
