@@ -1,10 +1,36 @@
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
+import type { StudentStanding } from "../@types/types";
 
-type TPageTab = "accounts" | "students";
+// People screen state. Roster filters live here so they survive switching tabs
+// and opening a student. Changing any roster filter goes back to page 1.
+
+export type PeopleTab = "accounts" | "students" | "sections";
+
+export type RosterFilters = {
+  search: string;
+  sectionId: string;
+  standing: StudentStanding | "";
+  /** "" = everyone, "yes" = has a fingerprint, "no" = still to enroll */
+  enrolled: "" | "yes" | "no";
+  showDeleted: boolean;
+};
+
+export const DEFAULT_ROSTER_FILTERS: RosterFilters = {
+  search: "",
+  sectionId: "",
+  standing: "",
+  enrolled: "",
+  showDeleted: false,
+};
 
 interface IUserManagement {
-  activeTab: TPageTab;
-  setActiveTab: (value: TPageTab) => void;
+  activeTab: PeopleTab;
+  setActiveTab: (value: PeopleTab) => void;
+
+  // Accounts
+  showDeletedAccounts: boolean;
+  setShowDeletedAccounts: (value: boolean) => void;
   isAddUserOpen: boolean;
   setIsAddUserOpen: (value: boolean) => void;
   isEditUserOpen: boolean;
@@ -17,67 +43,45 @@ interface IUserManagement {
   setSelectedUserId: (id: string) => void;
   deleteUserId: string;
   setDeleteUserId: (id: string) => void;
+
+  // Student roster
+  rosterPage: number;
+  setRosterPage: (value: number) => void;
+  rosterFilters: RosterFilters;
+  setRosterFilter: <K extends keyof RosterFilters>(key: K, value: RosterFilters[K]) => void;
+  clearRosterFilters: () => void;
 }
 
 const UserManagementStore = create<IUserManagement>((set) => ({
   activeTab: "accounts",
   setActiveTab: (value) => set(() => ({ activeTab: value })),
 
+  showDeletedAccounts: false,
+  setShowDeletedAccounts: (value) => set(() => ({ showDeletedAccounts: value })),
   isAddUserOpen: false,
   setIsAddUserOpen: (value) => set(() => ({ isAddUserOpen: value })),
-
   isEditUserOpen: false,
   setIsEditUserOpen: (value) => set(() => ({ isEditUserOpen: value })),
-
   isViewCredentialsOpen: false,
   setIsViewCredentialsOpen: (value) => set(() => ({ isViewCredentialsOpen: value })),
-
   isDeleteModalOpen: false,
   setIsDeleteModalOpen: (value) => set(() => ({ isDeleteModalOpen: value })),
-
   selectedUserId: "",
   setSelectedUserId: (id) => set(() => ({ selectedUserId: id })),
-
   deleteUserId: "",
   setDeleteUserId: (id) => set(() => ({ deleteUserId: id })),
+
+  rosterPage: 1,
+  setRosterPage: (value) => set(() => ({ rosterPage: value })),
+  rosterFilters: DEFAULT_ROSTER_FILTERS,
+  setRosterFilter: (key, value) =>
+    set((state) => ({ rosterFilters: { ...state.rosterFilters, [key]: value }, rosterPage: 1 })),
+  // Keeps search and the deleted toggle; clears the narrowing filters.
+  clearRosterFilters: () =>
+    set((state) => ({
+      rosterFilters: { ...DEFAULT_ROSTER_FILTERS, search: state.rosterFilters.search, showDeleted: state.rosterFilters.showDeleted },
+      rosterPage: 1,
+    })),
 }));
 
-export const useAllUsersManagementState = () => {
-  const activeTab = UserManagementStore((state) => state.activeTab);
-  const setActiveTab = UserManagementStore((state) => state.setActiveTab);
-
-  const isAddUserOpen = UserManagementStore((state) => state.isAddUserOpen);
-  const setIsAddUserOpen = UserManagementStore((state) => state.setIsAddUserOpen);
-
-  const isEditUserOpen = UserManagementStore((state) => state.isEditUserOpen);
-  const setIsEditUserOpen = UserManagementStore((state) => state.setIsEditUserOpen);
-
-  const isViewCredentialsOpen = UserManagementStore((state) => state.isViewCredentialsOpen);
-  const setIsViewCredentialsOpen = UserManagementStore((state) => state.setIsViewCredentialsOpen);
-
-  const isDeleteModalOpen = UserManagementStore((state) => state.isDeleteModalOpen);
-  const setIsDeleteModalOpen = UserManagementStore((state) => state.setIsDeleteModalOpen);
-
-  const selectedUserId = UserManagementStore((state) => state.selectedUserId);
-  const setSelectedUserId = UserManagementStore((state) => state.setSelectedUserId);
-
-  const deleteUserId = UserManagementStore((state) => state.deleteUserId);
-  const setDeleteUserId = UserManagementStore((state) => state.setDeleteUserId);
-
-  return {
-    activeTab,
-    setActiveTab,
-    isAddUserOpen,
-    setIsAddUserOpen,
-    isEditUserOpen,
-    setIsEditUserOpen,
-    isViewCredentialsOpen,
-    setIsViewCredentialsOpen,
-    isDeleteModalOpen,
-    setIsDeleteModalOpen,
-    selectedUserId,
-    setSelectedUserId,
-    deleteUserId,
-    setDeleteUserId,
-  };
-};
+export const useAllUsersManagementState = () => UserManagementStore(useShallow((state) => state));
