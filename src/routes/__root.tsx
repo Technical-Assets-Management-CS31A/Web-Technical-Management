@@ -17,6 +17,7 @@ import RfidController from "./RfidController";
 import Reports from "./Reports";
 import Rooms from "./Rooms";
 import AuthCards from "./AuthCards";
+import CounterCamera from "./CounterCamera";
 
 
 export const Route = createRootRoute({
@@ -39,6 +40,17 @@ const homeRoute = createRoute({
     component: () => (
         <ProtectedRoute>
             <Home />
+        </ProtectedRoute>
+    ),
+});
+
+// Standalone (no sidebar) so the counter computer can run it full-screen.
+const CounterCameraRoute = createRoute({
+    getParentRoute: () => Route,
+    path: "counter-camera",
+    component: () => (
+        <ProtectedRoute>
+            <CounterCamera />
         </ProtectedRoute>
     ),
 });
@@ -123,6 +135,7 @@ const AuthCardsRoute = createRoute({
 
 export const routeTree = Route.addChildren([
     indexRoute,
+    CounterCameraRoute,
     homeRoute.addChildren([
         DashboardRoute,
         InventoryListRoute,
