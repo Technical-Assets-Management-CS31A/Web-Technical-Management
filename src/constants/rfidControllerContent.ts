@@ -18,6 +18,7 @@ export const RFID_CONTROLLER_CONTENT = {
     asset: "Asset",
     room: "Room",
   },
+  testCamera: "Test webcam",
   capturePrompt: "Take the checkout photo",
   cameraIdle: "The camera opens when the kiosk asks for the photo.",
   photoReceived: "Checkout photo received.",
