@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { Camera, CheckCircle2, Info, Loader2, MonitorSmartphone, Upload } from "lucide-react";
 import { WebcamCapture } from "../components/WebcamCapture";
 import { useActiveKioskSessions, useUploadSessionPhoto } from "../hooks/loanHooks";
@@ -159,10 +160,19 @@ export default function RfidController() {
       <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 md:px-8 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
 
         {/* Header */}
-        <header>
-          <p className="text-xs font-medium uppercase tracking-wider text-blue-600">{T.eyebrow}</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{T.title}</h1>
-          <p className="mt-1 text-sm text-slate-500">{T.description}</p>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-blue-600">{T.eyebrow}</p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{T.title}</h1>
+            <p className="mt-1 text-sm text-slate-500">{T.description}</p>
+          </div>
+          <Link
+            to="/counter-camera"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            <Camera className="h-4 w-4" />
+            {T.testCamera}
+          </Link>
         </header>
 
         {isError ? (
