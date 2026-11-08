@@ -5,6 +5,8 @@ import SettingsSkeletonLoader from "../loader/SettingsSkeletonLoader";
 import EditProfileModal from "../components/EditProfileModal";
 import InventorySettings from "../components/InventorySettings";
 import AppearanceSettings from "../components/AppearanceSettings";
+import BusinessRulesSettings from "../components/BusinessRulesSettings";
+import { canEditBusinessRules } from "../utils/usersData/userData";
 import { DetailSection, InfoRow } from "../components/ArchiveDetailShell";
 import type { UserDto } from "../@types/types";
 import { formatEnum, formatRole, fullName as toFullName, initials as toInitials } from "../lib/utils";
@@ -23,12 +25,14 @@ import {
   Palette,
   ShieldCheck,
   ChevronRight,
+  SlidersHorizontal,
 } from "lucide-react";
 
-type SettingsTab = "profile" | "inventory" | "appearance";
+type SettingsTab = "profile" | "businessRules" | "inventory" | "appearance";
 
 const TABS: { key: SettingsTab; label: string; description: string; icon: React.ElementType }[] = [
   { key: "profile", label: T.tabs.profile, description: T.tabDescriptions.profile, icon: CircleUserRound },
+  { key: "businessRules", label: T.tabs.businessRules, description: T.tabDescriptions.businessRules, icon: SlidersHorizontal },
   { key: "inventory", label: T.tabs.inventory, description: T.tabDescriptions.inventory, icon: Package },
   { key: "appearance", label: T.tabs.appearance, description: T.tabDescriptions.appearance, icon: Palette },
 ];
@@ -126,6 +130,11 @@ export default function Settings() {
               <>
                 <PanelHeader title={T.tabs.appearance} description={T.appearance.description} />
                 <AppearanceSettings />
+              </>
+            ) : activeTab === "businessRules" ? (
+              <>
+                <PanelHeader title={T.businessRules.title} description={T.businessRules.description} />
+                <BusinessRulesSettings canEdit={canEditBusinessRules(user?.role ?? "")} />
               </>
             ) : activeTab === "inventory" ? (
               <>
