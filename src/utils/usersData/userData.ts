@@ -31,3 +31,4 @@ export const canManageRoster = (role: UserRole | "") => role === "ADMIN" || role
 export const canManageAssets = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF" || role === "CUSTODIAN";
 export const canResolvePenalties = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
 export const canManageRooms = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
+export const canEditBusinessRules = (role: UserRole | "") => role === "ADMIN";
