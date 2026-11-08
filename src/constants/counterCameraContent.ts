@@ -1,0 +1,48 @@
+export const COUNTER_CAMERA_CONTENT = {
+  eyebrow: "Counter",
+  title: "Webcam check",
+  description:
+    "Open the counter's USB webcam and take a test photo to confirm it works before the kiosk needs it for checkout photos.",
+  back: "Counter Station",
+  status: {
+    live: "Live",
+    starting: "Starting…",
+    off: "Off",
+    error: "Error",
+  },
+  cameraLabel: "Camera",
+  noCameras: "No cameras detected",
+  resolution: "Resolution",
+  starting: "Starting camera…",
+  offTitle: "Camera is off",
+  offHint: "Start the camera to see the live preview.",
+  actions: {
+    capture: "Take test photo",
+    capturing: "Capturing…",
+    start: "Start camera",
+    stop: "Stop camera",
+    retry: "Retry",
+    download: "Download",
+    clear: "Clear",
+  },
+  photo: {
+    title: "Test photo",
+    emptyTitle: "No test photo yet",
+    emptyHint: "Take a test photo to check framing, focus and lighting at the counter.",
+    alt: "Test photo from the counter webcam",
+    takenAt: "Taken",
+    size: "Size",
+    dimensions: "Dimensions",
+    camera: "Camera",
+  },
+  checks: {
+    title: "Checks",
+    supported: "Browser can access cameras",
+    detected: "Camera detected",
+    live: "Live preview running",
+    captured: "Test photo captured",
+  },
+  captureFailed: "Couldn't capture a photo. Wait for the preview to load and try again.",
+  footerHint:
+    "Test photos stay on this computer and are not uploaded. The camera you pick here is remembered and used for checkout photos.",
+} as const;
