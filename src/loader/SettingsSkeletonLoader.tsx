@@ -16,7 +16,7 @@ export default function SettingsSkeletonLoader() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">
           {/* Navigation */}
           <div className="flex gap-1 lg:flex-col">
-            {[0, 1, 2].map((i) => (
+            {[0, 1, 2, 3].map((i) => (
               <div key={i} className="flex items-center gap-3 rounded-lg px-3 py-2.5">
                 <Bone className="h-8 w-8 rounded-md" />
                 <div className="space-y-1.5">
