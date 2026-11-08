@@ -4,13 +4,19 @@ export const SETTINGS_CONTENT = {
   description: "Manage your account and system configuration.",
   tabs: {
     profile: "Profile",
+    businessRules: "Business rules",
     inventory: "Inventory",
     appearance: "Appearance",
   },
   tabDescriptions: {
     profile: "Your personal and account details",
+    businessRules: "Loan, kiosk and penalty rules",
     inventory: "Asset categories",
     appearance: "Theme and display preferences",
+  },
+  businessRules: {
+    title: "Business rules",
+    description: "System-wide rules from PRD 4.1. Changes apply to new kiosk sessions and loans.",
   },
   inventory: {
     title: "Asset categories",
