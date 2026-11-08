@@ -1,0 +1,19 @@
+node_modules
+dist
+dist-ssr
+.wrangler
+.git
+.github
+.vscode
+.idea
+.kiro
+*.log
+*.local
+
+# Secrets: pass VITE_* values as --build-arg instead
+.env
+.env.*
+.dev.vars*
+
+Dockerfile
+.dockerignore
