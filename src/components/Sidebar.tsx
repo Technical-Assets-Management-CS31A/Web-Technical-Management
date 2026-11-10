@@ -43,7 +43,7 @@ export default function Sidebar() {
   ];
 
   const operationalLinks: NavLink[] = [
-    { label: "Loans", link: "/home/active-borrowed-items", icon: BsClipboardCheck, badge: activeBorrowCount },
+    { label: "Loans", link: "/home/loans", icon: BsClipboardCheck, badge: activeBorrowCount },
     { label: "Counter", link: "/home/rfid-controller", icon: FaWifi },
   ];
 
@@ -56,7 +56,6 @@ export default function Sidebar() {
 
   const logsLinks: NavLink[] = [
     { label: "Activity Logs", link: "/home/activity-logs", icon: BiLogoSass },
-    { label: "Loan History", link: "/home/history-list", icon: MdHistory },
   ];
 
   const bottomLinks: NavLink[] = [
