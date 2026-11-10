@@ -4,14 +4,17 @@ import type { ReactNode } from "react";
 type BadgesProps = {
   name: string;
   link: string;
+  /** Optional query params, e.g. a status filter on the Loans list */
+  search?: Record<string, string>;
   data: number | null;
   icon: ReactNode;
 };
 
-export default function DashboardBadges({ name, link, data, icon }: BadgesProps) {
+export default function DashboardBadges({ name, link, search, data, icon }: BadgesProps) {
   return (
     <Link
       to={link}
+      search={search}
       className="group flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5 transition-colors hover:border-slate-300"
     >
       <div className="min-w-0">
