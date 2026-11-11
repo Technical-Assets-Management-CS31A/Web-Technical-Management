@@ -16,7 +16,6 @@ import type { LoanDto } from "../@types/types";
 import { useAllLoans } from "../hooks/loanHooks";
 import { useAllRooms } from "../hooks/assetHooks";
 import { FormattedDateTime } from "../components/FormattedDateTime";
-import LoanDetailDialog from "../components/LoanDetailDialog";
 import SearchBar from "../components/SearchBar";
 import Pagination from "../components/Pagination";
 import ErrorTable from "../components/ErrorTables";
@@ -39,7 +38,7 @@ import { UserData } from "../utils/usersData/userData";
 import { LOANS_CONTENT as T } from "../constants/loansContent";
 
 // PRD 6.5 Loans: a read-only list of active and past loans from the kiosk flow.
-// The web never creates a borrow; staff actions (mark missing, change room) live in LoanDetailDialog.
+// The web never creates a borrow; staff actions (mark missing, change room) live on the Loan detail page.
 
 const ITEMS_PER_PAGE = 10;
 const EMPTY: LoanDto[] = [];
@@ -109,12 +108,15 @@ export default function Loans() {
     setCurrentPage,
     sortOrder,
     setSortOrder,
-    selectedLoanId,
-    setSelectedLoanId,
   } = useLoansState();
 
   const [now, setNow] = useState(() => Date.now());
   const [searchResetKey, setSearchResetKey] = useState(0);
+
+  const openLoan = useCallback(
+    (loanId: string) => navigate({ to: "/home/loans/$loanId", params: { loanId } }),
+    [navigate],
+  );
 
   // Tick every 30 s so the transit and due countdowns stay live
   useEffect(() => {
@@ -320,7 +322,7 @@ export default function Loans() {
                     <tbody className="divide-y divide-slate-100">
                       {paginatedData.length > 0 ? (
                         paginatedData.map((loan) => (
-                          <LoanRow key={loan.id} loan={loan} now={now} onSelect={setSelectedLoanId} />
+                          <LoanRow key={loan.id} loan={loan} now={now} onSelect={openLoan} />
                         ))
                       ) : (
                         <tr>
@@ -355,7 +357,6 @@ export default function Loans() {
         </section>
       </div>
 
-      {selectedLoanId && <LoanDetailDialog loanId={selectedLoanId} onClose={() => setSelectedLoanId(null)} />}
     </div>
   );
 }
