@@ -1,16 +1,15 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { DashboardSkeletonLoader } from "../loader/DashboardSkeletonLoader";
 import DashboardBadges from "../components/DashboardBadges";
 import ErrorTable from "../components/ErrorTables";
-import LoanDetailDialog from "../components/LoanDetailDialog";
 import { SlugStatus } from "../components/SlugStatus";
 import { useAllLoans, useDashboardSummary, useStationHealth } from "../hooks/loanHooks";
 import { CheckCircle2, MonitorSmartphone, Package, AlarmClock, TriangleAlert, Truck } from "lucide-react";
 import DashboardActivityChart from "../components/DashboardActivityChart";
 import DashboardStatusOverview from "../components/DashboardStatusOverview";
 import { UserData } from "../utils/usersData/userData";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { FormattedDateTime } from "../components/FormattedDateTime";
 import { formatEnum } from "../lib/utils";
 import { HEALTH_DOT } from "../components/stationHealth";
@@ -27,7 +26,7 @@ const getGreeting = () => {
 
 export default function Dashboard() {
   const { firstName } = UserData();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const navigate = useNavigate();
   const { data: summary } = useQuery(useDashboardSummary());
   const { data: stations = [] } = useQuery(useStationHealth());
   const { data: loanData, isLoading, isError } = useQuery(useAllLoans());
@@ -155,7 +154,7 @@ export default function Dashboard() {
                     recentLoans.map((loan) => (
                       <tr
                         key={loan.id}
-                        onClick={() => setSelectedId(loan.id)}
+                        onClick={() => navigate({ to: "/home/loans/$loanId", params: { loanId: loan.id } })}
                         className="cursor-pointer hover:bg-slate-50"
                       >
                         <td className="px-5 py-3">
@@ -188,7 +187,6 @@ export default function Dashboard() {
         </section>
       </div>
 
-      {selectedId && <LoanDetailDialog loanId={selectedId} onClose={() => setSelectedId(null)} />}
     </div>
   );
 }
