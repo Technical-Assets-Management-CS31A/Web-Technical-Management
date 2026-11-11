@@ -58,7 +58,7 @@ export default function Login() {
         }
 
         // Instructors land on their own loans; staff and admins on the live board.
-        navigate({ to: role === "INSTRUCTOR" ? "/home/active-borrowed-items" : "/home/dashboard" });
+        navigate({ to: role === "INSTRUCTOR" ? "/home/loans" : "/home/dashboard" });
       },
       onError: (error) => {
         // 403 means the account exists but is INACTIVE

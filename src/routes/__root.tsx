@@ -1,4 +1,4 @@
-import { createRoute, createRootRoute } from "@tanstack/react-router";
+import { createRoute, createRootRoute, redirect } from "@tanstack/react-router";
 
 import App from "../App";
 import Login from "./auth/Login";
@@ -6,13 +6,13 @@ import Dashboard from "./Dashboard";
 import Home from "./Home";
 import InventoryList from "./InventoryList";
 import UserManagement from "./UserManagement";
-import HistoryList from "./HistoryList";
 import Settings from "./Settings";
 import { ProtectedRoute, PublicRoute } from "../utils/middleware/accessAuth";
 import ViewItem from "../components/ViewItem";
 import ActivityLogs from "./ActivityLogs";
 import ActivityLogDetail from "./ActivityLogDetail";
-import ActiveBorrowedItems from "./ActiveBorrowedItems";
+import Loans from "./Loans";
+import { isLoanStatusFilter } from "../lib/loanFilters";
 import RfidController from "./RfidController";
 import Reports from "./Reports";
 import Rooms from "./Rooms";
@@ -73,11 +73,6 @@ const UserManagementRoute = createRoute({
     component: UserManagement,
 });
 
-const HistoryListRoute = createRoute({
-    getParentRoute: () => homeRoute,
-    path: "history-list",
-    component: HistoryList,
-});
 
 const SettingsRoute = createRoute({
     getParentRoute: () => homeRoute,
@@ -103,10 +98,28 @@ const ActivityLogDetailRoute = createRoute({
     component: ActivityLogDetail
 })
 
-const ActiveBorrowedItemsRoute = createRoute({
+// PRD 6.5 Loans: read-only list of kiosk loans. ?status= and ?roomId= deep-link a filter.
+const LoansRoute = createRoute({
+    getParentRoute: () => homeRoute,
+    path: "loans",
+    validateSearch: (search: Record<string, unknown>): { status?: string; roomId?: string } => ({
+        ...(isLoanStatusFilter(search.status) && search.status !== "all" ? { status: search.status } : {}),
+        ...(typeof search.roomId === "string" && search.roomId ? { roomId: search.roomId } : {}),
+    }),
+    component: Loans
+})
+
+// The old lent-items pages now redirect to Loans so bookmarks keep working.
+const ActiveBorrowedItemsRedirect = createRoute({
     getParentRoute: () => homeRoute,
     path: "active-borrowed-items",
-    component: ActiveBorrowedItems
+    beforeLoad: () => { throw redirect({ to: "/home/loans", replace: true }); },
+})
+
+const HistoryListRedirect = createRoute({
+    getParentRoute: () => homeRoute,
+    path: "history-list",
+    beforeLoad: () => { throw redirect({ to: "/home/loans", replace: true }); },
 })
 
 const RfidControllerRoute = createRoute({
@@ -140,12 +153,13 @@ export const routeTree = Route.addChildren([
         DashboardRoute,
         InventoryListRoute,
         UserManagementRoute,
-        HistoryListRoute,
         SettingsRoute,
         ViewItemRoute,
         ActivityLogsRoute,
         ActivityLogDetailRoute,
-        ActiveBorrowedItemsRoute,
+        LoansRoute,
+        ActiveBorrowedItemsRedirect,
+        HistoryListRedirect,
         RfidControllerRoute,
         ReportsRoute,
         RoomsRoute,

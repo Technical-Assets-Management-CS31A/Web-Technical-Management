@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LoginUserApi, logoutUserApi } from "../api/auth_api";
 import { signalRService } from "../services/signalrService";
+import { resetLoansState } from "../states/loans-state";
 
 export const useLogin = () => {
   const queryClient = useQueryClient();
@@ -8,7 +9,10 @@ export const useLogin = () => {
     mutationFn: LoginUserApi,
     mutationKey: ["login"],
     // Start the new session without another account's cached data (e.g. ["me"]).
-    onSuccess: () => queryClient.clear(),
+    onSuccess: () => {
+      queryClient.clear();
+      resetLoansState();
+    },
   });
 };
 
@@ -20,6 +24,7 @@ export const useLogoutUser = () => {
     onSettled: () => {
       void signalRService.disconnect();
       queryClient.clear();
+      resetLoansState();
     },
   });
 };

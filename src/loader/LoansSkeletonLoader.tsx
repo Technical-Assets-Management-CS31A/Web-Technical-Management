@@ -4,7 +4,7 @@ const Bone = ({ className, style }: { className?: string; style?: React.CSSPrope
   <div className={`animate-pulse rounded-lg bg-slate-200 ${className ?? ""}`} style={style} />
 );
 
-const ActiveBorrowedItemsSkeletonLoader = () => {
+const LoansSkeletonLoader = () => {
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-8xl space-y-6 px-4 py-6 sm:px-6 md:px-8">
@@ -30,6 +30,13 @@ const ActiveBorrowedItemsSkeletonLoader = () => {
 
         {/* Table card */}
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          {/* Status tabs */}
+          <div className="flex gap-4 border-b border-slate-200 px-5 py-3.5">
+            {[48, 64, 72, 80, 64].map((w, i) => (
+              <Bone key={i} className="h-4" style={{ width: w }} />
+            ))}
+          </div>
+
           {/* Toolbar */}
           <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-1.5">
@@ -81,7 +88,7 @@ const ActiveBorrowedItemsSkeletonLoader = () => {
                     <td className="px-5 py-3">
                       <Bone className="h-5 w-14 rounded-md" />
                     </td>
-                    {/* Lent At */}
+                    {/* Checked out */}
                     <td className="px-5 py-3">
                       <Bone className="h-3.5 w-28" />
                     </td>
@@ -111,4 +118,4 @@ const ActiveBorrowedItemsSkeletonLoader = () => {
   );
 };
 
-export default ActiveBorrowedItemsSkeletonLoader;
+export default LoansSkeletonLoader;

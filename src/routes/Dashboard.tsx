@@ -35,11 +35,11 @@ export default function Dashboard() {
 
   // Status board columns from PRD 6.5
   const badges = [
-    { name: T.badges.atCounter, data: summary?.atCounter ?? null, link: "/home/active-borrowed-items", icon: <Package className="h-5 w-5" /> },
-    { name: T.badges.inTransit, data: summary?.inTransit ?? null, link: "/home/active-borrowed-items", icon: <Truck className="h-5 w-5" /> },
-    { name: T.badges.inRoomVerified, data: summary?.inRoomVerified ?? null, link: "/home/active-borrowed-items", icon: <CheckCircle2 className="h-5 w-5" /> },
-    { name: T.badges.anomaly, data: summary?.locationAnomaly ?? null, link: "/home/active-borrowed-items", icon: <TriangleAlert className="h-5 w-5" /> },
-    { name: T.badges.overdue, data: summary?.overdue ?? null, link: "/home/history-list", icon: <AlarmClock className="h-5 w-5" /> },
+    { name: T.badges.atCounter, data: summary?.atCounter ?? null, link: "/home/loans", icon: <Package className="h-5 w-5" /> },
+    { name: T.badges.inTransit, data: summary?.inTransit ?? null, link: "/home/loans", icon: <Truck className="h-5 w-5" /> },
+    { name: T.badges.inRoomVerified, data: summary?.inRoomVerified ?? null, link: "/home/loans", icon: <CheckCircle2 className="h-5 w-5" /> },
+    { name: T.badges.anomaly, data: summary?.locationAnomaly ?? null, link: "/home/loans", icon: <TriangleAlert className="h-5 w-5" /> },
+    { name: T.badges.overdue, data: summary?.overdue ?? null, link: "/home/loans", search: { status: "OVERDUE" }, icon: <AlarmClock className="h-5 w-5" /> },
   ];
 
   const recentLoans = useMemo(
@@ -87,7 +87,7 @@ export default function Dashboard() {
         {/* ── Status board ── */}
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
           {badges.map((item) => (
-            <DashboardBadges key={item.name} name={item.name} link={item.link} data={item.data} icon={item.icon} />
+            <DashboardBadges key={item.name} name={item.name} link={item.link} search={item.search} data={item.data} icon={item.icon} />
           ))}
         </section>
 
@@ -129,7 +129,7 @@ export default function Dashboard() {
               <p className="text-sm text-slate-500">{T.recentBorrows.description}</p>
             </div>
             <Link
-              to="/home/active-borrowed-items"
+              to="/home/loans"
               className="text-sm font-medium text-blue-600 hover:underline"
             >
               {T.recentBorrows.viewAll}
