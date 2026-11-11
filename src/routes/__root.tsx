@@ -12,6 +12,7 @@ import ViewItem from "../components/ViewItem";
 import ActivityLogs from "./ActivityLogs";
 import ActivityLogDetail from "./ActivityLogDetail";
 import Loans from "./Loans";
+import LoanDetail from "./LoanDetail";
 import { isLoanStatusFilter } from "../lib/loanFilters";
 import RfidController from "./RfidController";
 import Reports from "./Reports";
@@ -109,6 +110,13 @@ const LoansRoute = createRoute({
     component: Loans
 })
 
+// PRD 6.5 Loan detail: checkout photo, class length, due time, room and approval ledger.
+const LoanDetailRoute = createRoute({
+    getParentRoute: () => homeRoute,
+    path: "loans/$loanId",
+    component: LoanDetail
+})
+
 // The old lent-items pages now redirect to Loans so bookmarks keep working.
 const ActiveBorrowedItemsRedirect = createRoute({
     getParentRoute: () => homeRoute,
@@ -158,6 +166,7 @@ export const routeTree = Route.addChildren([
         ActivityLogsRoute,
         ActivityLogDetailRoute,
         LoansRoute,
+        LoanDetailRoute,
         ActiveBorrowedItemsRedirect,
         HistoryListRedirect,
         RfidControllerRoute,

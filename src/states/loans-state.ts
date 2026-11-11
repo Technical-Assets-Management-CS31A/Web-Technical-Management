@@ -12,12 +12,9 @@ interface ILoansState {
 
   sortOrder: LoanSortOrder;
   setSortOrder: (value: LoanSortOrder) => void;
-
-  selectedLoanId: string | null;
-  setSelectedLoanId: (id: string | null) => void;
 }
 
-const INITIAL = { searchTerm: "", currentPage: 1, sortOrder: "newest" as LoanSortOrder, selectedLoanId: null };
+const INITIAL = { searchTerm: "", currentPage: 1, sortOrder: "newest" as LoanSortOrder };
 
 const loansStore = create<ILoansState>((set) => ({
   searchTerm: "",
@@ -28,12 +25,9 @@ const loansStore = create<ILoansState>((set) => ({
 
   sortOrder: "newest",
   setSortOrder: (value) => set({ sortOrder: value, currentPage: 1 }),
-
-  selectedLoanId: null,
-  setSelectedLoanId: (id) => set({ selectedLoanId: id }),
 }));
 
-/** Called on login and logout so one account never sees another's open loan or search. */
+/** Called on login and logout so one account never sees another's search or page. */
 export const resetLoansState = () => loansStore.setState(INITIAL);
 
 export const useLoansState = () => ({
@@ -43,6 +37,4 @@ export const useLoansState = () => ({
   setCurrentPage: loansStore((s) => s.setCurrentPage),
   sortOrder: loansStore((s) => s.sortOrder),
   setSortOrder: loansStore((s) => s.setSortOrder),
-  selectedLoanId: loansStore((s) => s.selectedLoanId),
-  setSelectedLoanId: loansStore((s) => s.setSelectedLoanId),
 });
