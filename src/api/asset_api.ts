@@ -7,6 +7,7 @@ import type {
   AssetForm,
   AssetListParams,
   LedgerEntryDto,
+  ListParams,
   Paged,
   RoomDto,
   StaffAssetStatus,
@@ -110,7 +111,10 @@ export const deleteCategoryApi = async (id: string) => {
 
 // ── Rooms ────────────────────────────────────────────────────────────────────
 
-export const allRoomsApi = async (): Promise<RoomDto[]> => {
-  const response = await api.get("/rooms");
-  return response.data.data;
+export const listRoomsApi = async (params: ListParams): Promise<Paged<RoomDto>> => {
+  const response = await api.get("/rooms", { params: toListQuery(params) });
+  return toPaged<RoomDto>(response.data, params);
 };
+
+/** Every room, fetched page by page so a paged response does not hide rooms. */
+export const allRoomsApi = async (): Promise<RoomDto[]> => fetchAllPages(listRoomsApi, {});
