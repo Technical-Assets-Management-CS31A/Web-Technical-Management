@@ -17,6 +17,8 @@ interface ILoansState {
   setSelectedLoanId: (id: string | null) => void;
 }
 
+const INITIAL = { searchTerm: "", currentPage: 1, sortOrder: "newest" as LoanSortOrder, selectedLoanId: null };
+
 const loansStore = create<ILoansState>((set) => ({
   searchTerm: "",
   setSearchTerm: (value) => set({ searchTerm: value, currentPage: 1 }),
@@ -30,6 +32,9 @@ const loansStore = create<ILoansState>((set) => ({
   selectedLoanId: null,
   setSelectedLoanId: (id) => set({ selectedLoanId: id }),
 }));
+
+/** Called on login and logout so one account never sees another's open loan or search. */
+export const resetLoansState = () => loansStore.setState(INITIAL);
 
 export const useLoansState = () => ({
   searchTerm: loansStore((s) => s.searchTerm),
