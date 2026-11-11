@@ -1,10 +1,13 @@
 import { api } from "./axios";
+import { fetchAllPages, toListQuery, toPaged } from "./paging";
 import type {
   ChangeLoanRoomRequest,
   CheckoutSessionDto,
   DashboardSummaryDto,
   LoanDto,
   LoanFilters,
+  ListParams,
+  Paged,
   ResolveRequest,
   RoomOccupancyDto,
   StationHealthDto,
@@ -14,10 +17,14 @@ const loan_end_point = "/loans";
 
 // Loans are created only by a kiosk session; the web lists and manages them.
 
-export const allLoansApi = async (filters: LoanFilters = {}): Promise<LoanDto[]> => {
-  const response = await api.get(loan_end_point, { params: filters });
-  return response.data.data;
+export const listLoansApi = async (params: LoanFilters & ListParams): Promise<Paged<LoanDto>> => {
+  const response = await api.get(loan_end_point, { params: toListQuery(params) });
+  return toPaged<LoanDto>(response.data, params);
 };
+
+/** Every loan matching the filters, fetched page by page so a paged response does not hide loans. */
+export const allLoansApi = async (filters: LoanFilters = {}): Promise<LoanDto[]> =>
+  fetchAllPages(listLoansApi, filters);
 
 export const getLoanApi = async (id: string): Promise<LoanDto> => {
   const response = await api.get(`${loan_end_point}/${id}`);
