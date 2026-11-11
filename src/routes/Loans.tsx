@@ -114,6 +114,7 @@ export default function Loans() {
   } = useLoansState();
 
   const [now, setNow] = useState(() => Date.now());
+  const [searchResetKey, setSearchResetKey] = useState(0);
 
   // Tick every 30 s so the transit and due countdowns stay live
   useEffect(() => {
@@ -274,16 +275,23 @@ export default function Loans() {
                 ))}
               </div>
 
+              {/* SearchBar is uncontrolled; a new key remounts it empty when filters are cleared */}
               <SearchBar
+                key={searchResetKey}
                 onChangeValue={setSearchTerm}
                 defaultValue={searchTerm}
                 name="search"
                 placeholder={T.searchPlaceholder}
               />
 
-              {(status !== "all" || roomId) && (
+              {isFiltered && (
                 <button
-                  onClick={() => { setFilters({ status: "all", roomId: "" }); setCurrentPage(1); }}
+                  onClick={() => {
+                    setFilters({ status: "all", roomId: "" });
+                    setSearchTerm("");
+                    setSearchResetKey((k) => k + 1);
+                    setCurrentPage(1);
+                  }}
                   className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                 >
                   <X className="h-3.5 w-3.5" />
