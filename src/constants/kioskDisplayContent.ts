@@ -13,6 +13,7 @@ export const KIOSK_DISPLAY_CONTENT = {
     title: "Ready",
     detail: "Tap the instructor's auth card to borrow, or scan a finger to return an item.",
   },
+  previous: "Previous session",
   ending: {
     title: "Session ended",
     checking: "Checking the result…",
