@@ -6,6 +6,7 @@ import type {
   AssetType,
   CardStatus,
   RecordStatus,
+  SessionFailureCode,
   StationType,
   StudentStanding,
   UserRole,
@@ -205,6 +206,14 @@ export type StationForm = {
 
 export type ChangeLoanRoomRequest = {
   destinationRoomId: string;
+  reason: string;
+};
+
+// ── Kiosk sessions ───────────────────────────────────────────────────────────
+
+/** Ends a kiosk session as FAILED; `reason` is the text the kiosk LCD shows (e.g. "Camera error"). */
+export type FailSessionRequest = {
+  failureCode: SessionFailureCode;
   reason: string;
 };
 

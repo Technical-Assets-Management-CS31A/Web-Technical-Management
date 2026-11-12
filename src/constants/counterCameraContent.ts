@@ -1,8 +1,8 @@
 export const COUNTER_CAMERA_CONTENT = {
   eyebrow: "Counter",
-  title: "Webcam check",
+  title: "Counter webcam",
   description:
-    "Open the counter's USB webcam and take a test photo to confirm it works before the kiosk needs it for checkout photos.",
+    "Keep this page open on the counter computer. When the kiosk reaches the photo step, the borrower's photo is taken and uploaded automatically.",
   back: "Counter Station",
   status: {
     live: "Live",
@@ -42,7 +42,39 @@ export const COUNTER_CAMERA_CONTENT = {
     live: "Live preview running",
     captured: "Test photo captured",
   },
+  session: {
+    title: "Kiosk session",
+    live: "Watching",
+    offline: "Offline",
+    loadError: "Couldn't load kiosk sessions. Check the connection to the server; photos can't be taken until it's back.",
+    idleTitle: "Waiting for a kiosk session",
+    idleHint: "Starts when an instructor taps their card at the kiosk.",
+    station: "Station",
+    student: "Student",
+    asset: "Asset",
+    instructor: "Instructor",
+    steps: {
+      AWAITING_FINGERPRINT: "Fingerprint",
+      AWAITING_ASSET: "Item tag",
+      AWAITING_PHOTO: "Photo",
+      AWAITING_APPROVAL: "Approval",
+      AWAITING_CONFIRM: "Confirm",
+    },
+    beforePhoto: "The photo is taken automatically when the kiosk reaches the photo step.",
+    cameraOffWarning: "The camera is off. It will be opened at the photo step, but check it works now.",
+    phase: {
+      capturing: (attempt: number, max: number) => `Taking the borrower's photo… (try ${attempt} of ${max})`,
+      retrying: (attempt: number, max: number) => `First try failed. Retrying automatically… (try ${attempt} of ${max})`,
+      uploaded: "Photo uploaded. Waiting for the instructor's approval.",
+      denied: "Camera error. The borrow was denied and the kiosk tells the borrower to see lab staff.",
+      denyFailed: "Camera error, and the server couldn't be told. The session will expire on its own; tell the borrower to see lab staff.",
+      aborted: "The session moved on before the photo was taken.",
+    },
+    lastError: "Last error",
+    photoAlt: "Checkout photo sent for this session",
+  },
+  testDisabled: "Test photos are paused while a checkout photo is being taken.",
   captureFailed: "Couldn't capture a photo. Wait for the preview to load and try again.",
   footerHint:
-    "Test photos stay on this computer and are not uploaded. The camera you pick here is remembered and used for checkout photos.",
+    "Checkout photos get one automatic retry; if both tries fail, the borrow is denied with \"Camera error\". Test photos stay on this computer. The camera you pick here is remembered and used for checkout photos.",
 } as const;

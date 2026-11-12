@@ -4,6 +4,7 @@ import {
   allLoansApi,
   changeLoanRoomApi,
   dashboardSummaryApi,
+  failKioskSessionApi,
   getLoanApi,
   markLoanMissingApi,
   stationHealthApi,
@@ -82,6 +83,15 @@ export const useUploadSessionPhoto = () => {
   return useMutation({
     mutationFn: uploadSessionPhotoApi,
     mutationKey: ["session-photo"],
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["kioskSessions"] }),
+  });
+};
+
+export const useFailKioskSession = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: failKioskSessionApi,
+    mutationKey: ["session-fail"],
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["kioskSessions"] }),
   });
 };

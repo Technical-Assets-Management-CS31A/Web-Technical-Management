@@ -1,17 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Camera, CheckCircle2, Info, Loader2, MonitorSmartphone, Upload } from "lucide-react";
-import { WebcamCapture } from "../components/WebcamCapture";
-import { useActiveKioskSessions, useUploadSessionPhoto } from "../hooks/loanHooks";
-import { showToast } from "../components/AppToast";
-import { getErrorMessage } from "../components/form/FormKit";
+import { Camera, CheckCircle2, Info, Loader2, MonitorSmartphone } from "lucide-react";
+import { useActiveKioskSessions } from "../hooks/loanHooks";
 import { formatEnum } from "../lib/utils";
 import type { CheckoutSessionDto } from "../@types/types";
 import { RFID_CONTROLLER_CONTENT as T } from "../constants/rfidControllerContent";
 
-// Counter screen for the counter computer (team decision, 28 Oct): it watches the kiosk session and,
-// at AWAITING_PHOTO, captures a USB webcam frame and uploads it as the checkout photo.
+// Counter screen: follows the kiosk sessions. The checkout photo itself is taken automatically by the
+// Counter webcam page (/counter-camera), so only one page ever uploads it.
 
 const STEP_ORDER: CheckoutSessionDto["status"][] = [
   "AWAITING_FINGERPRINT",
@@ -23,35 +20,8 @@ const STEP_ORDER: CheckoutSessionDto["status"][] = [
 ];
 
 function SessionCard({ session }: { session: CheckoutSessionDto }) {
-  const upload = useUploadSessionPhoto();
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
   const needsPhoto = session.status === "AWAITING_PHOTO" && !session.photoUrl;
   const stepIndex = STEP_ORDER.indexOf(session.status);
-
-  useEffect(() => {
-    if (!photo) {
-      setPreview(null);
-      return;
-    }
-    const url = URL.createObjectURL(photo);
-    setPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [photo]);
-
-  const handleUpload = () => {
-    if (!photo) return;
-    upload.mutate(
-      { sessionId: session.id, photo },
-      {
-        onSuccess: () => {
-          setPhoto(null);
-          showToast.success(T.toast.uploadedTitle, T.toast.uploaded);
-        },
-        onError: (err) => showToast.error(T.toast.failedTitle, getErrorMessage(err, T.toast.failed)),
-      },
-    );
-  };
 
   return (
     <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
@@ -120,24 +90,15 @@ function SessionCard({ session }: { session: CheckoutSessionDto }) {
           )}
         </div>
 
-        {/* Webcam capture at AWAITING_PHOTO */}
+        {/* Checkout photo, taken by the Counter webcam page */}
         <div>
-          {needsPhoto ? (
-            <div className="space-y-3">
-              <p className="flex items-center gap-2 text-sm font-medium text-slate-900">
-                <Camera className="h-4 w-4 text-slate-400" />
-                {T.capturePrompt}
-              </p>
-              <WebcamCapture onCapture={setPhoto} capturedPreview={preview} />
-              <button
-                type="button"
-                onClick={handleUpload}
-                disabled={!photo || upload.isPending}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-              >
-                {upload.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                {T.upload}
-              </button>
+          {session.photoUrl ? (
+            <img src={session.photoUrl} alt={T.photoAlt} className="aspect-video w-full rounded-xl border border-slate-200 bg-slate-100 object-cover" />
+          ) : needsPhoto ? (
+            <div className="flex h-full min-h-40 flex-col items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 text-center text-sm text-amber-800">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <span className="font-medium">{T.photoInProgress}</span>
+              <Link to="/counter-camera" className="text-xs font-medium underline underline-offset-2">{T.openWebcam}</Link>
             </div>
           ) : (
             <div className="flex h-full min-h-40 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center text-sm text-slate-500">
@@ -171,7 +132,7 @@ export default function RfidController() {
             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
             <Camera className="h-4 w-4" />
-            {T.testCamera}
+            {T.openWebcam}
           </Link>
         </header>
 

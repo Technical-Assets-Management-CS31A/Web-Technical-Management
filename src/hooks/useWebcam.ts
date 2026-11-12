@@ -197,6 +197,23 @@ export function useWebcam({ autoStart = true }: UseWebcamOptions = {}) {
     return captureFrame(videoRef.current, fileName);
   }, []);
 
+  /**
+   * Opens the camera if it is off, waits for the first frame, then captures.
+   * Used by the unattended kiosk photo step, where nobody is there to press Start.
+   */
+  const captureWhenReady = useCallback(
+    async (fileName?: string, timeoutMs = 5000) => {
+      if (!streamRef.current && !(await start())) throw new Error("Camera could not be opened");
+      const deadline = Date.now() + timeoutMs;
+      while (!videoRef.current?.videoWidth) {
+        if (Date.now() > deadline) throw new Error("Camera is not ready yet");
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      return captureFrame(videoRef.current, fileName);
+    },
+    [start],
+  );
+
   // Attach the stream once the <video> element is rendered.
   useEffect(() => {
     if (videoRef.current) videoRef.current.srcObject = stream;
@@ -233,5 +250,6 @@ export function useWebcam({ autoStart = true }: UseWebcamOptions = {}) {
     stop,
     switchCamera,
     capture,
+    captureWhenReady,
   };
 }
