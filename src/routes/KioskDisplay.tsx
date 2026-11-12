@@ -45,7 +45,7 @@ const TONE: Record<DisplayTone | "idle", { panel: string; icon: React.ElementTyp
 export default function KioskDisplay() {
   const navigate = useNavigate();
   const { station } = useSearch({ strict: false }) as { station?: string };
-  const { display, now, holdUntil, isError } = useKioskDisplay(station);
+  const { display, previous, now, holdUntil, isError } = useKioskDisplay(station);
   const { data: stationsData } = useQuery(useAllStations());
 
   const counterStations = useMemo(
@@ -102,8 +102,10 @@ export default function KioskDisplay() {
 
         {isError && <p className="rounded-xl border border-rose-200 bg-rose-50 px-5 py-3 text-sm text-rose-700">{T.loadError}</p>}
 
+        {previous && <PreviousResult display={previous} holdLeft={holdUntil ? Math.max(0, Math.ceil((holdUntil - now) / 1000)) : null} />}
+
         <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-          <StatusPanel display={display} now={now} holdUntil={holdUntil} />
+          <StatusPanel display={display} now={now} holdUntil={display.kind === "running" ? null : holdUntil} />
 
           <div className="space-y-4">
             <LcdMirror lines={lcd} showButtons={session?.status === "AWAITING_CONFIRM" && display.kind === "running"} />
@@ -117,6 +119,36 @@ export default function KioskDisplay() {
         </p>
       </div>
     </div>
+  );
+}
+
+/** Compact result of a session that ended while the next one already started. */
+function PreviousResult({ display, holdLeft }: { display: Exclude<Display, { kind: "idle" } | { kind: "running" }>; holdLeft: number | null }) {
+  const { session } = display;
+  const state =
+    display.kind === "result"
+      ? describeSession(session)
+      : { tone: "neutral" as const, title: T.ending.title, detail: display.failed ? T.ending.failed : T.ending.checking };
+  const tone = TONE[state.tone];
+  const who = session.student?.fullName ?? session.asset?.assetCode;
+
+  return (
+    <section className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${tone.panel}`} aria-live="polite">
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${tone.iconClass}`}>
+        {display.kind === "ending" && !display.failed ? <Loader2 className="h-4 w-4 animate-spin" /> : <tone.icon className="h-4 w-4" />}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-slate-500">
+          {T.previous} · <span className="font-mono">{session.station.stationCode}</span>
+          {who && ` · ${who}`}
+        </p>
+        <p className="truncate text-sm font-semibold text-slate-900">
+          {state.title}
+          {state.detail && <span className="font-normal text-slate-600"> — {state.detail}</span>}
+        </p>
+      </div>
+      {holdLeft !== null && <span className="shrink-0 text-xs tabular-nums text-slate-500">{holdLeft}s</span>}
+    </section>
   );
 }
 
