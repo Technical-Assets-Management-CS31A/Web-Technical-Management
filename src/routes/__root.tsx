@@ -19,6 +19,7 @@ import Reports from "./Reports";
 import Rooms from "./Rooms";
 import AuthCards from "./AuthCards";
 import CounterCamera from "./CounterCamera";
+import KioskDisplay from "./KioskDisplay";
 
 
 export const Route = createRootRoute({
@@ -52,6 +53,20 @@ const CounterCameraRoute = createRoute({
     component: () => (
         <ProtectedRoute>
             <CounterCamera />
+        </ProtectedRoute>
+    ),
+});
+
+// Kiosk confirmation view (PRD 6.2, 6.7): standalone so it can run full-screen next to the kiosk.
+// ?station=KIOSK-01 follows one counter kiosk.
+const KioskDisplayRoute = createRoute({
+    getParentRoute: () => Route,
+    path: "counter-display",
+    validateSearch: (search: Record<string, unknown>): { station?: string } =>
+        typeof search.station === "string" && search.station ? { station: search.station } : {},
+    component: () => (
+        <ProtectedRoute>
+            <KioskDisplay />
         </ProtectedRoute>
     ),
 });
@@ -157,6 +172,7 @@ const AuthCardsRoute = createRoute({
 export const routeTree = Route.addChildren([
     indexRoute,
     CounterCameraRoute,
+    KioskDisplayRoute,
     homeRoute.addChildren([
         DashboardRoute,
         InventoryListRoute,

@@ -5,6 +5,7 @@ import {
   changeLoanRoomApi,
   dashboardSummaryApi,
   failKioskSessionApi,
+  getKioskSessionApi,
   getLoanApi,
   markLoanMissingApi,
   stationHealthApi,
@@ -75,6 +76,15 @@ export const useActiveKioskSessions = () => {
     queryKey: ["kioskSessions", "active"],
     staleTime: 0,
     refetchInterval: 2000,
+  });
+};
+
+export const useKioskSession = (id: string | null) => {
+  return queryOptions({
+    queryFn: () => getKioskSessionApi(id as string),
+    queryKey: ["kioskSessions", "one", id],
+    enabled: !!id,
+    staleTime: 0,
   });
 };
 

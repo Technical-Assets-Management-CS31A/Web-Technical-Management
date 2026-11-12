@@ -19,6 +19,7 @@ export const RFID_CONTROLLER_CONTENT = {
     room: "Room",
   },
   openWebcam: "Open counter webcam",
+  openDisplay: "Open kiosk confirmation",
   cameraIdle: "The photo is taken automatically at the photo step.",
   photoInProgress: "Taking the checkout photo…",
   photoAlt: "Checkout photo for this session",
