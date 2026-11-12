@@ -127,6 +127,14 @@ export default function RfidController() {
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{T.title}</h1>
             <p className="mt-1 text-sm text-slate-500">{T.description}</p>
           </div>
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+          <Link
+            to="/counter-display"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            <MonitorSmartphone className="h-4 w-4" />
+            {T.openDisplay}
+          </Link>
           <Link
             to="/counter-camera"
             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
@@ -134,6 +142,7 @@ export default function RfidController() {
             <Camera className="h-4 w-4" />
             {T.openWebcam}
           </Link>
+          </div>
         </header>
 
         {isError ? (
