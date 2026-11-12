@@ -35,9 +35,12 @@ Endpoints the web calls that the PRD does not list (team calls): `GET /auth/me`,
 `PUT /auth-cards/{id}`, `POST /students/{id}/restore`, `POST /assets/{id}/restore`, `PUT /assets/{id}/status`,
 `POST /assets:import`, `/asset-categories`, `GET /dashboard/summary`, `GET /audit-log`,
 `GET /kiosk/sessions?active=true`, `POST /kiosk/sessions` (type `ENROLLMENT`), `POST /kiosk/sessions/{id}/cancel`,
+`POST /kiosk/sessions/{id}/fail` (`{ failureCode: "PHOTO_FAILED", reason: "Camera error" }` after the photo retry fails),
 `POST /rooms`, `PUT/DELETE /rooms/{id}`, `GET /stations` (full `StationDto` list), `POST /stations`, `PUT/DELETE /stations/{id}`.
 
 ### Team calls still open
+
+- Add `POST /kiosk/sessions/{id}/fail` so the counter webcam can deny a borrow with "Camera error" (PRD 4 F1 step 5 has no endpoint for it)?
 
 - Keep `middleName` on users and students?
 - Keep `department` on instructors for reports?
