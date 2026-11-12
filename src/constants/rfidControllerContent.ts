@@ -2,7 +2,7 @@ export const RFID_CONTROLLER_CONTENT = {
   eyebrow: "Counter",
   title: "Counter Station",
   description:
-    "Follows the kiosk checkout at this counter. When the kiosk reaches the photo step, capture the borrower with the webcam and upload it.",
+    "Follows the kiosk checkout at this counter. The borrower's photo is taken automatically by the Counter webcam page at the photo step.",
   idleTitle: "No active kiosk session",
   idleDescription: "A session appears here when an instructor taps their card at the kiosk.",
   steps: {
@@ -18,18 +18,12 @@ export const RFID_CONTROLLER_CONTENT = {
     asset: "Asset",
     room: "Room",
   },
-  testCamera: "Test webcam",
-  capturePrompt: "Take the checkout photo",
-  cameraIdle: "The camera opens when the kiosk asks for the photo.",
+  openWebcam: "Open counter webcam",
+  cameraIdle: "The photo is taken automatically at the photo step.",
+  photoInProgress: "Taking the checkout photo…",
+  photoAlt: "Checkout photo for this session",
   photoReceived: "Checkout photo received.",
-  upload: "Upload photo",
   error: "Couldn't load kiosk sessions. Check the connection to the server.",
   footerHint:
     "Card, fingerprint, item tag, photo and the instructor's approval on mobile must all pass. Any failed step denies the borrow.",
-  toast: {
-    uploadedTitle: "Photo Uploaded",
-    uploaded: "The kiosk will now ask the instructor to approve.",
-    failedTitle: "Upload Failed",
-    failed: "Could not upload the photo. Try again.",
-  },
 } as const;
