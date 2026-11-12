@@ -3,6 +3,7 @@ import { fetchAllPages, toListQuery, toPaged } from "./paging";
 import type {
   ChangeLoanRoomRequest,
   CheckoutSessionDto,
+  FailSessionRequest,
   DashboardSummaryDto,
   LoanDto,
   LoanFilters,
@@ -73,5 +74,12 @@ export const uploadSessionPhotoApi = async ({ sessionId, photo }: { sessionId: s
   const response = await api.post(`/kiosk/sessions/${sessionId}/photo`, body, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  return response.data;
+};
+
+// Team call: the PRD has no endpoint for this. After the photo retry fails, the session ends FAILED
+// with failure_code PHOTO_FAILED and the kiosk LCD shows "Camera error / Borrow denied / See lab staff".
+export const failKioskSessionApi = async ({ sessionId, data }: { sessionId: string; data: FailSessionRequest }) => {
+  const response = await api.post(`/kiosk/sessions/${sessionId}/fail`, data);
   return response.data;
 };
