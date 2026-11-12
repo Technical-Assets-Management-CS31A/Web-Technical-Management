@@ -67,6 +67,12 @@ export const activeKioskSessionsApi = async (): Promise<CheckoutSessionDto[]> =>
   return response.data.data;
 };
 
+// PRD 6.2 step 5. Used to read a session's final result after it leaves the active list.
+export const getKioskSessionApi = async (id: string): Promise<CheckoutSessionDto> => {
+  const response = await api.get(`/kiosk/sessions/${id}`);
+  return response.data.data;
+};
+
 // The counter computer's USB webcam supplies the checkout photo (team decision, 28 Oct).
 export const uploadSessionPhotoApi = async ({ sessionId, photo }: { sessionId: string; photo: File }) => {
   const body = new FormData();
