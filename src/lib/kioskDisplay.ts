@@ -6,8 +6,10 @@ import { formatEnum } from "./utils";
 
 export const LCD_COLS = 20;
 export const LCD_ROWS = 4;
-/** How long a finished session's result stays on screen before going back to idle. */
+/** How long a finished session's result stays on screen, counted from when the result was read. */
 export const RESULT_HOLD_MS = 15_000;
+/** How long to keep trying to read a finished session's result before giving up. */
+export const RESULT_CHECK_TIMEOUT_MS = 10_000;
 
 /** PRD 6.7 Idle screen, shown when no session is running. */
 export const IDLE_LCD = ["TAMS Counter", "Tap auth card", "or scan finger to", "return an item"];
@@ -73,9 +75,9 @@ const FAILURE_REASONS: Record<string, string> = {
  */
 export const denialReason = (session: CheckoutSessionDto) => {
   const lcd = session.lcdLines?.[0]?.trim();
-  if (lcd && !/^borrow denied$/i.test(lcd)) return lcd;
+  if (lcd && !/^(borrow|return) denied$/i.test(lcd)) return lcd;
   if (session.failureCode) return FAILURE_REASONS[session.failureCode] ?? formatEnum(session.failureCode);
-  return "Borrow denied";
+  return session.type === "RETURN" || session.type === "EVENT_RETURN" ? "Return denied" : "Borrow denied";
 };
 
 export type DisplayTone = "progress" | "action" | "success" | "declined" | "denied" | "neutral";
@@ -115,11 +117,19 @@ export const describeSession = (session: CheckoutSessionDto): DisplayState => {
     case "DECLINED":
       return { tone: "declined", title: "Declined by instructor", detail: "The instructor did not approve this borrow." };
     case "CANCELLED":
-      return { tone: "neutral", title: "Cancelled", detail: "The borrower pressed Cancel. Nothing was borrowed." };
+      return isReturn(session)
+        ? { tone: "neutral", title: "Return cancelled", detail: "The student pressed Cancel. The item is still on loan." }
+        : { tone: "neutral", title: "Cancelled", detail: "The borrower pressed Cancel. Nothing was borrowed." };
     case "EXPIRED":
-      return { tone: "declined", title: "Session expired", detail: "A step or the approval timed out. Start again with the card." };
+      return isReturn(session)
+        ? { tone: "declined", title: "Session expired", detail: "A step timed out. Scan the finger again to return the item." }
+        : { tone: "declined", title: "Session expired", detail: "A step or the approval timed out. Start again with the card." };
     case "FAILED":
-      return { tone: "denied", title: denialReason(session), detail: "Borrow denied. See lab staff." };
+      return {
+        tone: "denied",
+        title: denialReason(session),
+        detail: isReturn(session) ? "Return denied. See lab staff." : "Borrow denied. See lab staff.",
+      };
     default:
       return { tone: "neutral", title: formatEnum(session.status), detail: "" };
   }
@@ -132,3 +142,25 @@ export const secondsLeft = (session: CheckoutSessionDto, now: number) => {
   if (!Number.isFinite(t)) return null;
   return Math.max(0, Math.ceil((t - now) / 1000));
 };
+
+// ── Result hold ──────────────────────────────────────────────────────────────
+
+/** A session that left the active list; `resultAt` is when its final status was read. */
+export type EndedSession = { session: CheckoutSessionDto; endedAt: number; resultAt: number | null };
+
+/**
+ * "checking" while the final status is being read (up to RESULT_CHECK_TIMEOUT_MS),
+ * "showing" for RESULT_HOLD_MS after it was read, then "done".
+ */
+export const endedPhase = (ended: EndedSession, now: number): "checking" | "showing" | "done" => {
+  if (ended.resultAt !== null) return now < ended.resultAt + RESULT_HOLD_MS ? "showing" : "done";
+  return now < ended.endedAt + RESULT_CHECK_TIMEOUT_MS ? "checking" : "done";
+};
+
+/** When the held result leaves the screen. */
+export const endedDeadline = (ended: EndedSession) =>
+  ended.resultAt !== null ? ended.resultAt + RESULT_HOLD_MS : ended.endedAt + RESULT_CHECK_TIMEOUT_MS;
+
+/** The watched session if it is no longer in the active list, i.e. it just ended. */
+export const findEnded = (watched: CheckoutSessionDto | null, sessions: CheckoutSessionDto[]) =>
+  watched && !sessions.some((s) => s.id === watched.id && !isTerminal(s.status)) ? watched : null;
