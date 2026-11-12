@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { CheckoutSessionDto } from "../../@types/types";
 import {
+  RESULT_CHECK_TIMEOUT_MS,
+  RESULT_HOLD_MS,
   currentStepIndex,
+  endedDeadline,
+  endedPhase,
+  findEnded,
   denialReason,
   describeSession,
   pickDisplaySession,
@@ -102,5 +107,47 @@ describe("secondsLeft", () => {
     expect(secondsLeft(s, Date.parse("2026-11-13T08:00:30Z"))).toBe(30);
     expect(secondsLeft(s, Date.parse("2026-11-13T08:05:00Z"))).toBe(0);
     expect(secondsLeft(session({ id: "1", status: "COMPLETED" }), 0)).toBeNull();
+  });
+});
+
+describe("return wording", () => {
+  it("describes a cancelled return as a return, not a borrow", () => {
+    const state = describeSession(session({ id: "1", type: "RETURN", status: "CANCELLED" }));
+    expect(state.title).toBe("Return cancelled");
+    expect(state.detail).not.toMatch(/borrow/i);
+  });
+
+  it("denies and expires returns as returns", () => {
+    expect(describeSession(session({ id: "1", type: "RETURN", status: "FAILED" }))).toMatchObject({
+      title: "Return denied",
+      detail: "Return denied. See lab staff.",
+    });
+    expect(describeSession(session({ id: "1", type: "EVENT_RETURN", status: "EXPIRED" })).detail).not.toMatch(/card/);
+  });
+});
+
+describe("result hold", () => {
+  const ended = (resultAt: number | null) => ({ session: session({ id: "a" }), endedAt: 1_000, resultAt });
+
+  it("holds the result for the full time from when it was read", () => {
+    const e = ended(9_000);
+    expect(endedPhase(e, 9_000 + RESULT_HOLD_MS - 1)).toBe("showing");
+    expect(endedPhase(e, 9_000 + RESULT_HOLD_MS)).toBe("done");
+    expect(endedDeadline(e)).toBe(9_000 + RESULT_HOLD_MS);
+  });
+
+  it("gives up checking after the timeout so the read stops", () => {
+    const e = ended(null);
+    expect(endedPhase(e, 1_000 + RESULT_CHECK_TIMEOUT_MS - 1)).toBe("checking");
+    expect(endedPhase(e, 1_000 + RESULT_CHECK_TIMEOUT_MS)).toBe("done");
+  });
+
+  it("notices a session that ended even when another one replaced it", () => {
+    const a = session({ id: "a" });
+    const b = session({ id: "b" });
+    expect(findEnded(a, [b])).toBe(a);
+    expect(findEnded(a, [a, b])).toBeNull();
+    expect(findEnded(a, [{ ...a, status: "COMPLETED" }])).toBe(a);
+    expect(findEnded(null, [b])).toBeNull();
   });
 });
