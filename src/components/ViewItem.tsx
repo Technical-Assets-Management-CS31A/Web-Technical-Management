@@ -1,11 +1,12 @@
 import { Link, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { AssetDto, LedgerEvent, StaffAssetStatus } from "../@types/types";
-import { useAllRooms, useAssetHistory, useGetAsset, useSetAssetStatus } from "../hooks/assetHooks";
+import type { AssetDto, StaffAssetStatus } from "../@types/types";
+import { useAllRooms, useGetAsset, useSetAssetStatus } from "../hooks/assetHooks";
 import { fetchAndPrintQrLabel } from "./qrLabel";
 import ViewItemSkeletonLoader from "../loader/ViewItemSkeletonLoader";
 import AssetFormDialog from "./AssetFormDialog";
+import AssetHistoryTimeline from "./AssetHistoryTimeline";
 import { FormattedDateTime } from "./FormattedDateTime";
 import { SlugStatus } from "./SlugStatus";
 import { showToast } from "./AppToast";
@@ -28,20 +29,10 @@ import {
   MapPin,
   Banknote,
   QrCode,
-  History,
 } from "lucide-react";
 
 const php = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
 
-const LEDGER_TONE: Record<LedgerEvent, string> = {
-  CHECKOUT: "bg-blue-500",
-  ROOM_VERIFIED: "bg-emerald-500",
-  LATE_ARRIVAL_WARNING: "bg-amber-500",
-  RETURN: "bg-slate-400",
-  OVERDUE: "bg-orange-500",
-  MARKED_MISSING: "bg-rose-500",
-  SETTLED: "bg-violet-500",
-};
 
 export default function ViewItem() {
   const { id } = useParams({ strict: false }) as { id: string };
@@ -49,7 +40,6 @@ export default function ViewItem() {
   const viewer = UserData();
   const [isEditItemFormOpen, setIsEditItemFormOpen] = useState(false);
   const { data, isLoading, error } = useQuery(useGetAsset(itemId));
-  const { data: history = [] } = useQuery(useAssetHistory(itemId));
   const { data: rooms = [] } = useQuery(useAllRooms());
   const setStatus = useSetAssetStatus();
 
@@ -234,34 +224,7 @@ export default function ViewItem() {
           </div>
         )}
 
-        {/* History timeline from the append-only transaction ledger */}
-        <section className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
-          <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-900">
-            <History className="h-4 w-4 text-slate-400" />
-            History
-          </h2>
-          {history.length === 0 ? (
-            <p className="text-sm italic text-slate-400">No loan events yet.</p>
-          ) : (
-            <ol className="relative space-y-4 border-l border-slate-200 pl-5">
-              {history.map((entry) => (
-                <li key={entry.id} className="relative">
-                  <span className={`absolute -left-[25px] top-1.5 h-2.5 w-2.5 rounded-full ring-4 ring-white ${LEDGER_TONE[entry.event] ?? "bg-slate-400"}`} />
-                  <p className="text-sm font-medium text-slate-900">
-                    {formatEnum(entry.event)}
-                    {entry.student && <span className="font-normal text-slate-500"> · {entry.student.fullName}</span>}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {FormattedDateTime(entry.occurredAt)}
-                    {entry.instructor && ` · approved by ${entry.instructor.fullName}`}
-                    {entry.actorStation && ` · ${entry.actorStation.stationCode}`}
-                    {entry.actor && ` · ${entry.actor.fullName}`}
-                  </p>
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
+        <AssetHistoryTimeline assetId={item.id} />
       </div>
 
       {isEditItemFormOpen && (
