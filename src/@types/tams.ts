@@ -403,3 +403,73 @@ export interface AssetStatusChangedEvent {
   newStatus: AssetStatus;
   roomId: string | null;
 }
+
+export interface LoanCreatedEvent {         // "loan summary, transit deadline, due at"
+  loanId: string;
+  loanNo: string;
+  asset: AssetRef;
+  student: Ref | null;
+  destinationRoomId: string | null;
+  transitDeadlineAt: string | null;
+  dueAt: string;
+}
+
+export type RoomOccupancyChangedEvent = RoomOccupancyDto;
+
+export interface AnomalyEvent {             // anomaly.raised and anomaly.resolved
+  anomalyId: string;
+  type: AnomalyType;
+  status?: AnomalyStatus;
+  assetId?: string;
+  assetCode?: string;
+  loanId?: string | null;
+  roomCode?: string;
+}
+
+export interface WarningIssuedEvent {
+  loanId: string;
+  studentId?: string;
+  studentName?: string;
+  warningNo: number;
+  penaltyTriggered: boolean;
+}
+
+export interface LoanOverdueEvent {         // "loan, student, section"
+  loanId: string;
+  assetCode?: string;
+  studentName?: string;
+  sectionCode?: string;
+}
+
+export interface StationHealthChangedEvent {
+  stationId: string;
+  stationCode: string;
+  health: StationHealth;
+}
+
+// Not in PRD 6.4 yet: the backend has to broadcast this after POST /stations/{code}/scans.
+export interface ScanRecordedEvent {
+  scanId: string;
+  stationId: string;
+  stationCode: string;
+  roomId: string | null;
+  tagUid: string;
+  result: RoomScanResult;
+  assetId: string | null;
+  assetCode: string | null;
+  loanId: string | null;
+  scannedAt: string;
+}
+
+// Hub method name → payload. The web client subscribes to every key.
+export interface RealtimeEventMap {
+  "asset.statusChanged": AssetStatusChangedEvent;
+  "loan.created": LoanCreatedEvent;
+  "loan.overdue": LoanOverdueEvent;
+  "room.occupancyChanged": RoomOccupancyChangedEvent;
+  "anomaly.raised": AnomalyEvent;
+  "anomaly.resolved": AnomalyEvent;
+  "warning.issued": WarningIssuedEvent;
+  "station.healthChanged": StationHealthChangedEvent;
+  "scan.recorded": ScanRecordedEvent;
+}

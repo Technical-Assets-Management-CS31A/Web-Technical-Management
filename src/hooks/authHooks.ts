@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LoginUserApi, logoutUserApi } from "../api/auth_api";
 import { signalRService } from "../services/signalrService";
 import { resetLoansState } from "../states/loans-state";
+import { resetRealtimeState } from "../states/realtime-state";
 
 export const useLogin = () => {
   const queryClient = useQueryClient();
@@ -22,7 +23,8 @@ export const useLogoutUser = () => {
     mutationFn: logoutUserApi,
     mutationKey: ["logout"],
     onSettled: () => {
-      void signalRService.disconnect();
+      void signalRService.stop();
+      resetRealtimeState();
       queryClient.clear();
       resetLoansState();
     },

@@ -8,6 +8,7 @@ import { useAllLoans, useDashboardSummary, useStationHealth } from "../hooks/loa
 import { CheckCircle2, MonitorSmartphone, Package, AlarmClock, TriangleAlert, Truck } from "lucide-react";
 import DashboardActivityChart from "../components/DashboardActivityChart";
 import DashboardStatusOverview from "../components/DashboardStatusOverview";
+import RealtimeStatusPill from "../components/RealtimeStatusPill";
 import { UserData } from "../utils/usersData/userData";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { FormattedDateTime } from "../components/FormattedDateTime";
@@ -74,6 +75,7 @@ export default function Dashboard() {
                 timeZone: "Asia/Manila",
               }).format(new Date())}
             </span>
+            <RealtimeStatusPill />
             {summary && (
               <span className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1">
                 <span className={`h-2 w-2 rounded-full ${summary.openAnomalies ? "bg-amber-500" : "bg-emerald-500"}`} />
