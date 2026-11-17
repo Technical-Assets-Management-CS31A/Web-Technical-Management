@@ -65,7 +65,7 @@ export const pushRecent = (recent: readonly RealtimeEnvelope[], next: RealtimeEn
 
 /** React Query key roots each event makes stale. */
 export const QUERY_KEYS_BY_EVENT: Record<RealtimeEventName, readonly string[]> = {
-  "asset.statusChanged": ["assets", "loans", "dashboard"],
+  "asset.statusChanged": ["assets", "loans", "dashboard", "kioskSessions"],
   "loan.created": ["loans", "assets", "dashboard", "kioskSessions"],
   "loan.overdue": ["loans", "dashboard", "students"],
   "room.occupancyChanged": ["dashboard", "loans", "room-occupancy"],
