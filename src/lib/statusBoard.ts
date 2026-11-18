@@ -27,7 +27,12 @@ export interface BoardCard {
   /** When the card entered the board: checkout time, or the session start for At Counter cards. */
   startedAt: string;
   transitDeadlineAt: string | null;
+  /** classEndsAt + graceMinutes (PRD 7.6). */
   dueAt: string | null;
+  /** Approving instructor: the class the asset was borrowed for. */
+  instructor: { id: string; fullName: string } | null;
+  classEndsAt: string | null;
+  graceMinutes: number | null;
 }
 
 /** Asset statuses that place a card on the board. Any other status (IN_STORAGE, MISSING, ...) takes it off. */
@@ -75,6 +80,9 @@ const loanCard = (loan: LoanDto): BoardCard => ({
   startedAt: loan.checkedOutAt,
   transitDeadlineAt: loan.transitDeadlineAt,
   dueAt: loan.dueAt,
+  instructor: loan.approvedBy,
+  classEndsAt: loan.classEndsAt,
+  graceMinutes: loan.graceMinutes,
 });
 
 const CHECKOUT_TYPES: SessionType[] = ["CHECKOUT", "EVENT_BATCH"];
@@ -102,6 +110,9 @@ const sessionCard = (session: CheckoutSessionDto & { asset: NonNullable<Checkout
   startedAt: session.createdAt,
   transitDeadlineAt: null,
   dueAt: null,
+  instructor: session.instructor,
+  classEndsAt: null,
+  graceMinutes: null,
 });
 
 /** Active loans plus checkouts still at the counter, one card per asset (a loan wins over a session). */
@@ -163,6 +174,10 @@ export const applyBoardEvent = (cards: BoardCard[], event: RealtimeEnvelope, roo
         startedAt: new Date(event.receivedAt).toISOString(),
         transitDeadlineAt: p.transitDeadlineAt,
         dueAt: p.dueAt,
+        // The event has no class details; the approving instructor is known from the kiosk session.
+        instructor: previous?.instructor ?? null,
+        classEndsAt: previous?.classEndsAt ?? null,
+        graceMinutes: previous?.graceMinutes ?? null,
       };
       return [...cards.filter((c) => c.assetId !== p.asset.id), card];
     }
