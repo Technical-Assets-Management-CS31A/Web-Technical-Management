@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { MonitorSmartphone } from "lucide-react";
@@ -8,6 +9,8 @@ import { useStatusBoard } from "../hooks/useStatusBoard";
 import DashboardActivityChart from "../components/DashboardActivityChart";
 import DashboardStatusOverview from "../components/DashboardStatusOverview";
 import LiveStatusBoard from "../components/LiveStatusBoard";
+import RoomOccupancyCards from "../components/RoomOccupancyCards";
+import { buildRoomCards } from "../lib/roomBoard";
 import RealtimeStatusPill from "../components/RealtimeStatusPill";
 import { UserData } from "../utils/usersData/userData";
 import { FormattedDateTime } from "../components/FormattedDateTime";
@@ -27,7 +30,9 @@ export default function Dashboard() {
   const { data: summary } = useQuery(useDashboardSummary());
   const { data: stations = [] } = useQuery(useStationHealth());
   // FR-4.2 / US-08: one card per active asset, moved between columns by SignalR events.
-  const { columns, moved, loans, isLoading, isError } = useStatusBoard();
+  const { columns, cards, rooms, moved, loans, isLoading, isError } = useStatusBoard();
+  // FR-4.1: room cards share the board's live cards, so they move with the same events.
+  const roomCards = useMemo(() => buildRoomCards(rooms, cards), [rooms, cards]);
 
   if (isLoading) return <DashboardSkeletonLoader />;
 
@@ -79,6 +84,17 @@ export default function Dashboard() {
             <LiveStatusBoard columns={columns} moved={moved} />
           )}
         </section>
+
+        {/* ── Room cards ── */}
+        {!isError && (
+          <section className="space-y-3">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">{T.rooms.title}</h2>
+              <p className="text-sm text-slate-500">{T.rooms.description}</p>
+            </div>
+            <RoomOccupancyCards rooms={roomCards} />
+          </section>
+        )}
 
         {/* ── Station health strip ── */}
         <section className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-slate-200 bg-white px-5 py-3">
