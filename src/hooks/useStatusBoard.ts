@@ -48,10 +48,8 @@ export const useStatusBoard = () => {
   const loans = useMemo(() => (Array.isArray(loansQuery.data) ? loansQuery.data : []), [loansQuery.data]);
   const fetchedAt = loansQuery.dataUpdatedAt;
 
-  const roomCodes = useMemo(
-    () => new Map((Array.isArray(rooms) ? rooms : []).map((r) => [r.id, r.code] as const)),
-    [rooms],
-  );
+  const roomList = useMemo(() => (Array.isArray(rooms) ? rooms : []), [rooms]);
+  const roomCodes = useMemo(() => new Map(roomList.map((r) => [r.id, r.code] as const)), [roomList]);
 
   const fetched = useMemo(() => buildBoardCards(loans, Array.isArray(sessions) ? sessions : []), [loans, sessions]);
   const cards = useMemo(() => applyBoardEvents(fetched, recent, fetchedAt, roomCodes), [fetched, recent, fetchedAt, roomCodes]);
@@ -60,6 +58,9 @@ export const useStatusBoard = () => {
 
   return {
     columns,
+    /** Live cards, also used for the room cards (FR-4.1). */
+    cards,
+    rooms: roomList,
     moved,
     loans,
     isLoading: loansQuery.isLoading,
