@@ -1,8 +1,9 @@
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { AlarmClock, CheckCircle2, MapPin, Package, TriangleAlert, Truck } from "lucide-react";
 import { BOARD_COLUMNS, formatCountdown, formatSpan, type BoardCard, type BoardColumn } from "../lib/statusBoard";
 import { MOVED_HIGHLIGHT_MS } from "../hooks/useStatusBoard";
+import { useNow } from "../hooks/useNow";
 import { DASHBOARD_CONTENT as T } from "../constants/dashboardContent";
 
 const COLUMN_STYLE: Record<BoardColumn, { icon: ReactNode; dot: string; count: string }> = {
@@ -11,16 +12,6 @@ const COLUMN_STYLE: Record<BoardColumn, { icon: ReactNode; dot: string; count: s
   VERIFIED: { icon: <CheckCircle2 className="h-4 w-4" />, dot: "bg-emerald-500", count: "bg-emerald-50 text-emerald-700" },
   ANOMALY: { icon: <TriangleAlert className="h-4 w-4" />, dot: "bg-amber-500", count: "bg-amber-50 text-amber-700" },
   OVERDUE: { icon: <AlarmClock className="h-4 w-4" />, dot: "bg-rose-500", count: "bg-rose-50 text-rose-700" },
-};
-
-/** Current time, ticking every `ms`. */
-const useNow = (ms = 1000) => {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), ms);
-    return () => clearInterval(id);
-  }, [ms]);
-  return now;
 };
 
 type Props = {
