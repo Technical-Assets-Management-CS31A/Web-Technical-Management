@@ -20,6 +20,9 @@ import Rooms from "./Rooms";
 import AuthCards from "./AuthCards";
 import CounterCamera from "./CounterCamera";
 import KioskDisplay from "./KioskDisplay";
+import Anomalies from "./Anomalies";
+import { isAnomalyTypeFilter, isAnomalyView, type AnomalyView } from "../lib/anomalies";
+import type { AnomalyType } from "../@types/types";
 
 
 export const Route = createRootRoute({
@@ -169,6 +172,17 @@ const AuthCardsRoute = createRoute({
     component: AuthCards
 })
 
+// PRD FR-4.5 / US-09: anomalies queue. ?view=resolved and ?type=WRONG_ROOM deep-link a filter.
+const AnomaliesRoute = createRoute({
+    getParentRoute: () => homeRoute,
+    path: "anomalies",
+    validateSearch: (search: Record<string, unknown>): { view?: AnomalyView; type?: AnomalyType } => ({
+        ...(isAnomalyView(search.view) && search.view !== "active" ? { view: search.view } : {}),
+        ...(isAnomalyTypeFilter(search.type) && search.type !== "all" ? { type: search.type } : {}),
+    }),
+    component: Anomalies
+})
+
 export const routeTree = Route.addChildren([
     indexRoute,
     CounterCameraRoute,
@@ -188,6 +202,7 @@ export const routeTree = Route.addChildren([
         RfidControllerRoute,
         ReportsRoute,
         RoomsRoute,
-        AuthCardsRoute
+        AuthCardsRoute,
+        AnomaliesRoute
     ]),
 ]);

@@ -31,4 +31,6 @@ export const canManageRoster = (role: UserRole | "") => role === "ADMIN" || role
 export const canManageAssets = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF" || role === "CUSTODIAN";
 export const canResolvePenalties = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
 export const canManageRooms = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
+// FR-4.5: Technical Personnel "receive anomaly alerts, resolve violations"; admins can do everything.
+export const canHandleAnomalies = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
 export const canEditBusinessRules = (role: UserRole | "") => role === "ADMIN";
