@@ -1,6 +1,8 @@
 // Web form and request types. Response DTOs and enums live in ./tams.ts
 // (PRD 7.2, 7.3 and 7.6) and are re-exported here so screens import from one place.
 import type {
+  AnomalyStatus,
+  AnomalyType,
   AssetCondition,
   AssetStatus,
   AssetType,
@@ -221,4 +223,18 @@ export type LoanFilters = {
   status?: string;
   roomId?: string;
   approvedBy?: "me";
+};
+
+// ── Anomalies (GET /anomalies, FR-4.5) ───────────────────────────────────────
+
+export type AnomalyFilters = {
+  /** Several statuses are sent comma-separated, e.g. OPEN,ACKNOWLEDGED for the active queue */
+  status?: AnomalyStatus | AnomalyStatus[];
+  type?: AnomalyType;
+  roomId?: string;
+};
+
+/** POST /anomalies/{id}/resolve. The server stores the note with the resolver's name (US-09). */
+export type ResolveAnomalyRequest = {
+  resolutionNote: string;
 };
