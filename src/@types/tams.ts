@@ -294,6 +294,12 @@ export interface AnomalyDto {
   station: { id: string; stationCode: string } | null;
   resolutionNote: string | null;
   createdAt: string;
+  // PRD anomalies table: detected_at, acknowledged_by/at, resolved_by/at. Optional until TAMS-95 sends them all.
+  detectedAt?: string;
+  acknowledgedBy?: Ref | null;
+  acknowledgedAt?: string | null;
+  resolvedBy?: Ref | null;
+  resolvedAt?: string | null;
 }
 
 export interface AuditItemDto {
