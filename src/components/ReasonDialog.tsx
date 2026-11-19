@@ -9,6 +9,10 @@ type ReasonDialogProps = {
   subtitle?: string;
   confirmLabel: string;
   placeholder?: string;
+  /** Field label, hint and validation message; default to the audit-log reason wording. */
+  fieldLabel?: string;
+  hint?: string;
+  requiredMessage?: string;
   isSubmitting?: boolean;
   error?: string;
   onClose: () => void;
@@ -21,6 +25,9 @@ export default function ReasonDialog({
   subtitle,
   confirmLabel,
   placeholder = "Why is this being done?",
+  fieldLabel = "Reason",
+  hint = "Saved to the audit log",
+  requiredMessage = "Give a reason of at least 3 characters",
   isSubmitting = false,
   error,
   onClose,
@@ -47,7 +54,7 @@ export default function ReasonDialog({
       submitLabel={confirmLabel}
     >
       {children}
-      <Field label="Reason" htmlFor="reason-text" required error={touched && missing ? "Give a reason of at least 3 characters" : undefined} hint="Saved to the audit log">
+      <Field label={fieldLabel} htmlFor="reason-text" required error={touched && missing ? requiredMessage : undefined} hint={hint}>
         <textarea
           id="reason-text"
           rows={3}
