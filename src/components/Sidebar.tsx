@@ -7,6 +7,7 @@ import {
   MdDashboardCustomize,
   MdAssessment,
   MdMeetingRoom,
+  MdReportProblem,
 } from "react-icons/md";
 import { BiLogoSass } from "react-icons/bi";
 import { BsPersonCircle, BsClipboardCheck, BsPersonBadge } from "react-icons/bs";
@@ -15,6 +16,7 @@ import { useState, useEffect } from "react";
 import SidebarSkeletonLoader from "../loader/SidebarSkeletonLoader";
 import { useSidebar } from "../context/SidebarContext";
 import { useActiveBorrowCount } from "../hooks/useActiveBorrowCount";
+import { useOpenAnomalyCount } from "../hooks/useOpenAnomalyCount";
 import { useLogoutUser } from "../hooks/authHooks";
 import { ChevronDown } from "lucide-react";
 import type { IconType } from "react-icons";
@@ -36,6 +38,7 @@ export default function Sidebar() {
   const { mutate, isPending } = useLogoutUser();
   const { setIsSidebarExpanded } = useSidebar();
   const activeBorrowCount = useActiveBorrowCount();
+  const openAnomalyCount = useOpenAnomalyCount();
 
   const primaryLinks: NavLink[] = [
     { label: "Dashboard", link: "/home/dashboard", icon: MdDashboardCustomize },
@@ -44,6 +47,7 @@ export default function Sidebar() {
 
   const operationalLinks: NavLink[] = [
     { label: "Loans", link: "/home/loans", icon: BsClipboardCheck, badge: activeBorrowCount },
+    { label: "Anomalies", link: "/home/anomalies", icon: MdReportProblem, badge: openAnomalyCount },
     { label: "Counter", link: "/home/rfid-controller", icon: FaWifi },
   ];
 
