@@ -25,6 +25,7 @@ export type ApprovalDecision = "PENDING" | "APPROVED" | "DECLINED" | "EXPIRED";
 export type PenaltyStatus = "ACTIVE" | "CLEARED";
 export type PenaltyReason = "LATE_ARRIVAL_LIMIT" | "OVERDUE" | "MISSING";
 export type LiabilityStatus = "OUTSTANDING" | "SETTLED_PAYMENT" | "SETTLED_REPLACEMENT" | "WAIVED";
+export type LiabilityReason = "MISSING" | "DAMAGE";
 export type StationType = "COUNTER_KIOSK" | "ROOM_STATION";
 export type StationHealth = "ONLINE" | "WARNING" | "OFFLINE";
 export type AnomalyType = "TRANSIT_TIMEOUT" | "WRONG_ROOM" | "UNBORROWED_TAP";
@@ -133,6 +134,9 @@ export interface LiabilityDto {
   amount: number;                           // PHP, from asset replacementCost
   status: LiabilityStatus;
   receiptNo: string | null;
+  reason?: LiabilityReason;
+  settledAt?: string | null;
+  notes?: string | null;
 }
 
 export interface ApprovalFreezeDto {

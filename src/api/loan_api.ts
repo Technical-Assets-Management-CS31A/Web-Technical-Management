@@ -7,10 +7,11 @@ import type {
   DashboardSummaryDto,
   LoanDto,
   LoanFilters,
+  MarkMissingRequest,
   ListParams,
   Paged,
-  ResolveRequest,
   RoomOccupancyDto,
+  StaffReturnRequest,
   StationHealthDto,
 } from "../@types/types";
 
@@ -32,8 +33,15 @@ export const getLoanApi = async (id: string): Promise<LoanDto> => {
   return response.data.data;
 };
 
-export const markLoanMissingApi = async ({ id, data }: { id: string; data: ResolveRequest }) => {
+// FR-6.7: declares the loan MISSING and issues a liability (replacement cost unless an amount is given).
+export const markLoanMissingApi = async ({ id, data }: { id: string; data: MarkMissingRequest }) => {
   const response = await api.post(`${loan_end_point}/${id}/mark-missing`, data);
+  return response.data;
+};
+
+// Staff close an open loan from the web, including a MISSING one whose item was found (PRD 4.2).
+export const staffReturnLoanApi = async ({ id, data }: { id: string; data: StaffReturnRequest }) => {
+  const response = await api.post(`${loan_end_point}/${id}/return`, data);
   return response.data;
 };
 

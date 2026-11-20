@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 import type { LoanDto } from "../../@types/types";
-import { buildLoanTimeline, dueState, minutesToText } from "../loanDetail";
+import {
+  amountError,
+  buildLoanTimeline,
+  dueState,
+  foundNeedsReturn,
+  loanLiability,
+  minutesToText,
+  parseAmount,
+  settlementRequest,
+  validateSettlement,
+  type SettlementForm,
+} from "../loanDetail";
 
 const T0 = Date.parse("2026-11-10T08:00:00Z");
 const at = (minutes: number) => new Date(T0 + minutes * 60_000).toISOString();
@@ -98,5 +109,62 @@ describe("buildLoanTimeline", () => {
 
   it("ends with a missing step for missing loans", () => {
     expect(buildLoanTimeline(loan({ status: "MISSING" }), T0).at(-1)).toMatchObject({ key: "return", state: "late" });
+  });
+});
+
+describe("liability settlement", () => {
+  const liabilities = [
+    { id: "x1", loanId: "other", amount: 500, status: "OUTSTANDING", receiptNo: null },
+    { id: "x2", loanId: "1", amount: 1200, status: "OUTSTANDING", receiptNo: null },
+  ] as const;
+  const form = (over: Partial<SettlementForm> = {}): SettlementForm => ({
+    outcome: "PAID",
+    receiptNo: "OR-1",
+    amount: "1200.00",
+    note: "Paid at the cashier",
+    ...over,
+  });
+
+  it("finds the liability for this loan", () => {
+    expect(loanLiability([...liabilities], "1")?.id).toBe("x2");
+    expect(loanLiability([...liabilities], "nope")).toBeNull();
+    expect(loanLiability(undefined, "1")).toBeNull();
+  });
+
+  it("parses peso amounts", () => {
+    expect(parseAmount("1,250.50")).toBe(1250.5);
+    expect(parseAmount("  ")).toBeNull();
+    expect(parseAmount("-5")).toBeNaN();
+    expect(parseAmount("1.234")).toBeNaN();
+    expect(amountError("abc")).toBeDefined();
+    expect(amountError("")).toBeUndefined();
+  });
+
+  it("requires a receipt for a payment only", () => {
+    expect(validateSettlement(form({ receiptNo: " " })).receiptNo).toBeDefined();
+    expect(validateSettlement(form({ outcome: "REPLACED", receiptNo: "" }))).toEqual({});
+    expect(validateSettlement(form({ outcome: "FOUND", receiptNo: "", amount: "junk" }))).toEqual({});
+  });
+
+  it("maps outcomes to settle requests and sends the amount only when changed", () => {
+    expect(settlementRequest(form(), 1200)).toEqual({ status: "SETTLED_PAYMENT", receiptNo: "OR-1", notes: "Paid at the cashier" });
+    expect(settlementRequest(form({ amount: "900" }), 1200)).toMatchObject({ amount: 900 });
+    expect(settlementRequest(form({ outcome: "REPLACED", amount: "1000" }), 1200)).toEqual({
+      status: "SETTLED_REPLACEMENT",
+      receiptNo: null,
+      notes: "Paid at the cashier",
+      amount: 1000,
+    });
+    expect(settlementRequest(form({ outcome: "FOUND", note: "In CL10 cabinet", amount: "0" }), 1200)).toEqual({
+      status: "WAIVED",
+      receiptNo: null,
+      notes: "Item found: In CL10 cabinet",
+    });
+  });
+
+  it("returns a found item only while the loan is still missing", () => {
+    expect(foundNeedsReturn({ outcome: "FOUND" }, { status: "MISSING" })).toBe(true);
+    expect(foundNeedsReturn({ outcome: "FOUND" }, { status: "RETURNED" })).toBe(false);
+    expect(foundNeedsReturn({ outcome: "PAID" }, { status: "MISSING" })).toBe(false);
   });
 });

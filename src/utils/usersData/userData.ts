@@ -29,6 +29,8 @@ export const isAccountRole = (role: unknown): role is UserRole => USER_ROLES.inc
 export const canManageAccounts = (role: UserRole | "") => role === "ADMIN";
 export const canManageRoster = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
 export const canManageAssets = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF" || role === "CUSTODIAN";
+// Mark missing, change room and staff return on a loan: ADMIN and TECH_STAFF only, as the backend enforces.
+export const canManageLoans = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
 export const canResolvePenalties = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
 export const canManageRooms = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
 // FR-4.5: Technical Personnel "receive anomaly alerts, resolve violations"; admins can do everything.

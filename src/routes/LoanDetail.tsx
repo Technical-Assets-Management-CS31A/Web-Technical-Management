@@ -15,23 +15,44 @@ import {
   TriangleAlert,
   UserRound,
 } from "lucide-react";
-import type { ApprovalDto, LoanDto } from "../@types/types";
+import type { ApprovalDto, LiabilityDto, LoanDto } from "../@types/types";
 import { useChangeLoanRoom, useGetLoan, useMarkLoanMissing } from "../hooks/loanHooks";
-import { useAllRooms } from "../hooks/assetHooks";
+import { useAllRooms, useGetAsset } from "../hooks/assetHooks";
+import { useStudentStanding } from "../hooks/userHooks";
 import { DetailSection, ImageLightbox, InfoRow, NeutralBadge, ZoomableImage } from "../components/ArchiveDetailShell";
 import { FormattedDateTime } from "../components/FormattedDateTime";
 import { SlugStatus } from "../components/SlugStatus";
 import ReasonDialog from "../components/ReasonDialog";
+import LiabilitySettleDialog from "../components/LiabilitySettleDialog";
 import { showToast } from "../components/AppToast";
-import { Field, SelectInput, getErrorMessage } from "../components/form/FormKit";
+import { Field, SelectInput, TextInput, getErrorMessage } from "../components/form/FormKit";
 import { formatEnum } from "../lib/utils";
-import { buildLoanTimeline, dueState, minutesToText, type DueState, type TimelineStep } from "../lib/loanDetail";
+import {
+  amountError,
+  buildLoanTimeline,
+  dueState,
+  loanLiability,
+  minutesToText,
+  parseAmount,
+  type DueState,
+  type TimelineStep,
+} from "../lib/loanDetail";
 import { isOpenLoan } from "../lib/loanFilters";
-import { UserData } from "../utils/usersData/userData";
+import { UserData, canManageLoans, canResolvePenalties } from "../utils/usersData/userData";
 import { LOAN_DETAIL_CONTENT as T } from "../constants/loanDetailContent";
 
 // PRD 6.5 Loan detail: checkout photo, class length, due time, destination room and the approval ledger.
-// Staff can mark the asset missing or change its room. Loans are created and returned only at the kiosk.
+// Staff can mark the asset missing (FR-6.7) or change its room, and record how a liability was settled
+// (paid, replaced or found). Loans are created and returned only at the kiosk; a found item is the exception.
+
+const php = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
+
+const LIABILITY_TONE: Record<LiabilityDto["status"], string> = {
+  OUTSTANDING: "bg-rose-50 text-rose-700 ring-rose-200",
+  SETTLED_PAYMENT: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  SETTLED_REPLACEMENT: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  WAIVED: "bg-slate-100 text-slate-700 ring-slate-200",
+};
 
 const DUE_TONE: Record<DueState["kind"] | "soon", string> = {
   due: "bg-emerald-50 text-emerald-700 ring-emerald-200",
@@ -86,8 +107,10 @@ function LoanDetailView({ loan: l }: { loan: LoanDto }) {
   const { data: roomsData } = useQuery(useAllRooms());
   const markMissing = useMarkLoanMissing();
   const changeRoom = useChangeLoanRoom();
-  const [action, setAction] = useState<"missing" | "room" | null>(null);
+  const [action, setAction] = useState<"missing" | "room" | "settle" | null>(null);
   const [newRoomId, setNewRoomId] = useState("");
+  const [missingAmount, setMissingAmount] = useState("");
+  const [missingAmountTouched, setMissingAmountTouched] = useState(false);
   const [zoomSrc, setZoomSrc] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
@@ -102,7 +125,19 @@ function LoanDetailView({ loan: l }: { loan: LoanDto }) {
   const destination = l.destinationRoom ? roomById.get(l.destinationRoom.id) : undefined;
 
   const isOut = isOpenLoan(l);
-  const isStaff = viewer.role !== "INSTRUCTOR";
+  // The backend allows mark missing, change room and settlement for ADMIN and TECH_STAFF only.
+  const isStaff = canManageLoans(viewer.role);
+  const canSettle = canResolvePenalties(viewer.role);
+  // Replacement cost is the default liability (FR-6.7); the loan only carries an asset reference.
+  const { data: asset } = useQuery({ ...useGetAsset(l.asset.id), enabled: isStaff && isOut && !!l.asset.id });
+  const showLiability = canSettle && (l.status === "MISSING" || l.status === "RETURNED");
+  const missingAmountError = missingAmountTouched ? amountError(missingAmount) : undefined;
+
+  const openMarkMissing = () => {
+    setMissingAmount(asset ? asset.replacementCost.toFixed(2) : "");
+    setMissingAmountTouched(false);
+    setAction("missing");
+  };
   const isEvent = l.type === "EVENT";
   const due = dueState(l, now);
   const timeline = buildLoanTimeline(l, now);
@@ -144,7 +179,7 @@ function LoanDetailView({ loan: l }: { loan: LoanDto }) {
               </button>
               <button
                 type="button"
-                onClick={() => setAction("missing")}
+                onClick={openMarkMissing}
                 className="rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm font-medium text-rose-700 hover:bg-rose-50"
               >
                 {T.actions.markMissing}
@@ -202,6 +237,16 @@ function LoanDetailView({ loan: l }: { loan: LoanDto }) {
             </FactCard>
           </div>
         </section>
+
+        {showLiability && l.student && (
+          <LiabilitySection loan={l} studentId={l.student.id} onSettle={() => setAction("settle")} />
+        )}
+        {canSettle && !l.student && l.status === "MISSING" && (
+          <p className="flex items-start gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+            {T.liability.noStudent}
+          </p>
+        )}
 
         {/* Borrower + timeline */}
         <section className="grid gap-6 lg:grid-cols-2">
@@ -293,11 +338,15 @@ function LoanDetailView({ loan: l }: { loan: LoanDto }) {
           title={T.missingDialog.title}
           subtitle={`${l.asset.assetCode} · ${l.loanNo}`}
           confirmLabel={T.missingDialog.confirm}
+          fieldLabel={T.missingDialog.reasonLabel}
+          placeholder={T.missingDialog.reasonPlaceholder}
           isSubmitting={markMissing.isPending}
           onClose={() => setAction(null)}
-          onConfirm={(reason) =>
+          onConfirm={(reason) => {
+            setMissingAmountTouched(true);
+            if (amountError(missingAmount)) return;
             markMissing.mutate(
-              { id: l.id, data: { reason } },
+              { id: l.id, data: { amount: parseAmount(missingAmount), note: reason } },
               {
                 onSuccess: () => {
                   setAction(null);
@@ -305,12 +354,30 @@ function LoanDetailView({ loan: l }: { loan: LoanDto }) {
                 },
                 onError: (err) => showToast.error(T.errorTitle, getErrorMessage(err, T.missingDialog.error)),
               },
-            )
-          }
+            );
+          }}
         >
           <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-800">{T.missingDialog.warning}</p>
+          <Field
+            label={T.missingDialog.amount}
+            htmlFor="missing-amount"
+            error={missingAmountError}
+            hint={asset ? T.missingDialog.amountHint(php.format(asset.replacementCost)) : T.missingDialog.amountHintUnknown}
+          >
+            <TextInput
+              id="missing-amount"
+              inputMode="decimal"
+              value={missingAmount}
+              onChange={(e) => setMissingAmount(e.target.value)}
+              onBlur={() => setMissingAmountTouched(true)}
+              error={!!missingAmountError}
+              placeholder={asset ? undefined : "0.00"}
+            />
+          </Field>
         </ReasonDialog>
       )}
+
+      {action === "settle" && l.student && <SettleDialogLoader loan={l} studentId={l.student.id} onClose={() => setAction(null)} />}
 
       {action === "room" && (
         <ReasonDialog
@@ -345,6 +412,76 @@ function LoanDetailView({ loan: l }: { loan: LoanDto }) {
       )}
     </div>
   );
+}
+
+// The loan DTO has no liability, so it is read from the borrower's standing (one liability per loan).
+const useLoanLiability = (studentId: string, loanId: string) => {
+  const query = useQuery(useStudentStanding(studentId));
+  return { ...query, liability: loanLiability(query.data?.liabilities, loanId) };
+};
+
+function LiabilitySection({ loan, studentId, onSettle }: { loan: LoanDto; studentId: string; onSettle: () => void }) {
+  const { liability, isPending, isError } = useLoanLiability(studentId, loan.id);
+  const L = T.liability;
+
+  return (
+    <section>
+      <h3 className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-400">{L.section}</h3>
+      {isPending ? (
+        <div className="h-20 animate-pulse rounded-xl border border-slate-200 bg-white" aria-label={L.loading} />
+      ) : isError ? (
+        <p className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-rose-700">{L.error}</p>
+      ) : !liability ? (
+        // A loan returned on time has nothing to settle; only say so when it was declared missing.
+        loan.status === "MISSING" ? (
+          <p className="rounded-xl border border-dashed border-slate-200 bg-white px-4 py-6 text-center text-sm text-slate-500">{L.none}</p>
+        ) : null
+      ) : (
+        <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xl font-semibold tracking-tight text-slate-900 tabular-nums">{php.format(liability.amount)}</span>
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${LIABILITY_TONE[liability.status]}`}>
+                {L.status_[liability.status]}
+              </span>
+              {liability.reason && <NeutralBadge icon={TriangleAlert}>{L.reason_[liability.reason]}</NeutralBadge>}
+            </div>
+            <dl className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500">
+              {liability.receiptNo && (
+                <div>
+                  <dt className="inline">{L.receipt}: </dt>
+                  <dd className="inline font-mono font-medium text-slate-700">{liability.receiptNo}</dd>
+                </div>
+              )}
+              {liability.settledAt && (
+                <div>
+                  <dt className="inline">{L.settledAt}: </dt>
+                  <dd className="inline font-medium text-slate-700">{FormattedDateTime(liability.settledAt)}</dd>
+                </div>
+              )}
+            </dl>
+            {liability.notes && <p className="text-sm text-slate-600">{liability.notes}</p>}
+            {liability.status === "OUTSTANDING" && <p className="text-xs text-slate-500">{L.outstandingHint}</p>}
+          </div>
+          {liability.status === "OUTSTANDING" && (
+            <button
+              type="button"
+              onClick={onSettle}
+              className="shrink-0 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            >
+              {L.settle}
+            </button>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SettleDialogLoader({ loan, studentId, onClose }: { loan: LoanDto; studentId: string; onClose: () => void }) {
+  const { liability } = useLoanLiability(studentId, loan.id);
+  if (!liability || liability.status !== "OUTSTANDING") return null;
+  return <LiabilitySettleDialog loan={loan} liability={liability} onClose={onClose} />;
 }
 
 function FactCard({ icon: Icon, label, children }: { icon: React.ElementType; label: string; children: React.ReactNode }) {

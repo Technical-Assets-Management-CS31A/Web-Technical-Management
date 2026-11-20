@@ -49,6 +49,8 @@ export default function PenaltyResolveDialog({
   const copy = COPY[target.kind];
   const isSubmitting = clearWarning.isPending || clearMark.isPending || liftHold.isPending || settle.isPending || liftFreeze.isPending;
 
+  const [receiptError, setReceiptError] = useState<string>();
+
   const confirm = (reason: string) => {
     const callbacks = {
       onSuccess: () => {
@@ -65,7 +67,9 @@ export default function PenaltyResolveDialog({
     else if (target.kind === "freeze") liftFreeze.mutate(body, callbacks);
     else {
       const receipt = settleStatus === "SETTLED_PAYMENT" ? receiptNo.trim() || null : null;
-      settle.mutate({ id: target.id, data: { status: settleStatus, receiptNo: receipt, reason } }, callbacks);
+      // The backend rejects a payment without a receipt number.
+      if (settleStatus === "SETTLED_PAYMENT" && !receipt) return setReceiptError("Enter the official receipt number");
+      settle.mutate({ id: target.id, data: { status: settleStatus, receiptNo: receipt, notes: reason } }, callbacks);
     }
   };
 
@@ -88,8 +92,15 @@ export default function PenaltyResolveDialog({
             </SelectInput>
           </Field>
           {settleStatus === "SETTLED_PAYMENT" && (
-            <Field label="Receipt No." htmlFor="settle-receipt" optional>
-              <TextInput id="settle-receipt" value={receiptNo} onChange={(e) => setReceiptNo(e.target.value)} placeholder="OR-000123" />
+            <Field label="Receipt No." htmlFor="settle-receipt" required error={receiptError}>
+              <TextInput
+                id="settle-receipt"
+                value={receiptNo}
+                maxLength={40}
+                onChange={(e) => { setReceiptNo(e.target.value); setReceiptError(undefined); }}
+                error={!!receiptError}
+                placeholder="OR-000123"
+              />
             </Field>
           )}
           <Note icon={Receipt} tone="slate">Settling the liability lifts the student's hold and the approving instructor's freeze for this loan.</Note>
