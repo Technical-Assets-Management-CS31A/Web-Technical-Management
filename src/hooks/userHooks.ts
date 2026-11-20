@@ -217,12 +217,15 @@ export const useStudentStanding = (id: string) => {
   });
 };
 
-// Resolving any penalty changes the student's standing and counters.
+// Resolving any penalty changes the student's standing and counters. Settling a loan's
+// liability also lifts the approving instructor's freeze (US-10), so accounts and loans refresh too.
 const useInvalidateStanding = () => {
   const queryClient = useQueryClient();
   return () => {
     queryClient.invalidateQueries({ queryKey: ["standing"] });
     queryClient.invalidateQueries({ queryKey: STUDENTS_KEY });
+    queryClient.invalidateQueries({ queryKey: USERS_KEY });
+    queryClient.invalidateQueries({ queryKey: ["loans"] });
   };
 };
 
