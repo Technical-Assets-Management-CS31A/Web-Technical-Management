@@ -8,6 +8,7 @@ import {
   getKioskSessionApi,
   getLoanApi,
   markLoanMissingApi,
+  staffReturnLoanApi,
   stationHealthApi,
   uploadSessionPhotoApi,
 } from "../api/loan_api";
@@ -43,6 +44,11 @@ const useInvalidateLoans = () => {
 export const useMarkLoanMissing = () => {
   const onSuccess = useInvalidateLoans();
   return useMutation({ mutationFn: markLoanMissingApi, mutationKey: ["mark-missing"], onSuccess });
+};
+
+export const useStaffReturnLoan = () => {
+  const onSuccess = useInvalidateLoans();
+  return useMutation({ mutationFn: staffReturnLoanApi, mutationKey: ["staff-return"], onSuccess });
 };
 
 export const useChangeLoanRoom = () => {
