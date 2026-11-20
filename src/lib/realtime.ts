@@ -67,11 +67,13 @@ export const pushRecent = (recent: readonly RealtimeEnvelope[], next: RealtimeEn
 export const QUERY_KEYS_BY_EVENT: Record<RealtimeEventName, readonly string[]> = {
   "asset.statusChanged": ["assets", "loans", "dashboard", "kioskSessions"],
   "loan.created": ["loans", "assets", "dashboard", "kioskSessions"],
-  "loan.overdue": ["loans", "dashboard", "students"],
+  // Overdue issues a mark and a hold, and freezes the approving instructor (FR-6.4 to 6.6).
+  "loan.overdue": ["loans", "dashboard", "students", "standing", "users"],
   "room.occupancyChanged": ["dashboard", "loans", "room-occupancy"],
   "anomaly.raised": ["dashboard", "loans", "assets", "anomalies"],
   "anomaly.resolved": ["dashboard", "loans", "assets", "anomalies"],
-  "warning.issued": ["students", "standing", "loans"],
+  // A 4th warning also issues a mark and freezes the instructor (FR-6.2).
+  "warning.issued": ["students", "standing", "loans", "users"],
   "station.healthChanged": ["dashboard", "stations"],
   "scan.recorded": ["dashboard", "room-occupancy"],
 };

@@ -34,3 +34,5 @@ export const canManageRooms = (role: UserRole | "") => role === "ADMIN" || role 
 // FR-4.5: Technical Personnel "receive anomaly alerts, resolve violations"; admins can do everything.
 export const canHandleAnomalies = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
 export const canEditBusinessRules = (role: UserRole | "") => role === "ADMIN";
+// FR-6.9: the start-of-term warning reset is an admin action.
+export const canResetTermWarnings = (role: UserRole | "") => role === "ADMIN";

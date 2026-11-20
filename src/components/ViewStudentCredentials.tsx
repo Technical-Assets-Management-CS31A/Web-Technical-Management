@@ -1,26 +1,14 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  AlertTriangle,
-  CalendarPlus,
-  Fingerprint,
-  GraduationCap,
-  Hash,
-  Layers,
-  Lock,
-  Receipt,
-  ShieldAlert,
-} from "lucide-react";
+import { CalendarPlus, Fingerprint, GraduationCap, Hash, Layers, Lock, ShieldAlert } from "lucide-react";
 import type { StudentDto } from "../@types/types";
 import { FormattedDateTime } from "./FormattedDateTime";
 import { formatEnum, fullName, initials } from "../lib/utils";
 import { ArchiveDialog, ArchiveLoading, DeletedNotice, DetailHeader, DetailSection, InfoRow, InitialsAvatar, NeutralBadge } from "./ArchiveDetailShell";
-import { useClearMark, useClearWarning, useLiftHold, useSettleLiability, useStudentStanding } from "../hooks/userHooks";
+import { useStudentStanding } from "../hooks/userHooks";
 import { UserData, canResolvePenalties } from "../utils/usersData/userData";
 import StandingPill from "./StandingPill";
-import ReasonDialog from "./ReasonDialog";
-import { showToast } from "./AppToast";
-import { Field, SelectInput, TextInput, getErrorMessage } from "./form/FormKit";
+import PenaltyResolveDialog, { type PenaltyTarget } from "./PenaltyResolveDialog";
 
 type ViewStudentCredentialsProps = {
   student: StudentDto;
@@ -29,7 +17,7 @@ type ViewStudentCredentialsProps = {
 };
 
 // Which penalty the staff member is resolving.
-type Pending = { kind: "warning" | "mark" | "hold" | "liability"; id: string; label: string };
+type Pending = Omit<PenaltyTarget, "subject">;
 
 const php = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
 
@@ -58,13 +46,7 @@ function PenaltyRow({ title, detail, active, onResolve, actionLabel }: {
 const ViewStudentCredentials = ({ student, isOpen, onClose }: ViewStudentCredentialsProps) => {
   const viewer = UserData();
   const { data: standing, isLoading } = useQuery(useStudentStanding(student.id));
-  const clearWarning = useClearWarning();
-  const clearMark = useClearMark();
-  const liftHold = useLiftHold();
-  const settle = useSettleLiability();
   const [pending, setPending] = useState<Pending | null>(null);
-  const [settleStatus, setSettleStatus] = useState<"SETTLED_PAYMENT" | "SETTLED_REPLACEMENT" | "WAIVED">("SETTLED_PAYMENT");
-  const [receiptNo, setReceiptNo] = useState("");
 
   if (!isOpen) return null;
   if (isLoading) return <ArchiveLoading message="Loading standing..." />;
@@ -72,24 +54,6 @@ const ViewStudentCredentials = ({ student, isOpen, onClose }: ViewStudentCredent
   const canResolve = canResolvePenalties(viewer.role);
   const resolve = canResolve ? (p: Pending) => () => setPending(p) : () => undefined;
 
-  const confirm = (reason: string) => {
-    if (!pending) return;
-    const callbacks = {
-      onSuccess: () => {
-        setPending(null);
-        setReceiptNo("");
-        showToast.success("Resolved", `${pending.label} resolved.`);
-      },
-      onError: (err: unknown) => showToast.error("Not Resolved", getErrorMessage(err, "Failed to resolve.")),
-    };
-    const body = { id: pending.id, data: { reason } };
-    if (pending.kind === "warning") clearWarning.mutate(body, callbacks);
-    else if (pending.kind === "mark") clearMark.mutate(body, callbacks);
-    else if (pending.kind === "hold") liftHold.mutate(body, callbacks);
-    else settle.mutate({ id: pending.id, data: { status: settleStatus, receiptNo: receiptNo.trim() || null, reason } }, callbacks);
-  };
-
-  const isResolving = clearWarning.isPending || clearMark.isPending || liftHold.isPending || settle.isPending;
   const warnings = standing?.warnings ?? [];
   const marks = standing?.marks ?? [];
   const holds = standing?.holds ?? [];
@@ -181,43 +145,7 @@ const ViewStudentCredentials = ({ student, isOpen, onClose }: ViewStudentCredent
         </p>
       )}
 
-      {pending && (
-        <ReasonDialog
-          title={pending.kind === "liability" ? "Settle liability" : pending.kind === "hold" ? "Lift hold" : "Clear penalty"}
-          subtitle={`${pending.label} · ${fullName(student)}`}
-          confirmLabel={pending.kind === "liability" ? "Settle" : pending.kind === "hold" ? "Lift hold" : "Clear"}
-          isSubmitting={isResolving}
-          onClose={() => setPending(null)}
-          onConfirm={confirm}
-        >
-          {pending.kind === "liability" ? (
-            <>
-              <Field label="Settled by" htmlFor="settle-status">
-                <SelectInput id="settle-status" value={settleStatus} onChange={(e) => setSettleStatus(e.target.value as typeof settleStatus)}>
-                  <option value="SETTLED_PAYMENT">Payment</option>
-                  <option value="SETTLED_REPLACEMENT">Replacement</option>
-                  <option value="WAIVED">Waived</option>
-                </SelectInput>
-              </Field>
-              {settleStatus === "SETTLED_PAYMENT" && (
-                <Field label="Receipt No." htmlFor="settle-receipt" optional>
-                  <TextInput id="settle-receipt" value={receiptNo} onChange={(e) => setReceiptNo(e.target.value)} placeholder="OR-000123" />
-                </Field>
-              )}
-            </>
-          ) : pending.kind === "mark" ? (
-            <p className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-              Clearing a mark can change the student's standing.
-            </p>
-          ) : pending.kind === "hold" ? (
-            <p className="flex items-start gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
-              <Receipt className="mt-0.5 h-4 w-4 shrink-0" />
-              Lift the hold once the loan is returned or settled.
-            </p>
-          ) : null}
-        </ReasonDialog>
-      )}
+      {pending && <PenaltyResolveDialog target={{ ...pending, subject: fullName(student) }} onClose={() => setPending(null)} />}
     </ArchiveDialog>
   );
 };

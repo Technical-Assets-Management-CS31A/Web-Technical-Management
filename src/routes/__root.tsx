@@ -22,6 +22,8 @@ import CounterCamera from "./CounterCamera";
 import KioskDisplay from "./KioskDisplay";
 import Anomalies from "./Anomalies";
 import { isAnomalyTypeFilter, isAnomalyView, type AnomalyView } from "../lib/anomalies";
+import Violations from "./Violations";
+import { isStudentViolationFilter, isViolationsTab, type StudentViolationFilter, type ViolationsTab } from "../lib/violations";
 import type { AnomalyType } from "../@types/types";
 
 
@@ -183,6 +185,17 @@ const AnomaliesRoute = createRoute({
     component: Anomalies
 })
 
+// PRD FR-6.8 / US-10: violations and resolution. ?tab=instructors and ?filter=holds deep-link a view.
+const ViolationsRoute = createRoute({
+    getParentRoute: () => homeRoute,
+    path: "violations",
+    validateSearch: (search: Record<string, unknown>): { tab?: ViolationsTab; filter?: StudentViolationFilter } => ({
+        ...(isViolationsTab(search.tab) && search.tab !== "students" ? { tab: search.tab } : {}),
+        ...(isStudentViolationFilter(search.filter) && search.filter !== "all" ? { filter: search.filter } : {}),
+    }),
+    component: Violations
+})
+
 export const routeTree = Route.addChildren([
     indexRoute,
     CounterCameraRoute,
@@ -203,6 +216,7 @@ export const routeTree = Route.addChildren([
         ReportsRoute,
         RoomsRoute,
         AuthCardsRoute,
-        AnomaliesRoute
+        AnomaliesRoute,
+        ViolationsRoute
     ]),
 ]);
