@@ -86,10 +86,24 @@ export type ResolveRequest = {
   reason: string;
 };
 
+// POST /liabilities/{id}/settle. receiptNo is required for SETTLED_PAYMENT. amount corrects the
+// liability (FR-6.7: editable); leave it out to keep the current amount. notes is the staff reason.
 export type SettleLiabilityRequest = {
   status: "SETTLED_PAYMENT" | "SETTLED_REPLACEMENT" | "WAIVED";
   receiptNo: string | null;
-  reason: string;
+  notes: string;
+  amount?: number;
+};
+
+// POST /loans/{id}/mark-missing (FR-6.7). amount null charges the asset's replacement cost.
+export type MarkMissingRequest = {
+  amount: number | null;
+  note: string;
+};
+
+// POST /loans/{id}/return: staff close a loan, e.g. a MISSING item that was found.
+export type StaffReturnRequest = {
+  note: string;
 };
 
 // ── Assets ───────────────────────────────────────────────────────────────────
