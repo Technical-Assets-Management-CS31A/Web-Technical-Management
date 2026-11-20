@@ -8,6 +8,7 @@ import {
   MdAssessment,
   MdMeetingRoom,
   MdReportProblem,
+  MdGavel,
 } from "react-icons/md";
 import { BiLogoSass } from "react-icons/bi";
 import { BsPersonCircle, BsClipboardCheck, BsPersonBadge } from "react-icons/bs";
@@ -48,6 +49,7 @@ export default function Sidebar() {
   const operationalLinks: NavLink[] = [
     { label: "Loans", link: "/home/loans", icon: BsClipboardCheck, badge: activeBorrowCount },
     { label: "Anomalies", link: "/home/anomalies", icon: MdReportProblem, badge: openAnomalyCount },
+    { label: "Violations", link: "/home/violations", icon: MdGavel },
     { label: "Counter", link: "/home/rfid-controller", icon: FaWifi },
   ];
 
