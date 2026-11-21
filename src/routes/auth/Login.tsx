@@ -7,8 +7,10 @@ import type { LoginRequest, LoginResponse } from "../../@types/types";
 import { useLogin } from "../../hooks/authHooks";
 import { logoutUserApi } from "../../api/auth_api";
 import { LOGIN_CONTENT as T } from "../../constants/loginContent";
-import { setToken } from "../../utils/token";
+import { setRefreshToken, setToken } from "../../utils/token";
+import { getErrorMessage } from "../../components/form/FormKit";
 import { isAccountRole } from "../../utils/usersData/userData";
+import { resolveLoginRole } from "../../lib/loginRole";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -39,14 +41,15 @@ export default function Login() {
     if (hasError) return;
 
     mutate(submitForm, {
-      onSuccess: (res: { data?: LoginResponse }) => {
-        const accessToken = res?.data?.accessToken;
-        const role = res?.data?.role;
+      onSuccess: (res: LoginResponse) => {
+        const accessToken = res?.accessToken;
         if (!accessToken) {
           setErrorMessage(T.errors.invalid);
           return;
         }
+        const role = resolveLoginRole(res, accessToken);
         setToken(accessToken);
+        if (res.refreshToken) setRefreshToken(res.refreshToken);
 
         // Staff-only web: anything other than a users-table role (e.g. a student) is signed straight
         // back out, which also clears the refresh-token cookie so the route guard can't revive it.
@@ -63,7 +66,7 @@ export default function Login() {
       onError: (error) => {
         // 403 means the account exists but is INACTIVE
         if (isAxiosError(error) && error.response?.status === 403) {
-          setErrorMessage(error.response.data?.message || T.errors.inactive);
+          setErrorMessage(getErrorMessage(error, T.errors.inactive));
           setIsInactiveError(true);
         } else {
           // For all other errors (401, 500, etc.), show generic message

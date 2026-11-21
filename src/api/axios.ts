@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getToken, removeToken, setToken } from "../utils/token";
+import { getRefreshToken, getToken, removeToken, setRefreshToken, setToken } from "../utils/token";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -8,7 +8,6 @@ export const api = axios.create({
   headers: {
     Accept: "application/json",
   },
-  withCredentials: true,
 });
 
 // ── Request interceptor — attach the current access token ─────────────────
@@ -27,10 +26,14 @@ api.interceptors.request.use((config) => {
 let refreshInFlight: Promise<string> | null = null;
 
 const requestNewAccessToken = async (): Promise<string> => {
-  // Plain fetch so the call skips the interceptors; the HttpOnly refresh-token cookie rides along.
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) throw new Error("No refresh token");
+
+  // Plain fetch so the call skips the interceptors. The backend reads the refresh token from the body.
   const res = await fetch(`${BASE_URL}/auth/refresh`, {
     method: "POST",
-    credentials: "include",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({ refreshToken }),
   });
 
   if (!res.ok) {
@@ -38,11 +41,13 @@ const requestNewAccessToken = async (): Promise<string> => {
   }
 
   const data = await res.json();
-  const newToken: unknown = data?.data?.accessToken ?? data?.data;
+  const payload = data?.data ?? data;
+  const newToken: unknown = payload?.accessToken ?? payload;
   if (typeof newToken !== "string" || !newToken) throw new Error("No token in refresh response");
 
-  // Store the new access token in the cookie so getToken() picks it up
+  // Store the new access token in the cookie so getToken() picks it up; keep a rotated refresh token too.
   setToken(newToken);
+  if (typeof payload?.refreshToken === "string" && payload.refreshToken) setRefreshToken(payload.refreshToken);
   return newToken;
 };
 

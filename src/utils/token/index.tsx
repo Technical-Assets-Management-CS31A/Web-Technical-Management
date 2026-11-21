@@ -1,6 +1,8 @@
 import Cookies from "js-cookie";
 
-// The access token lives in a readable cookie; the refresh token is an HttpOnly cookie set by the backend.
+// Both tokens come back in the /auth/login body: the backend sets no cookies, so the client keeps them.
+
+const cookieOptions = () => ({ sameSite: "strict" as const, secure: window.location.protocol === "https:" });
 
 export const getToken = (): string | undefined => {
     const key = import.meta.env.VITE_ACCESS_TOKEN_KEY;
@@ -8,9 +10,20 @@ export const getToken = (): string | undefined => {
 };
 export const setToken = (token: string) => {
     const key = import.meta.env.VITE_ACCESS_TOKEN_KEY;
-    Cookies.set(key, token, { sameSite: "strict", secure: window.location.protocol === "https:" });
+    Cookies.set(key, token, cookieOptions());
 };
+
+export const getRefreshToken = (): string | undefined => {
+    const key = import.meta.env.VITE_REFRESH_TOKEN_KEY;
+    return Cookies.get(key);
+};
+export const setRefreshToken = (token: string) => {
+    const key = import.meta.env.VITE_REFRESH_TOKEN_KEY;
+    Cookies.set(key, token, cookieOptions());
+};
+
+// Ends the local session: both tokens go.
 export const removeToken = () => {
-    const key = import.meta.env.VITE_ACCESS_TOKEN_KEY;
-    return Cookies.remove(key);
+    Cookies.remove(import.meta.env.VITE_REFRESH_TOKEN_KEY);
+    return Cookies.remove(import.meta.env.VITE_ACCESS_TOKEN_KEY);
 };
