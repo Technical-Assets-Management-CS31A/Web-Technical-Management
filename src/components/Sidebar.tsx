@@ -13,7 +13,7 @@ import {
 import { BsPersonCircle, BsClipboardCheck, BsPersonBadge } from "react-icons/bs";
 import { FaWifi } from "react-icons/fa";
 import { useState, useEffect } from "react";
-import SidebarSkeletonLoader from "../loader/SidebarSkeletonLoader";
+import SidebarSkeletonLoader from "./SidebarSkeletonLoader";
 import { useSidebar } from "../context/SidebarContext";
 import { useActiveBorrowCount } from "../hooks/useActiveBorrowCount";
 import { useOpenAnomalyCount } from "../hooks/useOpenAnomalyCount";
