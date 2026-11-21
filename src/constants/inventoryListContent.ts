@@ -22,6 +22,7 @@ export const INVENTORY_LIST_CONTENT = {
     count: (count: number) => `${count} asset${count !== 1 ? "s" : ""}`,
     inCategory: (category: string) => ` in ${category}`,
     searchPlaceholder: "Search name, code, serial or tag...",
+    inRoom: (room: string, scope: "home" | "current") => scope === "home" ? ` stored in ${room}` : ` now in ${room}`,
     includingDeleted: ", including deleted",
     updating: "Updating…",
   },
@@ -30,6 +31,14 @@ export const INVENTORY_LIST_CONTENT = {
     condition: "Condition",
     type: "Type",
     showDeleted: "Show deleted",
+    room: "Room",
+    allRooms: "All rooms",
+    roomScope: "Match room by",
+    roomScopes: [
+      { value: "home", label: "Home room" },
+      { value: "current", label: "Current room" },
+    ],
+    roomScopeHint: "Home room is where the asset is stored. Current room is where it was last verified.",
   },
   sort: {
     label: "Sort",
