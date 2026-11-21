@@ -1,0 +1,370 @@
+import { Link } from "@tanstack/react-router";
+import { AlertTriangle, ArrowLeft, Camera, CameraOff, CheckCircle2, Circle, Download, ImageOff, Info, Loader2, Power, Trash2 } from "lucide-react";
+import type { CheckoutSessionDto } from "../../../@types/types";
+import { type PhotoRun } from "../../../hooks/useSessionPhotoCapture";
+import { COUNTER_CAMERA_CONTENT as T } from "../../../constants/counterCameraContent";
+import { STEP_ORDER, formatBytes, PHASE_STYLE, type CounterCameraViewModel } from "../model/counter-camera-view-model";
+
+export default function CounterCameraView(vm: CounterCameraViewModel) {
+  const {
+    cam,
+    supported,
+    photoStep,
+    photo,
+    setPhoto,
+    capturing,
+    captureError,
+    handleCapture,
+    status,
+    statusClass,
+  } = vm;
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-5xl space-y-6 px-4 py-6 sm:px-6 md:px-8 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
+
+        {/* Header */}
+        <header className="space-y-3">
+          <Link
+            to="/home/rfid-controller"
+            className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {T.back}
+          </Link>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-blue-600">{T.eyebrow}</p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">{T.title}</h1>
+            <p className="mt-1 max-w-2xl text-sm text-slate-500">{T.description}</p>
+          </div>
+        </header>
+
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+
+          {/* Viewfinder */}
+          <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                  <Camera className="h-4 w-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-slate-900">
+                    {cam.selectedCamera?.label ?? T.cameraLabel}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {T.resolution}: {cam.resolution ? `${cam.resolution.width} × ${cam.resolution.height}` : "—"}
+                  </p>
+                </div>
+              </div>
+              <span className={`inline-flex items-center gap-1.5 self-start rounded-md px-2 py-0.5 text-xs font-medium sm:self-auto ${statusClass}`}>
+                {status === "live" && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />}
+                {T.status[status]}
+              </span>
+            </div>
+
+            <div className="space-y-4 p-5">
+              {/* Camera picker */}
+              <div>
+                <label htmlFor="counter-camera-select" className="mb-1 block text-xs font-medium text-slate-600">
+                  {T.cameraLabel}
+                </label>
+                <select
+                  id="counter-camera-select"
+                  value={cam.selectedCameraId}
+                  onChange={(e) => cam.switchCamera(e.target.value)}
+                  disabled={cam.cameras.length === 0 || cam.starting}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+                >
+                  {cam.cameras.length === 0 ? (
+                    <option value="">{T.noCameras}</option>
+                  ) : (
+                    cam.cameras.map((c) => (
+                      <option key={c.deviceId} value={c.deviceId}>
+                        {c.label}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+
+              {/* Preview */}
+              <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-slate-900">
+                {cam.isLive ? (
+                  <video ref={cam.videoRef} autoPlay playsInline muted className="h-full w-full object-contain" />
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center text-sm text-slate-300">
+                    {cam.starting ? (
+                      <>
+                        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                        {T.starting}
+                      </>
+                    ) : cam.error ? (
+                      <>
+                        <AlertTriangle className="h-6 w-6 text-amber-400" />
+                        <span className="max-w-sm">{cam.error}</span>
+                      </>
+                    ) : (
+                      <>
+                        <CameraOff className="h-6 w-6 text-slate-500" />
+                        <span className="font-medium text-slate-200">{T.offTitle}</span>
+                        <span className="text-xs text-slate-400">{T.offHint}</span>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {captureError && (
+                <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{captureError}</p>
+              )}
+
+              {/* Actions */}
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={handleCapture}
+                  disabled={!cam.isLive || capturing || photoStep.busy}
+                  title={photoStep.busy ? T.testDisabled : undefined}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {capturing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                  {capturing ? T.actions.capturing : T.actions.capture}
+                </button>
+                {cam.isLive ? (
+                  <button
+                    type="button"
+                    onClick={cam.stop}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    <Power className="h-4 w-4" />
+                    {T.actions.stop}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => cam.start(cam.selectedCameraId || undefined)}
+                    disabled={cam.starting || !supported}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    <Power className="h-4 w-4" />
+                    {cam.error ? T.actions.retry : T.actions.start}
+                  </button>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <div className="space-y-6">
+            <SessionPanel
+              session={photoStep.session}
+              run={photoStep.run}
+              maxAttempts={photoStep.maxAttempts}
+              isError={photoStep.isError}
+              cameraLive={cam.isLive || cam.starting}
+            />
+
+            {/* Test photo */}
+            <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <div className="border-b border-slate-200 px-5 py-4">
+                <p className="text-sm font-semibold text-slate-900">{T.photo.title}</p>
+              </div>
+              <div className="space-y-4 p-5">
+                {photo ? (
+                  <>
+                    <img
+                      src={photo.url}
+                      alt={T.photo.alt}
+                      className="aspect-video w-full rounded-lg border border-slate-200 bg-slate-100 object-contain"
+                    />
+                    <dl className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <dt className="text-xs text-slate-500">{T.photo.takenAt}</dt>
+                        <dd className="font-medium text-slate-900">{photo.takenAt.toLocaleTimeString()}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs text-slate-500">{T.photo.size}</dt>
+                        <dd className="font-medium text-slate-900">{formatBytes(photo.file.size)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs text-slate-500">{T.photo.dimensions}</dt>
+                        <dd className="font-medium text-slate-900">
+                          {photo.width ? `${photo.width} × ${photo.height}` : "—"}
+                        </dd>
+                      </div>
+                      <div className="min-w-0">
+                        <dt className="text-xs text-slate-500">{T.photo.camera}</dt>
+                        <dd className="truncate font-medium text-slate-900" title={photo.cameraLabel}>{photo.cameraLabel}</dd>
+                      </div>
+                    </dl>
+                    <div className="flex gap-2">
+                      <a
+                        href={photo.url}
+                        download={photo.file.name}
+                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      >
+                        <Download className="h-4 w-4" />
+                        {T.actions.download}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setPhoto(null)}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        {T.actions.clear}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-6 py-8 text-center">
+                    <ImageOff className="h-6 w-6 text-slate-300" />
+                    <p className="text-sm font-medium text-slate-900">{T.photo.emptyTitle}</p>
+                    <p className="max-w-xs text-sm text-slate-500">{T.photo.emptyHint}</p>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Checks */}
+            <section className="rounded-xl border border-slate-200 bg-white px-5 py-4">
+              <p className="mb-3 text-sm font-semibold text-slate-900">{T.checks.title}</p>
+              <ul className="space-y-2">
+                <CheckRow ok={supported} label={T.checks.supported} />
+                <CheckRow ok={cam.cameras.length > 0} label={T.checks.detected} />
+                <CheckRow ok={cam.isLive} label={T.checks.live} />
+                <CheckRow ok={!!photo} label={T.checks.captured} />
+              </ul>
+            </section>
+          </div>
+        </div>
+
+        <p className="flex items-start gap-2 text-xs text-slate-500">
+          <Info className="mt-px h-3.5 w-3.5 shrink-0 text-slate-400" />
+          <span>{T.footerHint}</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function CheckRow({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <li className="flex items-center gap-2 text-sm">
+      {ok ? (
+        <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+      ) : (
+        <Circle className="h-4 w-4 shrink-0 text-slate-300" />
+      )}
+      <span className={ok ? "text-slate-900" : "text-slate-500"}>{label}</span>
+    </li>
+  );
+}
+
+function SessionPanel({
+  session,
+  run,
+  maxAttempts,
+  isError,
+  cameraLive,
+}: {
+  session: CheckoutSessionDto | null;
+  run: PhotoRun | null;
+  maxAttempts: number;
+  isError: boolean;
+  cameraLive: boolean;
+}) {
+  const stepIndex = session ? STEP_ORDER.indexOf(session.status as (typeof STEP_ORDER)[number]) : -1;
+  // A finished run stays visible until the next session starts (a denied session drops out of the active list).
+  const showRun = run && (!session || run.sessionId === session.id);
+  const phaseText = run
+    ? run.phase === "capturing" || run.phase === "retrying"
+      ? T.session.phase[run.phase](run.attempt, maxAttempts)
+      : T.session.phase[run.phase]
+    : null;
+  const style = run ? PHASE_STYLE[run.phase] : null;
+
+  return (
+    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white" aria-live="polite">
+      <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+        <p className="text-sm font-semibold text-slate-900">{T.session.title}</p>
+        <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium ${isError ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"}`}>
+          {!isError && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />}
+          {isError ? T.session.offline : T.session.live}
+        </span>
+      </div>
+
+      <div className="space-y-4 p-5">
+        {isError && <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{T.session.loadError}</p>}
+
+        {session ? (
+          <>
+            <ol className="flex flex-wrap gap-1.5">
+              {STEP_ORDER.map((step, i) => (
+                <li
+                  key={step}
+                  className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                    i < stepIndex ? "bg-emerald-50 text-emerald-700" : i === stepIndex ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-500"
+                  }`}
+                >
+                  {T.session.steps[step]}
+                </li>
+              ))}
+            </ol>
+            <dl className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <dt className="text-xs text-slate-500">{T.session.station}</dt>
+                <dd className="font-mono font-medium text-slate-900">{session.station.stationCode}</dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-xs text-slate-500">{T.session.instructor}</dt>
+                <dd className="truncate font-medium text-slate-900">{session.instructor?.fullName ?? "—"}</dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-xs text-slate-500">{T.session.student}</dt>
+                <dd className="truncate font-medium text-slate-900">{session.student?.fullName ?? "—"}</dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-xs text-slate-500">{T.session.asset}</dt>
+                <dd className="truncate font-medium text-slate-900">{session.asset ? `${session.asset.assetCode} · ${session.asset.name}` : "—"}</dd>
+              </div>
+            </dl>
+            {!showRun && stepIndex < STEP_ORDER.indexOf("AWAITING_PHOTO") && (
+              <p className="text-sm text-slate-500">{T.session.beforePhoto}</p>
+            )}
+            {!cameraLive && !showRun && (
+              <p className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                {T.session.cameraOffWarning}
+              </p>
+            )}
+          </>
+        ) : (
+          !isError && !showRun && (
+            <div className="flex flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-6 py-8 text-center">
+              <p className="text-sm font-medium text-slate-900">{T.session.idleTitle}</p>
+              <p className="max-w-xs text-sm text-slate-500">{T.session.idleHint}</p>
+            </div>
+          )
+        )}
+
+        {showRun && style && (
+          <div className={`space-y-3 rounded-lg border px-3 py-3 text-sm ${style.box}`}>
+            <p className="flex items-start gap-2 font-medium">
+              <style.icon className={`mt-0.5 h-4 w-4 shrink-0 ${style.spin ? "animate-spin" : ""}`} />
+              {phaseText}
+            </p>
+            {run.error && run.phase !== "uploaded" && (
+              <p className="text-xs opacity-80">
+                {T.session.lastError}: {run.error}
+              </p>
+            )}
+            {run.photoUrl && (
+              <img src={run.photoUrl} alt={T.session.photoAlt} className="aspect-video w-full rounded-md border border-black/5 bg-white object-contain" />
+            )}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
