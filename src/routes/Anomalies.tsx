@@ -181,7 +181,7 @@ export default function Anomalies() {
           <div className="overflow-x-auto">
             <div className="max-h-[60vh] min-h-[45vh] overflow-y-auto">
               {current.isError ? (
-                <ErrorTable />
+                <ErrorTable error={current.error} onRetry={() => current.refetch()} />
               ) : current.isPending ? (
                 <p className="px-5 py-20 text-center text-sm text-slate-400">Loading…</p>
               ) : rows.length === 0 ? (
@@ -293,6 +293,7 @@ export default function Anomalies() {
           title={T.resolveDialog.title}
           subtitle={T.resolveDialog.subtitle}
           confirmLabel={T.resolveDialog.confirm}
+          tone="success"
           fieldLabel={T.resolveDialog.fieldLabel}
           hint={T.resolveDialog.hint}
           placeholder={T.resolveDialog.placeholder}

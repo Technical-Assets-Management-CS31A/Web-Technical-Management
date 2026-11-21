@@ -27,7 +27,7 @@ export default function AuthCards() {
   const viewer = UserData();
   const canManage = canManageAccounts(viewer.role);
 
-  const { data: users = [], isPending, isError } = useQuery(useAllUsers());
+  const { data: users = [], isPending, isError, error, refetch } = useQuery(useAllUsers());
   const updateCard = useUpdateAuthCard();
 
   const [search, setSearch] = useState("");
@@ -188,7 +188,7 @@ export default function AuthCards() {
           <div className="overflow-x-auto">
             <div className="max-h-[60vh] min-h-[45vh] overflow-y-auto">
               {isError ? (
-                <ErrorTable />
+                <ErrorTable error={error} onRetry={() => refetch()} />
               ) : filteredRows.length === 0 ? (
                 <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
                   <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">

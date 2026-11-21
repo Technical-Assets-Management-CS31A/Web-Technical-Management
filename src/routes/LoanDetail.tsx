@@ -338,6 +338,7 @@ function LoanDetailView({ loan: l }: { loan: LoanDto }) {
           title={T.missingDialog.title}
           subtitle={`${l.asset.assetCode} · ${l.loanNo}`}
           confirmLabel={T.missingDialog.confirm}
+          tone="danger"
           fieldLabel={T.missingDialog.reasonLabel}
           placeholder={T.missingDialog.reasonPlaceholder}
           isSubmitting={markMissing.isPending}

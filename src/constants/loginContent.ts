@@ -4,15 +4,23 @@ export const LOGIN_CONTENT = {
     title: "Go to ACLC Page",
     alt: "ACLC Logo",
   },
+  brand: {
+    name: "ACLC College of Mandaue",
+    product: "Technical Equipment Borrowing",
+  },
   hero: {
-    titleLines: ["Technical Equipment", "Borrowing System"],
+    title: "Every item, every loan, accounted for.",
     description:
-      "Managing resources, tracking items and borrowers. Ensures smooth lifecycle management.",
-    tags: ["Assets", "Loans", "People", "Activity"],
+      "Track equipment from the shelf to the classroom and back, with RFID check-out, live loan status and a full audit trail.",
+    features: [
+      { title: "Assets", body: "Tagged by RFID and QR, with full history." },
+      { title: "Loans", body: "Who has what, where, and when it's due." },
+      { title: "Accountability", body: "Penalties, liabilities and activity logs." },
+    ],
   },
   heading: {
-    title: "Welcome back!",
-    subtitle: "Access the Technical Equipment Borrowing System.",
+    title: "Sign in",
+    subtitle: "Use your staff or instructor account.",
   },
   fields: {
     email: {
@@ -29,8 +37,8 @@ export const LOGIN_CONTENT = {
     },
   },
   submit: {
-    idle: "Sign In",
-    pending: "Signing in...",
+    idle: "Sign in",
+    pending: "Signing in…",
   },
   errors: {
     inactive: "Your account is inactive. Contact an administrator.",
@@ -38,7 +46,7 @@ export const LOGIN_CONTENT = {
     staffOnly: "This sign-in is for staff and instructor accounts. Students borrow at the kiosk with their RFID card.",
   },
   footer: {
-    copyright: "© 2025 ACLC College of Mandaue. All rights reserved.",
-    notice: "Official internal tool. Unauthorized access is strictly prohibited.",
+    copyright: "ACLC College of Mandaue. All rights reserved.",
+    notice: "Authorized personnel only. Activity on this system is logged.",
   },
 } as const;

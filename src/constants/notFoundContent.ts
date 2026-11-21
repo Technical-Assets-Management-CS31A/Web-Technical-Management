@@ -1,16 +1,12 @@
 export const NOT_FOUND_CONTENT = {
   logoAlt: "ACLC Logo",
   school: "ACLC College of Mandaue",
-  system: "Technical Equipment Borrowing System",
-  code: "404",
-  title: "Page not found",
-  description:
-    "This route isn't in our inventory. The page may have been moved, archived, or never existed.",
-  tips: [
-    "Check the URL for typos",
-    "Use the sidebar to navigate",
-    "Return to the dashboard",
-  ],
-  backButton: "Go Back to Continue",
-  footer: "© 2025 ACLC College of Mandaue · Technical Equipment Borrowing System",
+  system: "Technical Equipment Borrowing",
+  eyebrow: "Error 404",
+  title: "We couldn't find that page.",
+  description: "The link may be broken, or the page may have been moved or removed.",
+  pathLabel: "Requested",
+  primaryButton: "Go to dashboard",
+  secondaryButton: "Go back",
+  footer: "ACLC College of Mandaue. All rights reserved.",
 } as const;

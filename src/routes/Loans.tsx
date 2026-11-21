@@ -126,7 +126,7 @@ export default function Loans() {
 
   // Room goes to the server (GET /loans?roomId=); status stays client-side so every tab keeps its count.
   // Instructors only see the loans they approved.
-  const { data, isPending, isError } = useQuery({
+  const { data, isPending, isError, error, refetch } = useQuery({
     ...useAllLoans({
       ...(isInstructor ? { approvedBy: "me" as const } : {}),
       ...(roomId ? { roomId } : {}),
@@ -304,7 +304,7 @@ export default function Loans() {
           </div>
 
           {isError ? (
-            <ErrorTable />
+            <ErrorTable error={error} onRetry={() => refetch()} />
           ) : (
             <>
               <div className="overflow-x-auto">

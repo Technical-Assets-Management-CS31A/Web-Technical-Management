@@ -203,7 +203,7 @@ export default function Violations() {
           <div className="overflow-x-auto">
             <div className="max-h-[65vh] min-h-[45vh] overflow-y-auto">
               {current.isError ? (
-                <ErrorTable />
+                <ErrorTable error={current.error} onRetry={() => current.refetch()} />
               ) : rowCount === 0 ? (
                 <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
                   <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
@@ -320,6 +320,7 @@ export default function Violations() {
           title={T.resetTerm.title}
           subtitle={T.resetTerm.subtitle}
           confirmLabel={T.resetTerm.confirm}
+          tone="danger"
           fieldLabel={T.resetTerm.fieldLabel}
           placeholder={T.resetTerm.placeholder}
           isSubmitting={resetTerm.isPending}

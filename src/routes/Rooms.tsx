@@ -182,7 +182,7 @@ export default function Rooms() {
 
             <div className="max-h-[60vh] min-h-[45vh] overflow-y-auto">
               {roomsQuery.isError ? (
-                <ErrorTable />
+                <ErrorTable error={roomsQuery.error} onRetry={() => roomsQuery.refetch()} />
               ) : filteredRooms.length === 0 ? (
                 <div className="flex flex-col items-center justify-center px-8 py-20 text-center">
                   <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
@@ -335,7 +335,7 @@ export default function Rooms() {
                   </div>
 
                   {stationsQuery.isError ? (
-                    <ErrorTable />
+                    <ErrorTable error={stationsQuery.error} onRetry={() => stationsQuery.refetch()} />
                   ) : roomStations.length === 0 ? (
                     <p className="flex items-center gap-2 rounded-xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
                       <Activity className="h-4 w-4 shrink-0 text-slate-400" />

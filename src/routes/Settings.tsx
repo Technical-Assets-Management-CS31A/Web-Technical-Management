@@ -52,7 +52,7 @@ function PanelHeader({ title, description, action }: { title: string; descriptio
 export default function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const { showEditProfile, setShowEditProfile } = useSettingsState();
-  const { data, isLoading, isError } = useQuery(useLoggedInUser());
+  const { data, isLoading, isError, error, refetch } = useQuery(useLoggedInUser());
 
   const user: UserDto | null = useMemo(() => data ?? null, [data]);
 
@@ -142,7 +142,7 @@ export default function Settings() {
                 <InventorySettings />
               </>
             ) : isError ? (
-              <ErrorTable />
+              <ErrorTable error={error} onRetry={() => refetch()} />
             ) : (
               <>
                 <PanelHeader title={T.profileSection.title} description={T.profileSection.description} action={editButton} />
