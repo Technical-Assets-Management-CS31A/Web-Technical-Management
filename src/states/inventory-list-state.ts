@@ -7,9 +7,14 @@ import type { AssetCondition, AssetStatus, AssetType } from "../@types/types";
 
 export type AssetSort = "-createdAt" | "createdAt" | "name" | "assetCode" | "-updatedAt";
 
+/** Which room the room filter matches: the asset's home (storage) room or its last verified room. */
+export type RoomScope = "home" | "current"
+
 export type AssetFilters = {
     search: string
     categoryId: string
+    roomId: string
+    roomScope: RoomScope
     status: AssetStatus | ""
     condition: AssetCondition | ""
     type: AssetType | ""
@@ -20,6 +25,8 @@ export type AssetFilters = {
 export const DEFAULT_ASSET_FILTERS: AssetFilters = {
     search: "",
     categoryId: "",
+    roomId: "",
+    roomScope: "home",
     status: "",
     condition: "",
     type: "",
