@@ -1,103 +1,87 @@
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
+import type { StudentStanding } from "../@types/types";
 
-type TPageTab = "staff" | "registered";
+// People screen state. Roster filters live here so they survive switching tabs
+// and opening a student. Changing any roster filter goes back to page 1.
+
+export type PeopleTab = "accounts" | "students" | "sections";
+
+export type RosterFilters = {
+  search: string;
+  sectionId: string;
+  standing: StudentStanding | "";
+  /** "" = everyone, "yes" = has a fingerprint, "no" = still to enroll */
+  enrolled: "" | "yes" | "no";
+  showDeleted: boolean;
+};
+
+export const DEFAULT_ROSTER_FILTERS: RosterFilters = {
+  search: "",
+  sectionId: "",
+  standing: "",
+  enrolled: "",
+  showDeleted: false,
+};
 
 interface IUserManagement {
-  activeTab: TPageTab;
-  setActiveTab: (value: TPageTab) => void;
+  activeTab: PeopleTab;
+  setActiveTab: (value: PeopleTab) => void;
+
+  // Accounts
+  showDeletedAccounts: boolean;
+  setShowDeletedAccounts: (value: boolean) => void;
   isAddUserOpen: boolean;
   setIsAddUserOpen: (value: boolean) => void;
   isEditUserOpen: boolean;
   setIsEditUserOpen: (value: boolean) => void;
   isViewCredentialsOpen: boolean;
   setIsViewCredentialsOpen: (value: boolean) => void;
-  isArchiveModalOpen: boolean;
-  setIsArchiveModalOpen: (value: boolean) => void;
-  isBlockModalOpen: boolean;
-  setIsBlockModalOpen: (value: boolean) => void;
+  isDeleteModalOpen: boolean;
+  setIsDeleteModalOpen: (value: boolean) => void;
   selectedUserId: string;
   setSelectedUserId: (id: string) => void;
-  archiveUserId: string;
-  setArchiveUserId: (id: string) => void;
-  blockUserId: string;
-  setBlockUserId: (id: string) => void;
+  deleteUserId: string;
+  setDeleteUserId: (id: string) => void;
+
+  // Student roster
+  rosterPage: number;
+  setRosterPage: (value: number) => void;
+  rosterFilters: RosterFilters;
+  setRosterFilter: <K extends keyof RosterFilters>(key: K, value: RosterFilters[K]) => void;
+  clearRosterFilters: () => void;
 }
 
 const UserManagementStore = create<IUserManagement>((set) => ({
-  activeTab: "staff",
+  activeTab: "accounts",
   setActiveTab: (value) => set(() => ({ activeTab: value })),
 
+  showDeletedAccounts: false,
+  setShowDeletedAccounts: (value) => set(() => ({ showDeletedAccounts: value })),
   isAddUserOpen: false,
   setIsAddUserOpen: (value) => set(() => ({ isAddUserOpen: value })),
-
   isEditUserOpen: false,
   setIsEditUserOpen: (value) => set(() => ({ isEditUserOpen: value })),
-
   isViewCredentialsOpen: false,
   setIsViewCredentialsOpen: (value) => set(() => ({ isViewCredentialsOpen: value })),
-
-  isArchiveModalOpen: false,
-  setIsArchiveModalOpen: (value) => set(() => ({ isArchiveModalOpen: value })),
-
-  isBlockModalOpen: false,
-  setIsBlockModalOpen: (value) => set(() => ({ isBlockModalOpen: value })),
-
+  isDeleteModalOpen: false,
+  setIsDeleteModalOpen: (value) => set(() => ({ isDeleteModalOpen: value })),
   selectedUserId: "",
   setSelectedUserId: (id) => set(() => ({ selectedUserId: id })),
+  deleteUserId: "",
+  setDeleteUserId: (id) => set(() => ({ deleteUserId: id })),
 
-  archiveUserId: "",
-  setArchiveUserId: (id) => set(() => ({ archiveUserId: id })),
-
-  blockUserId: "",
-  setBlockUserId: (id) => set(() => ({ blockUserId: id })),
+  rosterPage: 1,
+  setRosterPage: (value) => set(() => ({ rosterPage: value })),
+  rosterFilters: DEFAULT_ROSTER_FILTERS,
+  setRosterFilter: (key, value) =>
+    set((state) => ({ rosterFilters: { ...state.rosterFilters, [key]: value }, rosterPage: 1 })),
+  // Keeps search and the deleted toggle; clears the narrowing filters.
+  clearRosterFilters: () =>
+    set((state) => ({
+      rosterFilters: { ...DEFAULT_ROSTER_FILTERS, search: state.rosterFilters.search, showDeleted: state.rosterFilters.showDeleted },
+      rosterPage: 1,
+    })),
 }));
 
-export const useAllUsersManagementState = () => {
-  const activeTab = UserManagementStore((state) => state.activeTab);
-  const setActiveTab = UserManagementStore((state) => state.setActiveTab);
-
-  const isAddUserOpen = UserManagementStore((state) => state.isAddUserOpen);
-  const setIsAddUserOpen = UserManagementStore((state) => state.setIsAddUserOpen);
-
-  const isEditUserOpen = UserManagementStore((state) => state.isEditUserOpen);
-  const setIsEditUserOpen = UserManagementStore((state) => state.setIsEditUserOpen);
-
-  const isViewCredentialsOpen = UserManagementStore((state) => state.isViewCredentialsOpen);
-  const setIsViewCredentialsOpen = UserManagementStore((state) => state.setIsViewCredentialsOpen);
-
-  const isArchiveModalOpen = UserManagementStore((state) => state.isArchiveModalOpen);
-  const setIsArchiveModalOpen = UserManagementStore((state) => state.setIsArchiveModalOpen);
-
-  const isBlockModalOpen = UserManagementStore((state) => state.isBlockModalOpen);
-  const setIsBlockModalOpen = UserManagementStore((state) => state.setIsBlockModalOpen);
-
-  const selectedUserId = UserManagementStore((state) => state.selectedUserId);
-  const setSelectedUserId = UserManagementStore((state) => state.setSelectedUserId);
-
-  const archiveUserId = UserManagementStore((state) => state.archiveUserId);
-  const setArchiveUserId = UserManagementStore((state) => state.setArchiveUserId);
-
-  const blockUserId = UserManagementStore((state) => state.blockUserId);
-  const setBlockUserId = UserManagementStore((state) => state.setBlockUserId);
-
-  return {
-    activeTab,
-    setActiveTab,
-    isAddUserOpen,
-    setIsAddUserOpen,
-    isEditUserOpen,
-    setIsEditUserOpen,
-    isViewCredentialsOpen,
-    setIsViewCredentialsOpen,
-    isArchiveModalOpen,
-    setIsArchiveModalOpen,
-    isBlockModalOpen,
-    setIsBlockModalOpen,
-    selectedUserId,
-    setSelectedUserId,
-    archiveUserId,
-    setArchiveUserId,
-    blockUserId,
-    setBlockUserId,
-  };
-};
+export const useAllUsersManagementState = () => UserManagementStore(useShallow((state) => state));

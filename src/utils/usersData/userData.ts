@@ -1,40 +1,40 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 import { useLoggedInUser } from "../../hooks/userHooks";
-import type { TUsers } from "../../@types/types";
+import type { UserDto, UserRole } from "../../@types/types";
+import { USER_ROLES } from "../../components/form/accountForm";
 
-export const UserData = () => {
-    type TUserRequired = Pick<
-        TUsers,
-        | "id"
-        | "username"
-        | "lastName"
-        | "middleName"
-        | "firstName"
-        | "email"
-        | "phoneNumber"
-        | "userRole"
-        | "status"
-    >;
+type TSignedInUser = Pick<UserDto, "id" | "employeeNo" | "firstName" | "lastName" | "email" | "role" | "status" | "isEventCoordinator">;
 
-    const [userData, setUserData] = useState<TUserRequired>({
-        id: "",
-        username: "",
-        lastName: "",
-        middleName: "",
-        firstName: "",
-        email: "",
-        phoneNumber: "",
-        userRole: "",
-        status: "",
-    });
-
-    const { data } = useSuspenseQuery(useLoggedInUser());
-
-    useEffect(() => {
-        if (!data) console.log("User not found");
-        setUserData(data);
-    }, [data]);
-
-    return userData;
+const EMPTY_USER: TSignedInUser = {
+    id: "",
+    employeeNo: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    role: "" as UserRole,
+    status: "ACTIVE",
+    isEventCoordinator: false,
 };
+
+export const UserData = (): TSignedInUser => {
+    const { data } = useSuspenseQuery(useLoggedInUser());
+    if (!data) console.log("User not found");
+    return data ?? EMPTY_USER;
+};
+
+// Only users-table accounts sign in to the web; students are roster records with no login.
+export const isAccountRole = (role: unknown): role is UserRole => USER_ROLES.includes(role as UserRole);
+
+// Who may manage what on the People, Assets and Rooms screens.
+export const canManageAccounts = (role: UserRole | "") => role === "ADMIN";
+export const canManageRoster = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
+export const canManageAssets = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF" || role === "CUSTODIAN";
+// Mark missing, change room and staff return on a loan: ADMIN and TECH_STAFF only, as the backend enforces.
+export const canManageLoans = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
+export const canResolvePenalties = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
+export const canManageRooms = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
+// FR-4.5: Technical Personnel "receive anomaly alerts, resolve violations"; admins can do everything.
+export const canHandleAnomalies = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
+export const canEditBusinessRules = (role: UserRole | "") => role === "ADMIN";
+// FR-6.9: the start-of-term warning reset is an admin action.
+export const canResetTermWarnings = (role: UserRole | "") => role === "ADMIN";

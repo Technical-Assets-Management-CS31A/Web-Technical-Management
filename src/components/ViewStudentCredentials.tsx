@@ -1,318 +1,153 @@
-import { useState, type FC } from "react";
-import type { TStudent } from "../@types/types";
-import {
-  X,
-  Eye,
-  EyeOff,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  GraduationCap,
-  BadgeCheck,
-  KeyRound,
-  AtSign,
-  BookOpen,
-  Hash,
-  Building,
-  Navigation,
-  CreditCard,
-  ImageOff,
-  ZoomIn,
-} from "lucide-react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { CalendarPlus, Fingerprint, GraduationCap, Hash, Layers, Lock, ShieldAlert } from "lucide-react";
+import type { StudentDto } from "../@types/types";
+import { FormattedDateTime } from "./FormattedDateTime";
+import { formatEnum, fullName, initials } from "../lib/utils";
+import { ArchiveDialog, ArchiveLoading, DeletedNotice, DetailHeader, DetailSection, InfoRow, InitialsAvatar, NeutralBadge } from "./ArchiveDetailShell";
+import { useStudentStanding } from "../hooks/userHooks";
+import { UserData, canResolvePenalties } from "../utils/usersData/userData";
+import StandingPill from "./StandingPill";
+import PenaltyResolveDialog, { type PenaltyTarget } from "./PenaltyResolveDialog";
 
 type ViewStudentCredentialsProps = {
-  student: TStudent;
+  student: StudentDto;
   isOpen: boolean;
   onClose: () => void;
 };
 
-const ViewStudentCredentials: FC<ViewStudentCredentialsProps> = ({
-  student,
-  isOpen,
-  onClose,
-}) => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+// Which penalty the staff member is resolving.
+type Pending = Omit<PenaltyTarget, "subject">;
 
-  if (!isOpen) return null;
+const php = new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" });
 
-  const getFullName = () => {
-    const middleInitial = student.middleName
-      ? `${student.middleName.charAt(0)}.`
-      : "";
-    return `${student.firstName} ${middleInitial} ${student.lastName}`
-      .replace(/\s+/g, " ")
-      .trim();
-  };
-
-  const initials =
-    student.firstName && student.lastName
-      ? `${student.firstName.charAt(0)}${student.lastName.charAt(0)}`.toUpperCase()
-      : "S";
-
+function PenaltyRow({ title, detail, active, onResolve, actionLabel }: {
+  title: string;
+  detail: string;
+  active: boolean;
+  onResolve?: () => void;
+  actionLabel: string;
+}) {
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-4xl bg-white rounded-[2rem] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-extrabold text-lg shadow-md">
-              {initials}
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-slate-900">{getFullName()}</h2>
-              <p className="text-xs text-slate-400 font-medium mt-0.5">Student Credentials</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            data-testid="closebutton"
-            className="h-10 w-10 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-red-500 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Scrollable body */}
-        <div className="overflow-y-auto flex-1 p-6 space-y-5">
-
-          {/* Personal Information */}
-          <Section title="Personal Information" icon={<User className="h-4 w-4 text-blue-500" />}>
-            <Grid>
-              <Field label="Full Name" value={getFullName()} icon={<User className="h-3.5 w-3.5" />} />
-              <Field label="Username" value={student.username} icon={<AtSign className="h-3.5 w-3.5" />} />
-              <Field label="Email" value={student.email} icon={<Mail className="h-3.5 w-3.5" />} />
-              <Field label="Phone Number" value={student.phoneNumber} icon={<Phone className="h-3.5 w-3.5" />} />
-            </Grid>
-          </Section>
-
-          {/* Student Information */}
-          <Section title="Student Information" icon={<GraduationCap className="h-4 w-4 text-indigo-500" />}>
-            <Grid>
-              <Field label="Student ID" value={student.studentIdNumber} icon={<Hash className="h-3.5 w-3.5" />} mono />
-              <Field label="Course" value={student.course} icon={<BookOpen className="h-3.5 w-3.5" />} />
-              <Field label="Section" value={student.section} icon={<BadgeCheck className="h-3.5 w-3.5" />} />
-              <Field label="Year Level" value={student.year} icon={<GraduationCap className="h-3.5 w-3.5" />} />
-              <Field label="RFID Card" value={student.rfidUid} icon={<CreditCard className="h-3.5 w-3.5" />} mono />
-            </Grid>
-          </Section>
-
-          {/* Address Information */}
-          <Section title="Address Information" icon={<MapPin className="h-4 w-4 text-emerald-500" />}>
-            <div className="grid grid-cols-1 gap-px bg-slate-100 rounded-xl overflow-hidden border border-slate-100">
-              <Field label="Street" value={student.street} icon={<Navigation className="h-3.5 w-3.5" />} full />
-              <Field label="City / Municipality" value={student.cityMunicipality} icon={<Building className="h-3.5 w-3.5" />} />
-              <Field label="Province" value={student.province} icon={<MapPin className="h-3.5 w-3.5" />} />
-              <Field label="Postal Code" value={student.postalCode} icon={<Hash className="h-3.5 w-3.5" />} />
-            </div>
-          </Section>
-
-          {/* ID Images */}
-          <Section title="Student ID Images" icon={<CreditCard className="h-4 w-4 text-sky-500" />}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-1">
-              <IdImageCard
-                label="Front ID"
-                src={student.frontStudentIdPicture}
-                onZoom={setLightboxSrc}
-              />
-              <IdImageCard
-                label="Back ID"
-                src={student.backStudentIdPicture}
-                onZoom={setLightboxSrc}
-              />
-            </div>
-          </Section>
-
-          {/* Account Information */}
-          <Section title="Account Information" icon={<BadgeCheck className="h-4 w-4 text-violet-500" />}>
-            <Grid>
-              <div className="bg-white px-4 py-3.5 flex flex-col gap-1">
-                <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-                  <BadgeCheck className="h-3.5 w-3.5" />
-                  Role
-                </div>
-                <span className={`inline-flex w-fit items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border mt-0.5 ${
-                  student.userRole?.toLowerCase() === "admin"
-                    ? "bg-red-50 text-red-700 border-red-100"
-                    : "bg-blue-50 text-blue-700 border-blue-100"
-                }`}>
-                  {student.userRole || "N/A"}
-                </span>
-              </div>
-              <div className="bg-white px-4 py-3.5 flex flex-col gap-1">
-                <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-                  <BadgeCheck className="h-3.5 w-3.5" />
-                  Status
-                </div>
-                <span className={`inline-flex w-fit items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border mt-0.5 ${
-                  student.status?.toLowerCase() === "active" || student.status?.toLowerCase() === "online"
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                    : "bg-slate-100 text-slate-600 border-slate-200"
-                }`}>
-                  <span className={`h-1.5 w-1.5 rounded-full ${
-                    student.status?.toLowerCase() === "active" || student.status?.toLowerCase() === "online"
-                      ? "bg-emerald-500"
-                      : "bg-slate-400"
-                  }`} />
-                  {student.status || "N/A"}
-                </span>
-              </div>
-            </Grid>
-
-            {/* Generated password */}
-            <div className="mt-3 bg-white rounded-xl border border-slate-100 px-4 py-3.5">
-              <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium mb-2">
-                <KeyRound className="h-3.5 w-3.5" />
-                Generated Password
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={student.generatedPassword || ""}
-                  disabled
-                  className="flex-1 px-3 py-2 text-sm text-slate-900 bg-slate-50 border border-slate-200 rounded-xl cursor-not-allowed font-mono disabled:opacity-80"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((p) => !p)}
-                  title={showPassword ? "Hide password" : "Show password"}
-                  className="h-9 w-9 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors flex-shrink-0"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-          </Section>
-        </div>
+    <div className="flex items-center gap-3 bg-white px-4 py-3">
+      <div className="min-w-0 flex-1">
+        <p className={`text-sm font-medium ${active ? "text-slate-900" : "text-slate-400 line-through"}`}>{title}</p>
+        <p className="truncate text-xs text-slate-500">{detail}</p>
       </div>
-
-      {/* Lightbox */}
-      {lightboxSrc && (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-          onClick={() => setLightboxSrc(null)}
-        >
-          <div className="relative max-w-3xl w-full" onClick={(e) => e.stopPropagation()}>
-            <button
-              onClick={() => setLightboxSrc(null)}
-              className="absolute -top-4 -right-4 h-9 w-9 rounded-full bg-white flex items-center justify-center text-slate-600 hover:bg-red-500 hover:text-white transition-colors shadow-lg z-10"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <img
-              src={lightboxSrc}
-              alt="ID enlarged"
-              className="w-full rounded-2xl shadow-2xl object-contain max-h-[80vh]"
-            />
-          </div>
-        </div>
+      {active && onResolve && (
+        <button type="button" onClick={onResolve} className="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50">
+          {actionLabel}
+        </button>
       )}
     </div>
+  );
+}
+
+const ViewStudentCredentials = ({ student, isOpen, onClose }: ViewStudentCredentialsProps) => {
+  const viewer = UserData();
+  const { data: standing, isLoading } = useQuery(useStudentStanding(student.id));
+  const [pending, setPending] = useState<Pending | null>(null);
+
+  if (!isOpen) return null;
+  if (isLoading) return <ArchiveLoading message="Loading standing..." />;
+
+  const canResolve = canResolvePenalties(viewer.role);
+  const resolve = canResolve ? (p: Pending) => () => setPending(p) : () => undefined;
+
+  const warnings = standing?.warnings ?? [];
+  const marks = standing?.marks ?? [];
+  const holds = standing?.holds ?? [];
+  const liabilities = standing?.liabilities ?? [];
+
+  return (
+    <ArchiveDialog label="Student" icon={GraduationCap} titleId="student-detail-title" recordId={student.id} recordIdLabel="Student ID" onClose={onClose}>
+      <DetailHeader
+        titleId="student-detail-title"
+        title={fullName(student)}
+        subtitle={<span className="font-mono">{student.studentNo}</span>}
+        avatar={<InitialsAvatar initials={initials(student) || "?"} />}
+        badges={
+          <>
+            <StandingPill standing={standing?.standing ?? student.standing} />
+            {student.hasActiveHold && <NeutralBadge icon={Lock}>Profile hold</NeutralBadge>}
+            <NeutralBadge>{formatEnum(student.status)}</NeutralBadge>
+          </>
+        }
+      />
+
+      {student.deletedAt && <DeletedNotice deletedAt={student.deletedAt} subject="student" />}
+
+      <DetailSection title="Roster" columns={2}>
+        <InfoRow icon={Hash} label="Student No." value={student.studentNo} mono copyable />
+        <InfoRow icon={Layers} label="Section" value={student.section ? `${student.section.code} · ${student.section.program} ${student.section.yearLevel}` : null} />
+        <InfoRow icon={CalendarPlus} label="School year" value={student.section?.schoolYear} />
+        <InfoRow icon={Fingerprint} label="Fingerprints" value={student.enrolledFingerCount ? `${student.enrolledFingerCount} enrolled` : "Not enrolled"} />
+      </DetailSection>
+
+      {/* Standing — penalties are issued by the system; staff clear them with a reason */}
+      <DetailSection title={`Late arrival warnings (${student.activeWarningCount} this term)`}>
+        {warnings.length === 0 && <p className="bg-white px-4 py-3 text-sm italic text-slate-400">None</p>}
+        {warnings.map((w) => (
+          <PenaltyRow
+            key={w.id}
+            title={`Warning #${w.warningNo}${w.triggeredPenalty ? " · triggered a mark" : ""}`}
+            detail={`${w.schoolTerm} · ${FormattedDateTime(w.issuedAt)}`}
+            active={w.status === "ACTIVE"}
+            actionLabel="Clear"
+            onResolve={resolve({ kind: "warning", id: w.id, label: `Warning #${w.warningNo}` })}
+          />
+        ))}
+      </DetailSection>
+
+      <DetailSection title={`Non-compliance marks (${student.activeMarkCount} active)`}>
+        {marks.length === 0 && <p className="bg-white px-4 py-3 text-sm italic text-slate-400">None</p>}
+        {marks.map((m) => (
+          <PenaltyRow
+            key={m.id}
+            title={formatEnum(m.reason)}
+            detail={FormattedDateTime(m.issuedAt) ?? ""}
+            active={m.status === "ACTIVE"}
+            actionLabel="Clear"
+            onResolve={resolve({ kind: "mark", id: m.id, label: `${formatEnum(m.reason)} mark` })}
+          />
+        ))}
+      </DetailSection>
+
+      {(holds.length > 0 || liabilities.length > 0) && (
+        <DetailSection title="Holds and liabilities">
+          {holds.map((h) => (
+            <PenaltyRow
+              key={h.id}
+              title="Profile hold"
+              detail={`Placed ${FormattedDateTime(h.placedAt)}`}
+              active={h.status === "ACTIVE"}
+              actionLabel="Lift"
+              onResolve={resolve({ kind: "hold", id: h.id, label: "Profile hold" })}
+            />
+          ))}
+          {liabilities.map((l) => (
+            <PenaltyRow
+              key={l.id}
+              title={`Liability ${php.format(l.amount)}`}
+              detail={`${formatEnum(l.status)}${l.receiptNo ? ` · OR ${l.receiptNo}` : ""}`}
+              active={l.status === "OUTSTANDING"}
+              actionLabel="Settle"
+              onResolve={resolve({ kind: "liability", id: l.id, label: `Liability ${php.format(l.amount)}` })}
+            />
+          ))}
+        </DetailSection>
+      )}
+
+      {!canResolve && (warnings.length > 0 || marks.length > 0) && (
+        <p className="flex items-center gap-2 text-xs text-slate-500">
+          <ShieldAlert className="h-3.5 w-3.5" />
+          Only admins and technical staff can clear penalties.
+        </p>
+      )}
+
+      {pending && <PenaltyResolveDialog target={{ ...pending, subject: fullName(student) }} onClose={() => setPending(null)} />}
+    </ArchiveDialog>
   );
 };
 
 export default ViewStudentCredentials;
-
-
-function Section({
-  title,
-  icon,
-  children,
-}: {
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-      <div className="px-4 py-3 border-b border-slate-100 flex items-center gap-2 bg-slate-50/60">
-        {icon}
-        <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">{title}</h3>
-      </div>
-      <div className="p-3">{children}</div>
-    </div>
-  );
-}
-
-function Grid({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-slate-100 rounded-xl overflow-hidden border border-slate-100">
-      {children}
-    </div>
-  );
-}
-
-function Field({
-  label,
-  value,
-  icon,
-  mono = false,
-  full = false,
-}: {
-  label: string;
-  value?: string | null;
-  icon: React.ReactNode;
-  mono?: boolean;
-  full?: boolean;
-}) {
-  return (
-    <div className={`bg-white px-4 py-3.5 flex flex-col gap-1 ${full ? "col-span-full" : ""}`}>
-      <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-        {icon}
-        {label}
-      </div>
-      <p className={`text-sm font-semibold text-slate-900 ${mono ? "font-mono" : ""}`}>
-        {value || <span className="text-slate-300 font-normal italic text-xs">Not provided</span>}
-      </p>
-    </div>
-  );
-}
-
-function IdImageCard({
-  label,
-  src,
-  onZoom,
-}: {
-  label: string;
-  src?: string | null;
-  onZoom: (src: string) => void;
-}) {
-  // Add cache busting to force browser to reload image
-  const cacheBustedSrc = src ? `${src}?t=${Date.now()}` : null;
-  
-  return (
-    <div className="flex flex-col gap-2">
-      <span className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
-        <CreditCard className="h-3.5 w-3.5" />
-        {label}
-      </span>
-      {cacheBustedSrc ? (
-        <div
-          className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-50 cursor-pointer"
-          onClick={() => onZoom(cacheBustedSrc)}
-        >
-          <img
-            src={cacheBustedSrc}
-            alt={label}
-            className="w-full h-44 object-cover transition-transform duration-200 group-hover:scale-105"
-          />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-            <ZoomIn className="h-7 w-7 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center gap-2 h-44 rounded-xl border border-dashed border-slate-200 bg-slate-50 text-slate-300">
-          <ImageOff className="h-8 w-8" />
-          <span className="text-xs font-medium">No image provided</span>
-        </div>
-      )}
-    </div>
-  );
-}

@@ -1,139 +1,231 @@
-import * as signalR from '@microsoft/signalr';
+import * as signalR from "@microsoft/signalr";
+import { refreshAccessToken } from "../api/axios";
+import { getToken } from "../utils/token";
+import {
+  buildHubUrl,
+  isTokenExpiring,
+  reconnectDelay,
+  REALTIME_EVENTS,
+  type RealtimeEventName,
+  type RealtimeStatus,
+} from "../lib/realtime";
+import type { RealtimeEventMap } from "../@types/types";
+
+type EventListener = <K extends RealtimeEventName>(name: K, payload: RealtimeEventMap[K]) => void;
+type StatusListener = (status: RealtimeStatus, info: { error?: string; resumed?: boolean }) => void;
+
+class SessionExpiredError extends Error {
+  constructor() {
+    super("Session expired");
+  }
+}
 
 /**
- * SignalR Service — singleton managing the hub connection.
+ * Singleton SignalR client for the staff web app.
  *
- * Key guarantees:
- * - connect() is idempotent: calling it while already connected is a no-op.
- * - on() queues handlers registered before the connection is ready and
- *   replays them once connected, so callers never miss events due to timing.
- * - The singleton is never torn down on component unmount — it lives for the
- *   full browser session and is shared across all components.
+ * - start() is idempotent and lives for the whole signed-in session; stop() is called on logout.
+ * - The staff JWT is read from the cookie on every (re)connect and refreshed first if it is about to expire.
+ * - Reconnect never gives up: the built-in reconnect handles dropped connections, and a retry timer handles a
+ *   failed first start or a close after reconnect. Only a dead session (refresh fails) stops it.
+ * - SignalR forgets group membership when the connection id changes, so the admin/staff group is rejoined
+ *   after every reconnect.
+ * - Every hub event in REALTIME_EVENTS is fanned out to onEvent() listeners; callers never touch the connection.
  */
 class SignalRService {
-    private connection: signalR.HubConnection | null = null;
+  private connection: signalR.HubConnection | null = null;
+  private status: RealtimeStatus = "idle";
+  private wanted = false;
+  private startInFlight: Promise<void> | null = null;
+  private retryTimer: ReturnType<typeof setTimeout> | null = null;
+  private retryAttempt = 0;
+  private hasConnected = false;
+  private readonly eventListeners = new Set<EventListener>();
+  private readonly statusListeners = new Set<StatusListener>();
 
-    // Handlers registered before the connection was ready — replayed on connect
-    private pendingHandlers: Array<{ event: string; cb: (data: any) => void }> = [];
+  start(): Promise<void> {
+    this.wanted = true;
+    if (this.startInFlight) return this.startInFlight;
+    // Already up, or SignalR's own reconnect is running, or a retry is queued: nothing to do.
+    const state = this.connection?.state;
+    if (this.retryTimer || (state && state !== signalR.HubConnectionState.Disconnected)) return Promise.resolve();
+    return this.kick();
+  }
 
-    async connect(token: string): Promise<void> {
-        // Extract base URL from API URL (remove /api/v1 suffix)
-        const apiUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5278')
-            .replace(/\/api\/v\d+\/?$/, '')
-            .replace(/\/$/, '');
+  private kick(): Promise<void> {
+    this.startInFlight ??= this.attemptStart().finally(() => {
+      this.startInFlight = null;
+    });
+    return this.startInFlight;
+  }
 
-        if (this.connection?.state === signalR.HubConnectionState.Connected) {
-            return;
-        }
+  async stop(): Promise<void> {
+    this.wanted = false;
+    this.clearRetry();
+    const connection = this.connection;
+    this.connection = null;
+    this.hasConnected = false;
+    this.retryAttempt = 0;
+    if (connection) {
+      if (connection.state === signalR.HubConnectionState.Connected) {
+        await connection.invoke("LeaveAdminStaffGroup").catch(() => undefined);
+      }
+      await connection.stop().catch((error) => console.error("[SignalR] Error while stopping:", error));
+    }
+    this.setStatus("idle");
+  }
 
-        this.connection = new signalR.HubConnectionBuilder()
-            .withUrl(`${apiUrl}/notificationHub`, {
-                accessTokenFactory: () => token,
-                transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
-            })
-            .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
-            .configureLogging(signalR.LogLevel.Warning)
-            .build();
+  getStatus(): RealtimeStatus {
+    return this.status;
+  }
 
-        this.connection.onreconnecting((error) => {
-            console.warn('[SignalR] Reconnecting...', error);
+  isConnected(): boolean {
+    return this.status === "connected";
+  }
+
+  onEvent(listener: EventListener): () => void {
+    this.eventListeners.add(listener);
+    return () => this.eventListeners.delete(listener);
+  }
+
+  onStatus(listener: StatusListener): () => void {
+    this.statusListeners.add(listener);
+    return () => this.statusListeners.delete(listener);
+  }
+
+  // ── Internals ──────────────────────────────────────────────────────────────
+
+  private async attemptStart(): Promise<void> {
+    this.clearRetry();
+    const connection = (this.connection ??= this.build());
+    this.setStatus(this.hasConnected || this.retryAttempt > 0 ? "reconnecting" : "connecting");
+
+    try {
+      await connection.start();
+      await connection.invoke("JoinAdminStaffGroup");
+    } catch (error) {
+      if (!this.wanted || connection !== this.connection) return;
+      if (error instanceof SessionExpiredError || this.isSessionError(error)) {
+        await this.endDeadSession();
+        return;
+      }
+      // A failed invoke leaves a live connection without the group; drop it so the retry starts clean.
+      await connection.stop().catch(() => undefined);
+      this.setStatus("reconnecting", { error: describe(error) });
+      this.scheduleRetry();
+      return;
+    }
+
+    // stop() ran while start() was in flight.
+    if (!this.wanted || connection !== this.connection) {
+      await connection.stop().catch(() => undefined);
+      return;
+    }
+
+    const resumed = this.hasConnected || this.retryAttempt > 0;
+    this.hasConnected = true;
+    this.retryAttempt = 0;
+    this.setStatus("connected", { resumed });
+  }
+
+  private build(): signalR.HubConnection {
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(buildHubUrl(import.meta.env.VITE_API_BASE_URL), {
+        // With WebSockets/SSE the browser cannot send headers, so SignalR puts this in ?access_token=.
+        accessTokenFactory: () => this.accessToken(),
+        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.ServerSentEvents,
+      })
+      .withAutomaticReconnect({ nextRetryDelayInMilliseconds: ({ previousRetryCount }) => reconnectDelay(previousRetryCount) })
+      .configureLogging(signalR.LogLevel.Warning)
+      .build();
+
+    for (const name of REALTIME_EVENTS) {
+      connection.on(name, (payload: RealtimeEventMap[typeof name]) => this.emit(name, payload));
+    }
+
+    connection.onreconnecting((error) => {
+      if (connection !== this.connection) return;
+      this.setStatus("reconnecting", { error: error ? describe(error) : undefined });
+    });
+
+    connection.onreconnected(() => {
+      if (connection !== this.connection) return;
+      connection
+        .invoke("JoinAdminStaffGroup")
+        .then(() => this.setStatus("connected", { resumed: true }))
+        .catch((error) => {
+          // Connected but outside the group means no events; restart from scratch.
+          console.error("[SignalR] Rejoining the staff group failed:", error);
+          void connection.stop();
         });
+    });
 
-        this.connection.onreconnected(() => {
-            // Reconnected successfully
-        });
+    connection.onclose((error) => {
+      if (connection !== this.connection || !this.wanted) return;
+      if (error && this.isSessionError(error)) {
+        void this.endDeadSession();
+        return;
+      }
+      this.setStatus("reconnecting", { error: error ? describe(error) : "Connection closed" });
+      this.scheduleRetry();
+    });
 
-        this.connection.onclose((error) => {
-            if (error) console.error('[SignalR] Connection closed with error:', error);
-        });
+    return connection;
+  }
 
-        try {
-            await this.connection.start();
-        } catch (error) {
-            console.error('[SignalR] Connection failed:', error);
-            throw error;
-        }
-
-        // Replay any handlers that were registered before the connection was ready
-        for (const { event, cb } of this.pendingHandlers) {
-            this.connection.on(event, cb);
-        }
-        this.pendingHandlers = [];
+  private async accessToken(): Promise<string> {
+    const token = getToken();
+    if (token && !isTokenExpiring(token)) return token;
+    try {
+      return await refreshAccessToken();
+    } catch {
+      // SignalR's built-in reconnect would keep calling this forever, so end the session here as well.
+      queueMicrotask(() => void this.endDeadSession());
+      throw new SessionExpiredError();
     }
+  }
 
-    async joinAdminStaffGroup(): Promise<void> {
-        if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
-            return;
-        }
-        await this.connection.invoke('JoinAdminStaffGroup');
-    }
+  private isSessionError(error: unknown): boolean {
+    if (error instanceof SessionExpiredError) return true;
+    return error instanceof signalR.HttpError && error.statusCode === 401;
+  }
 
-    async leaveAdminStaffGroup(): Promise<void> {
-        if (!this.connection) return;
-        try {
-            await this.connection.invoke('LeaveAdminStaffGroup');
-        } catch { /* ignore */ }
-    }
+  /** The refresh token is gone too; the next API call sends the user to login. */
+  private async endDeadSession(): Promise<void> {
+    if (!this.wanted) return;
+    await this.stop();
+    this.setStatus("disconnected", { error: "Session expired" });
+  }
 
-    async joinUserGroup(userId: string): Promise<void> {
-        if (!this.connection || this.connection.state !== signalR.HubConnectionState.Connected) {
-            return;
-        }
-        await this.connection.invoke('JoinUserGroup', userId);
-    }
+  private scheduleRetry(): void {
+    if (!this.wanted || this.retryTimer) return;
+    const delay = reconnectDelay(this.retryAttempt++);
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = null;
+      if (this.wanted) void this.kick();
+    }, delay);
+  }
 
-    async leaveUserGroup(userId: string): Promise<void> {
-        if (!this.connection) return;
-        try {
-            await this.connection.invoke('LeaveUserGroup', userId);
-        } catch { /* ignore */ }
-    }
+  private clearRetry(): void {
+    if (this.retryTimer) clearTimeout(this.retryTimer);
+    this.retryTimer = null;
+  }
 
-    on(eventName: string, callback: (data: any) => void): void {
-        if (this.connection?.state === signalR.HubConnectionState.Connected) {
-            // Connection already exists - register immediately
-            this.connection.on(eventName, callback);
-        } else if (this.connection) {
-            // Connection exists but not connected yet - register anyway and queue as backup
-            this.connection.on(eventName, callback);
-            this.pendingHandlers.push({ event: eventName, cb: callback });
-        } else {
-            // No connection yet - queue for replay once connected
-            this.pendingHandlers.push({ event: eventName, cb: callback });
-        }
+  private emit<K extends RealtimeEventName>(name: K, payload: RealtimeEventMap[K]): void {
+    for (const listener of this.eventListeners) {
+      try {
+        listener(name, payload);
+      } catch (error) {
+        console.error(`[SignalR] Listener for ${name} threw:`, error);
+      }
     }
+  }
 
-    off(eventName: string, callback?: (data: any) => void): void {
-        if (!this.connection) return;
-        if (callback) {
-            this.connection.off(eventName, callback);
-            // Also remove from pending queue if it was never replayed
-            this.pendingHandlers = this.pendingHandlers.filter(
-                (h) => !(h.event === eventName && h.cb === callback)
-            );
-        } else {
-            this.connection.off(eventName);
-            this.pendingHandlers = this.pendingHandlers.filter((h) => h.event !== eventName);
-        }
-    }
-
-    async disconnect(): Promise<void> {
-        if (!this.connection) return;
-        try {
-            await this.connection.stop();
-            this.pendingHandlers = [];
-        } catch (error) {
-            console.error('[SignalR] Error disconnecting:', error);
-        }
-    }
-
-    getState(): signalR.HubConnectionState | null {
-        return this.connection?.state ?? null;
-    }
-
-    isConnected(): boolean {
-        return this.connection?.state === signalR.HubConnectionState.Connected;
-    }
+  private setStatus(status: RealtimeStatus, info: { error?: string; resumed?: boolean } = {}): void {
+    this.status = status;
+    for (const listener of this.statusListeners) listener(status, info);
+  }
 }
+
+const describe = (error: unknown): string => (error instanceof Error ? error.message : String(error));
 
 export const signalRService = new SignalRService();

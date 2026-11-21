@@ -1,323 +1,104 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { CircleUserRound } from "lucide-react";
 import { useUpdateUser } from "../hooks/userHooks";
 import { showToast } from "./AppToast";
-import {
-    User,
-    Mail,
-    Phone,
-    AtSign,
-    // Briefcase,
-    CircleUserRound,
-    BadgeCheck,
-    X,
-    Loader2,
-} from "lucide-react";
-
-export type EditableUser = {
-    id?: string | null;
-    firstName?: string | null;
-    lastName?: string | null;
-    middleName?: string | null;
-    username?: string | null;
-    email?: string | null;
-    phoneNumber?: string | null;
-    position?: string | null;
-};
+import { Field, FormAlert, FormDialog, FormSection, TextInput, getErrorMessage } from "./form/FormKit";
+import { validateEmail, validateRequired } from "./form/validators";
+import type { UserDto } from "../@types/types";
 
 type EditProfileModalProps = {
-    initialValues: EditableUser;
+    user: UserDto;
     onClose: () => void;
-    onSubmit?: (values: EditableUser) => Promise<void> | void;
 };
 
-// const POSITIONS = ["Intern", "Full-Time", "Part-Time", "Head-Staff"];
+type FieldKey = "firstName" | "lastName" | "email";
+type Values = Record<FieldKey, string>;
 
-export default function EditProfileModal({
-    initialValues,
-    onClose,
-    onSubmit,
-}: EditProfileModalProps) {
-    const [values, setValues] = useState<EditableUser>({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const { mutate } = useUpdateUser();
+export default function EditProfileModal({ user, onClose }: EditProfileModalProps) {
+    const { mutate, isPending } = useUpdateUser();
+    const [submitError, setSubmitError] = useState("");
+    const [errors, setErrors] = useState<Partial<Record<FieldKey, string>>>({});
 
-    useEffect(() => {
-        setValues({
-            id: initialValues.id ?? "",
-            firstName: initialValues.firstName ?? "",
-            lastName: initialValues.lastName ?? "",
-            middleName: initialValues.middleName ?? "",
-            username: initialValues.username ?? "",
-            email: initialValues.email ?? "",
-            phoneNumber: initialValues.phoneNumber ?? "",
-            position: initialValues.position ?? "",
-        });
-    }, [initialValues]);
+    // Seeded once on open — re-seeding on every parent render would wipe what the user is typing
+    const [values, setValues] = useState<Values>(() => ({
+        firstName: user.firstName ?? "",
+        lastName: user.lastName ?? "",
+        email: user.email ?? "",
+    }));
 
-    function update<K extends keyof EditableUser>(key: K, value: NonNullable<EditableUser[K]>) {
+    const update = (key: FieldKey) => (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { value } = e.target;
         setValues((prev) => ({ ...prev, [key]: value }));
-    }
-
-    const isValid =
-        (values.firstName?.trim()?.length ?? 0) > 0 &&
-        (values.lastName?.trim()?.length ?? 0) > 0 &&
-        (values.username?.trim()?.length ?? 0) > 0 &&
-        (values.email?.includes("@") ?? false);
+        setErrors((prev) => ({ ...prev, [key]: undefined }));
+        setSubmitError("");
+    };
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        if (!isValid) return;
-        setIsSubmitting(true);
 
+        const next = {
+            firstName: validateRequired(values.firstName, "First name"),
+            lastName: validateRequired(values.lastName, "Last name"),
+            email: validateEmail(values.email),
+        };
+        setErrors(next);
+        if (Object.values(next).some(Boolean)) return;
+
+        // PUT replaces the whole record, so role and settings are sent back unchanged.
         mutate(
             {
-                id: values.id ?? "",
+                id: user.id,
                 data: {
-                    firstName: values.firstName ?? "",
-                    lastName: values.lastName ?? "",
-                    middleName: values.middleName ?? "",
-                    username: values.username ?? "",
-                    email: values.email ?? "",
-                    phoneNumber: values.phoneNumber ?? "",
-                    position: values.position ?? "",
+                    employeeNo: user.employeeNo,
+                    firstName: values.firstName.trim(),
+                    lastName: values.lastName.trim(),
+                    email: values.email.trim(),
+                    role: user.role,
+                    isEventCoordinator: user.isEventCoordinator,
+                    defaultRoomId: user.defaultRoomId,
+                    status: user.status,
                 },
             },
             {
                 onSuccess: () => {
-                    onSubmit?.(values);
-                    showToast.success("Profile Updated", "User profile updated successfully.");
-                    setTimeout(() => {
-                        setIsSubmitting(false);
-                        onClose();
-                    }, 1500);
+                    showToast.success("Profile Updated", "Your profile was updated successfully.");
+                    onClose();
                 },
                 onError: (err) => {
-                    const message = err instanceof Error ? err.message : "Failed to update profile.";
+                    const message = getErrorMessage(err, "Failed to update profile.");
+                    setSubmitError(message);
                     showToast.error("Update Failed", message);
-                    setIsSubmitting(false);
                 },
             },
         );
     }
 
     return (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                onClick={onClose}
-            />
+        <FormDialog
+            title="Edit Profile"
+            subtitle="Update your personal information"
+            icon={CircleUserRound}
+            onClose={onClose}
+            onSubmit={handleSubmit}
+            isSubmitting={isPending}
+            footerNote={<><span className="text-rose-500">*</span> Required fields</>}
+        >
+            <FormSection title="Personal information">
+                <Field label="First name" htmlFor="profile-firstName" required error={errors.firstName}>
+                    <TextInput id="profile-firstName" value={values.firstName} onChange={update("firstName")} placeholder="Juan" error={!!errors.firstName} autoComplete="given-name" />
+                </Field>
+                <Field label="Last name" htmlFor="profile-lastName" required error={errors.lastName}>
+                    <TextInput id="profile-lastName" value={values.lastName} onChange={update("lastName")} placeholder="Dela Cruz" error={!!errors.lastName} autoComplete="family-name" />
+                </Field>
+            </FormSection>
 
-            {/* Modal */}
-            <div className="relative z-10 w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col max-h-[90vh]">
+            <FormSection title="Account">
+                <Field label="Email" htmlFor="profile-email" required error={errors.email} hint="You sign in with this email.">
+                    <TextInput id="profile-email" type="email" value={values.email} onChange={update("email")} placeholder="name@school.edu" error={!!errors.email} autoComplete="email" />
+                </Field>
+            </FormSection>
 
-                {/* Header */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-                    <div className="flex items-center gap-2.5">
-                        <div className="h-8 w-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                            <CircleUserRound className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <div>
-                            <h3 className="text-sm font-bold text-slate-900">Edit Profile</h3>
-                            <p className="text-xs text-slate-400">Update your personal information</p>
-                        </div>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-                        aria-label="Close"
-                    >
-                        <X className="h-4 w-4" />
-                    </button>
-                </div>
-
-                {/* Body */}
-                <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-                    <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-
-                        {/* Personal Information */}
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                                <User className="h-3.5 w-3.5 text-blue-500" />
-                                <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                                    Personal Information
-                                </p>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <Field
-                                    label="First Name"
-                                    icon={<User className="h-3.5 w-3.5" />}
-                                    required
-                                >
-                                    <input
-                                        type="text"
-                                        value={values.firstName ?? ""}
-                                        onChange={(e) => update("firstName", e.target.value)}
-                                        placeholder="Enter first name"
-                                        required
-                                        className="input-base"
-                                    />
-                                </Field>
-
-                                <Field
-                                    label="Last Name"
-                                    icon={<User className="h-3.5 w-3.5" />}
-                                    required
-                                >
-                                    <input
-                                        type="text"
-                                        value={values.lastName ?? ""}
-                                        onChange={(e) => update("lastName", e.target.value)}
-                                        placeholder="Enter last name"
-                                        required
-                                        className="input-base"
-                                    />
-                                </Field>
-
-                                <Field
-                                    label="Middle Name"
-                                    icon={<User className="h-3.5 w-3.5" />}
-                                >
-                                    <input
-                                        type="text"
-                                        value={values.middleName ?? ""}
-                                        onChange={(e) => update("middleName", e.target.value)}
-                                        placeholder="Enter middle name"
-                                        className="input-base"
-                                    />
-                                </Field>
-
-                                <Field
-                                    label="Phone Number"
-                                    icon={<Phone className="h-3.5 w-3.5" />}
-                                >
-                                    <input
-                                        type="tel"
-                                        value={values.phoneNumber ?? ""}
-                                        onChange={(e) => update("phoneNumber", e.target.value)}
-                                        placeholder="09XX XXX XXXX"
-                                        maxLength={11}
-                                        className="input-base"
-                                    />
-                                </Field>
-                            </div>
-                        </div>
-
-                        {/* Divider */}
-                        <div className="border-t border-slate-100" />
-
-                        {/* Account Information */}
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                                <BadgeCheck className="h-3.5 w-3.5 text-indigo-500" />
-                                <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                                    Account Information
-                                </p>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <Field
-                                    label="Username"
-                                    icon={<AtSign className="h-3.5 w-3.5" />}
-                                    required
-                                >
-                                    <input
-                                        type="text"
-                                        value={values.username ?? ""}
-                                        onChange={(e) => update("username", e.target.value)}
-                                        placeholder="Enter username"
-                                        required
-                                        className="input-base"
-                                    />
-                                </Field>
-
-                                <Field
-                                    label="Email"
-                                    icon={<Mail className="h-3.5 w-3.5" />}
-                                    required
-                                >
-                                    <input
-                                        type="email"
-                                        value={values.email ?? ""}
-                                        onChange={(e) => update("email", e.target.value)}
-                                        placeholder="Enter email address"
-                                        required
-                                        className="input-base"
-                                    />
-                                </Field>
-
-                                {/* <Field
-                                    label="Position"
-                                    icon={<Briefcase className="h-3.5 w-3.5" />}
-                                >
-                                    <select
-                                        value={values.position ?? ""}
-                                        onChange={(e) => update("position", e.target.value)}
-                                        className="input-base"
-                                    >
-                                        {POSITIONS.map((opt) => (
-                                            <option key={opt} value={opt}>
-                                                {opt}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </Field> */}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/60 rounded-b-2xl">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            disabled={isSubmitting}
-                            className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={!isValid || isSubmitting}
-                            className="inline-flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl shadow-sm hover:bg-blue-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    Saving...
-                                </>
-                            ) : (
-                                "Save Changes"
-                            )}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-}
-
-// ── Sub-component ────────────────────────────────────────────────────────────
-
-function Field({
-    label,
-    icon,
-    required,
-    children,
-}: {
-    label: string;
-    icon: React.ReactNode;
-    required?: boolean;
-    children: React.ReactNode;
-}) {
-    return (
-        <div className="space-y-1.5">
-            <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-                <span className="text-slate-400">{icon}</span>
-                {label}
-                {required && <span className="text-rose-400">*</span>}
-            </label>
-            {children}
-        </div>
+            {submitError && <FormAlert tone="error">{submitError}</FormAlert>}
+        </FormDialog>
     );
 }

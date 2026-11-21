@@ -4,19 +4,20 @@ import { CiLogout, CiUser } from "react-icons/ci";
 import { GiArchiveRegister } from "react-icons/gi";
 import {
   MdHistory,
-  MdInventory,
   MdDashboardCustomize,
   MdAssessment,
+  MdMeetingRoom,
+  MdReportProblem,
+  MdGavel,
 } from "react-icons/md";
 import { BiLogoSass } from "react-icons/bi";
-import { BsPersonCircle, BsClipboardCheck } from "react-icons/bs";
-import { TbPackages } from "react-icons/tb";
+import { BsPersonCircle, BsClipboardCheck, BsPersonBadge } from "react-icons/bs";
 import { FaWifi } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import SidebarSkeletonLoader from "../loader/SidebarSkeletonLoader";
 import { useSidebar } from "../context/SidebarContext";
-import { usePendingCount } from "../hooks/usePendingCount";
 import { useActiveBorrowCount } from "../hooks/useActiveBorrowCount";
+import { useOpenAnomalyCount } from "../hooks/useOpenAnomalyCount";
 import { useLogoutUser } from "../hooks/authHooks";
 import { ChevronDown } from "lucide-react";
 import type { IconType } from "react-icons";
@@ -37,35 +38,30 @@ export default function Sidebar() {
 
   const { mutate, isPending } = useLogoutUser();
   const { setIsSidebarExpanded } = useSidebar();
-  const { total: pendingCount } = usePendingCount();
   const activeBorrowCount = useActiveBorrowCount();
+  const openAnomalyCount = useOpenAnomalyCount();
 
   const primaryLinks: NavLink[] = [
     { label: "Dashboard", link: "/home/dashboard", icon: MdDashboardCustomize },
-    { label: "Inventory", link: "/home/inventory-list", icon: GiArchiveRegister },
-    {
-      label: "Pending Requests",
-      link: "/home/pending-reservations",
-      icon: BsClipboardCheck,
-      badge: pendingCount,
-    },
+    { label: "Assets", link: "/home/inventory-list", icon: GiArchiveRegister },
   ];
 
   const operationalLinks: NavLink[] = [
-    { label: "Borrowing", link: "/home/borrow-item", icon: TbPackages },
-    { label: "Active Borrows", link: "/home/active-borrowed-items", icon: BsClipboardCheck, badge: activeBorrowCount },
-    { label: "Scan Controller", link: "/home/rfid-controller", icon: FaWifi },
+    { label: "Loans", link: "/home/loans", icon: BsClipboardCheck, badge: activeBorrowCount },
+    { label: "Anomalies", link: "/home/anomalies", icon: MdReportProblem, badge: openAnomalyCount },
+    { label: "Violations", link: "/home/violations", icon: MdGavel },
+    { label: "Counter", link: "/home/rfid-controller", icon: FaWifi },
   ];
 
   const administrativeLinks: NavLink[] = [
-    { label: "User Management", link: "/home/user-management", icon: CiUser },
+    { label: "People", link: "/home/user-management", icon: CiUser },
+    { label: "Auth cards", link: "/home/auth-cards", icon: BsPersonBadge },
+    { label: "Rooms & stations", link: "/home/rooms", icon: MdMeetingRoom },
     { label: "Reports", link: "/home/reports", icon: MdAssessment },
-    { label: "Archives", link: "/home/archive-table", icon: MdInventory },
   ];
 
   const logsLinks: NavLink[] = [
     { label: "Activity Logs", link: "/home/activity-logs", icon: BiLogoSass },
-    { label: "Borrowing Logs", link: "/home/borrow-logs", icon: MdHistory },
   ];
 
   const bottomLinks: NavLink[] = [
@@ -84,10 +80,10 @@ export default function Sidebar() {
     setIsLoggingOut(true);
     setTimeout(() => {
       mutate(undefined, {
-        onSuccess: () => navigate({ to: "/" }),
-        onError: (err) => {
-          console.error(err.message);
-          setIsLoggingOut(false);
+        // The token is cleared either way, so leave for the login page even when the server call fails.
+        onSettled: (_data, err) => {
+          if (err) console.error(err.message);
+          navigate({ to: "/" });
         },
       });
     }, 2200);

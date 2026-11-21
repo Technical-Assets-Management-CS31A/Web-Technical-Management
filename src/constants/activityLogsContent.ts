@@ -1,0 +1,43 @@
+export const ACTIVITY_LOGS_CONTENT = {
+  eyebrow: "Audit Trail",
+  title: "Activity Logs",
+  description: "The audit log: every admin action, including each penalty cleared and the reason given.",
+  searchPlaceholder: "Search actor, action, or record...",
+  tableTitle: "Recent activity",
+  countLabel: (count: number) => `${count} ${count === 1 ? "entry" : "entries"}`,
+  stats: {
+    total: "Total events",
+    today: "Today",
+    actors: "Staff involved",
+    resolutions: "Penalties resolved",
+  },
+  actionFilters: {
+    all: "All",
+    create: "Created",
+    update: "Updated",
+    remove: "Deleted / Retired",
+    resolve: "Resolved",
+    loan: "Loan actions",
+  },
+  tableHeaders: ["Actor", "Action", "Record", "Change", "When"],
+  none: "None",
+  noStatusChange: "No field changes",
+  fieldsChanged: (keys: string[]) => (keys.length <= 2 ? keys.join(", ") : `${keys.length} fields`),
+  footerHint: "Click any row to open the full log details.",
+  empty: {
+    title: "No logs found",
+    description: "No activity matches your search or filter. Try a different term or filter.",
+  },
+  error: {
+    title: "Couldn't load activity",
+    description: "There was a problem fetching the activity history. Check your connection and try again.",
+    refresh: "Try again",
+  },
+  pagination: {
+    showing: "Showing",
+    of: " of ",
+    entries: " entries",
+    prev: "Prev",
+    next: "Next",
+  },
+} as const;

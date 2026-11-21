@@ -1,74 +1,90 @@
+const Bone = ({ className }: { className?: string }) => (
+  <div className={`animate-pulse rounded-lg bg-slate-200 ${className ?? ""}`} />
+);
+
 export default function ActivityLogsSkeletonLoader() {
   return (
-    <div className="p-6 md:p-8 max-w-[100rem] mx-auto space-y-8">
-
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-        <div className="space-y-3">
-          <div className="h-6 w-36 bg-slate-200 rounded-full animate-pulse" />
-          <div className="h-9 w-56 bg-slate-200 rounded-xl animate-pulse" />
-          <div className="h-4 w-96 bg-slate-100 rounded-lg animate-pulse" />
-          <div className="h-4 w-72 bg-slate-100 rounded-lg animate-pulse" />
+    <div className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-8xl space-y-6 px-4 py-6 sm:px-6 md:px-8">
+        {/* Header */}
+        <div className="space-y-2">
+          <Bone className="h-3 w-24 rounded-full" />
+          <Bone className="h-7 w-48" />
+          <Bone className="h-4 w-96 max-w-full" />
         </div>
-        <div className="h-12 w-full lg:w-96 bg-slate-200 rounded-2xl animate-pulse" />
-      </div>
 
-      <div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full whitespace-nowrap text-left text-sm">
-            <thead>
-              <tr className="border-b border-slate-100">
-                {["Actor Details", "Action Type", "Target Item", "Status Transition", "Timestamp"].map((col) => (
-                  <th key={col} className="px-8 py-5 bg-slate-50/50">
-                    <div className="h-3.5 w-24 bg-slate-200 rounded-lg animate-pulse" />
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <tr key={i}>
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-4">
-                      <div className="h-11 w-11 rounded-full bg-slate-200 animate-pulse flex-shrink-0" />
-                      <div className="space-y-2">
-                        <div className="h-4 w-32 bg-slate-200 rounded-lg animate-pulse" />
-                        <div className="h-3 w-20 bg-slate-100 rounded-lg animate-pulse" />
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <div className="h-6 w-24 bg-slate-200 rounded-full animate-pulse" />
-                  </td>
-                  <td className="px-8 py-5">
-                    <div className="space-y-2">
-                      <div className="h-4 w-36 bg-slate-200 rounded-lg animate-pulse" />
-                      <div className="h-3 w-24 bg-slate-100 rounded-lg animate-pulse" />
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-16 bg-slate-100 rounded-lg animate-pulse" />
-                      <div className="h-5 w-5 rounded-full bg-slate-100 animate-pulse" />
-                      <div className="h-6 w-20 bg-slate-200 rounded-lg animate-pulse" />
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <div className="space-y-2">
-                      <div className="h-4 w-28 bg-slate-200 rounded-lg animate-pulse" />
-                      <div className="h-3 w-20 bg-slate-100 rounded-lg animate-pulse" />
-                    </div>
-                  </td>
-                </tr>
+        {/* Summary */}
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5">
+              <div className="space-y-2">
+                <Bone className="h-3.5 w-24" />
+                <Bone className="h-7 w-12" />
+              </div>
+              <Bone className="h-10 w-10" />
+            </div>
+          ))}
+        </div>
+
+        {/* Table card */}
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div className="space-y-4 border-b border-slate-200 px-5 py-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="space-y-1.5">
+                <Bone className="h-5 w-36" />
+                <Bone className="h-3 w-20" />
+              </div>
+              <Bone className="h-10 w-full lg:w-80" />
+            </div>
+            <div className="flex gap-2">
+              {[56, 80, 80, 128, 88, 88].map((w, i) => (
+                <div key={i} className="h-7 animate-pulse rounded-full bg-slate-200" style={{ width: w }} />
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </div>
 
-        <div className="bg-slate-50/50 border-t border-slate-100 px-8 py-5 flex items-center justify-between">
-          <div className="h-4 w-40 bg-slate-200 rounded-lg animate-pulse" />
-          <div className="flex items-center gap-2">
-            <div className="h-9 w-24 bg-slate-200 rounded-xl animate-pulse" />
-            <div className="h-9 w-24 bg-slate-200 rounded-xl animate-pulse" />
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50">
+                <tr>
+                  {[60, 60, 50, 90, 50, 0].map((w, i) => (
+                    <th key={i} className="border-b border-slate-200 px-5 py-3 text-left">
+                      {w > 0 && <div className="h-3 animate-pulse rounded bg-slate-200" style={{ width: w }} />}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {Array.from({ length: 8 }).map((_, row) => (
+                  <tr key={row}>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <Bone className="h-9 w-9 rounded-full" />
+                        <div className="space-y-1.5">
+                          <Bone className="h-3.5 w-28" />
+                          <Bone className="h-3 w-16" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3"><Bone className="h-5 w-24 rounded-md" /></td>
+                    <td className="px-5 py-3">
+                      <div className="space-y-1.5">
+                        <Bone className="h-3.5 w-32" />
+                        <Bone className="h-3 w-24" />
+                      </div>
+                    </td>
+                    <td className="px-5 py-3"><Bone className="h-5 w-36" /></td>
+                    <td className="px-5 py-3">
+                      <div className="space-y-1.5">
+                        <Bone className="h-3.5 w-16" />
+                        <Bone className="h-3 w-28" />
+                      </div>
+                    </td>
+                    <td className="px-5 py-3"><Bone className="ml-auto h-4 w-4" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

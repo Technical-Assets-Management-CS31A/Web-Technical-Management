@@ -1,10 +1,12 @@
 import { useParams, useRouter } from "@tanstack/react-router";
-import { useActivityLogById } from "../hooks/logsHooks";
+import { useAuditLogById } from "../hooks/logsHooks";
+import { changedKeys } from "../components/auditDiff";
+import { formatEnum, formatRole } from "../lib/utils";
+import { ACTIVITY_LOG_DETAIL_CONTENT as T } from "../constants/activityLogDetailContent";
 import {
     Activity,
     ArrowLeft,
     ArrowRight,
-    Calendar,
     Tag,
     User,
     Package,
@@ -16,6 +18,7 @@ import {
 
 const getActionBadge = (action: string) => {
     const act = action?.toLowerCase() ?? "";
+    // Audit actions are UPPER_SNAKE verbs, e.g. WARNING_CLEARED
     let colorClass = "bg-slate-100 text-slate-700 border-slate-200";
     let dotClass = "bg-slate-500";
 
@@ -28,21 +31,24 @@ const getActionBadge = (action: string) => {
     } else if (act.includes("update") || act.includes("edit")) {
         colorClass = "bg-amber-50 text-amber-700 border-amber-200/60";
         dotClass = "bg-amber-500";
-    } else if (act.includes("borrow") || act.includes("lent")) {
+    } else if (act.includes("clear") || act.includes("lift") || act.includes("settle") || act.includes("resolve")) {
+        colorClass = "bg-violet-50 text-violet-700 border-violet-200/60";
+        dotClass = "bg-violet-500";
+    } else if (act.includes("loan") || act.includes("missing")) {
         colorClass = "bg-blue-50 text-blue-700 border-blue-200/60";
         dotClass = "bg-blue-500";
-    } else if (act.includes("return")) {
-        colorClass = "bg-indigo-50 text-indigo-700 border-indigo-200/60";
-        dotClass = "bg-indigo-500";
     }
 
     return (
         <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border shadow-sm ${colorClass}`}>
             <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
-            {action}
+            {formatEnum(action)}
         </span>
     );
 };
+
+const show = (value: unknown) =>
+    value === null || value === undefined || value === "" ? "—" : typeof value === "object" ? JSON.stringify(value) : String(value);
 
 const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "—";
@@ -52,6 +58,7 @@ const formatDate = (dateStr: string | null) => {
         month: "long",
         day: "numeric",
         year: "numeric",
+        timeZone: "Asia/Manila",
     }).format(d);
 };
 
@@ -63,15 +70,14 @@ const formatTime = (dateStr: string | null) => {
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
+        timeZone: "Asia/Manila",
     }).format(d);
 };
 
 export default function ActivityLogDetail() {
     const { id } = useParams({ strict: false }) as { id: string };
     const router = useRouter();
-    const { data, isLoading, isError } = useActivityLogById(id);
-
-    const log = data?.data ?? data;
+    const { data: log, isLoading, isError } = useAuditLogById(id);
 
     if (isLoading) {
         return (
@@ -84,8 +90,8 @@ export default function ActivityLogDetail() {
                         </div>
                     </div>
                     <div className="text-center space-y-1">
-                        <h3 className="text-lg font-semibold text-slate-900">Loading Log Details</h3>
-                        <p className="text-sm text-slate-500 font-medium">Fetching activity entry...</p>
+                        <h3 className="text-lg font-semibold text-slate-900">{T.loading.title}</h3>
+                        <p className="text-sm text-slate-500 font-medium">{T.loading.description}</p>
                     </div>
                 </div>
             </div>
@@ -100,16 +106,16 @@ export default function ActivityLogDetail() {
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 mb-6">
                         <Activity className="h-8 w-8 text-rose-500" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">Log Not Found</h3>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">{T.notFound.title}</h3>
                     <p className="text-slate-500 mb-6 leading-relaxed">
-                        We couldn't load this activity log. It may have been removed or the ID is invalid.
+                        {T.notFound.description}
                     </p>
                     <button
                         onClick={() => router.history.back()}
                         className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-slate-900 text-white font-medium text-sm hover:bg-slate-800 transition-colors focus:ring-4 focus:ring-slate-200"
                     >
                         <ArrowLeft className="h-4 w-4" />
-                        Go Back
+                        {T.notFound.goBack}
                     </button>
                 </div>
             </div>
@@ -125,20 +131,20 @@ export default function ActivityLogDetail() {
                 className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors group"
             >
                 <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-                Back to Activity Logs
+                {T.backToLogs}
             </button>
 
             {/* Header */}
             <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-xs font-semibold mb-4">
                     <Sparkles className="h-3.5 w-3.5" />
-                    <span>Activity detail</span>
+                    <span>{T.badge}</span>
                 </div>
                 <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">
-                    Log Entry
+                    {T.title}
                 </h1>
                 <p className="text-slate-500 font-medium text-sm font-mono">
-                    ID: {log.id}
+                    {T.idLabel} {log.id}
                 </p>
             </div>
 
@@ -149,17 +155,17 @@ export default function ActivityLogDetail() {
                 <div className="px-8 py-6 border-b border-slate-100">
                     <p className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-4 flex items-center gap-1.5">
                         <User className="h-3.5 w-3.5" />
-                        Actor
+                        {T.sections.actor}
                     </p>
                     <div className="flex items-center gap-4">
                         <div className="h-14 w-14 rounded-full bg-gradient-to-tr from-indigo-100 to-indigo-50 flex items-center justify-center font-bold text-indigo-700 text-xl shadow-sm border border-indigo-100/50">
-                            {log.actorName?.charAt(0).toUpperCase() ?? "?"}
+                            {log.actor?.fullName?.charAt(0).toUpperCase() ?? "?"}
                         </div>
                         <div>
-                            <p className="text-lg font-bold text-slate-900">{log.actorName}</p>
-                            <p className="text-sm text-slate-500 font-medium">{log.actorRole}</p>
-                            {log.actorUserId && (
-                                <p className="text-xs text-slate-400 font-mono mt-0.5">UID: {log.actorUserId}</p>
+                            <p className="text-lg font-bold text-slate-900">{log.actor?.fullName}</p>
+                            <p className="text-sm text-slate-500 font-medium">{formatRole(log.actor?.role)}</p>
+                            {log.actor?.id && (
+                                <p className="text-xs text-slate-400 font-mono mt-0.5">{T.uidLabel} {log.actor.id}</p>
                             )}
                         </div>
                     </div>
@@ -170,109 +176,76 @@ export default function ActivityLogDetail() {
                     <div className="px-8 py-6">
                         <p className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 flex items-center gap-1.5">
                             <Activity className="h-3.5 w-3.5" />
-                            Action
+                            {T.sections.action}
                         </p>
                         {getActionBadge(log.action)}
                     </div>
                     <div className="px-8 py-6">
                         <p className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 flex items-center gap-1.5">
                             <ArrowRight className="h-3.5 w-3.5" />
-                            Status Transition
+                            {T.sections.statusTransition}
                         </p>
-                        {(log.previousStatus || log.newStatus) ? (
-                            <div className="flex items-center gap-2.5 text-sm font-semibold">
-                                {log.previousStatus ? (
-                                    <span className="text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
-                                        {log.previousStatus}
-                                    </span>
-                                ) : (
-                                    <span className="text-slate-300 italic text-xs">None</span>
-                                )}
-                                {log.previousStatus && log.newStatus && (
-                                    <div className="flex items-center justify-center h-5 w-5 rounded-full bg-slate-100">
+                        {changedKeys(log).length > 0 ? (
+                            <ul className="space-y-1.5 text-sm">
+                                {changedKeys(log).map((key) => (
+                                    <li key={key} className="flex flex-wrap items-center gap-2">
+                                        <span className="font-mono text-xs text-slate-500">{key}</span>
+                                        <span className="text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg text-xs">{show(log.before?.[key])}</span>
                                         <ArrowRight className="h-3 w-3 text-slate-400" />
-                                    </div>
-                                )}
-                                {log.newStatus && (
-                                    <span className="text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100">
-                                        {log.newStatus}
-                                    </span>
-                                )}
-                            </div>
+                                        <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100 text-xs">{show(log.after?.[key])}</span>
+                                    </li>
+                                ))}
+                            </ul>
                         ) : (
-                            <span className="text-slate-400 text-xs italic">No status change</span>
+                            <span className="text-slate-400 text-xs italic">{T.noStatusChange}</span>
                         )}
                     </div>
                 </div>
 
-                {/* Item details */}
+                {/* Record */}
                 <div className="px-8 py-6 border-b border-slate-100">
                     <p className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-4 flex items-center gap-1.5">
                         <Package className="h-3.5 w-3.5" />
-                        Item
+                        {T.sections.record}
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                            <p className="text-xs text-slate-400 font-medium mb-1">Name</p>
-                            <p className="font-semibold text-slate-900">{log.itemName || "—"}</p>
-                        </div>
-                        <div>
                             <p className="text-xs text-slate-400 font-medium mb-1 flex items-center gap-1">
-                                <Hash className="h-3 w-3" /> Serial Number
+                                <Tag className="h-3 w-3" /> {T.record.type}
+                            </p>
+                            <p className="font-semibold text-slate-900">{formatEnum(log.entityType) || "—"}</p>
+                        </div>
+                        <div className="sm:col-span-2">
+                            <p className="text-xs text-slate-400 font-medium mb-1 flex items-center gap-1">
+                                <Hash className="h-3 w-3" /> {T.record.id}
                             </p>
                             <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-xs font-mono font-medium">
-                                {log.itemSerialNumber || "—"}
+                                {log.entityId || "—"}
                             </span>
                         </div>
-                        <div>
-                            <p className="text-xs text-slate-400 font-medium mb-1 flex items-center gap-1">
-                                <Tag className="h-3 w-3" /> Category
-                            </p>
-                            <p className="text-sm font-medium text-slate-700">{log.category || "—"}</p>
-                        </div>
                     </div>
-                    {log.reservedFor && (
-                        <div className="mt-4">
-                            <p className="text-xs text-slate-400 font-medium mb-1">Reserved For</p>
-                            <p className="text-sm font-medium text-slate-700">{log.reservedFor}</p>
-                        </div>
-                    )}
                 </div>
 
-                {/* Timestamps */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 border-b border-slate-100">
-                    {[
-                        { label: "Created At", value: log.createdAt, icon: Clock },
-                        { label: "Borrowed At", value: log.borrowedAt, icon: Calendar },
-                        { label: "Returned At", value: log.returnedAt, icon: Calendar },
-                    ].map(({ label, value, icon: Icon }) => (
-                        <div key={label} className="px-8 py-6">
-                            <p className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-2 flex items-center gap-1.5">
-                                <Icon className="h-3.5 w-3.5" />
-                                {label}
-                            </p>
-                            {value ? (
-                                <div>
-                                    <p className="font-semibold text-slate-800 text-sm">{formatDate(value)}</p>
-                                    <p className="text-xs text-slate-400 mt-0.5">{formatTime(value)}</p>
-                                </div>
-                            ) : (
-                                <span className="text-slate-300 text-xs italic">—</span>
-                            )}
-                        </div>
-                    ))}
+                {/* Timestamp */}
+                <div className="px-8 py-6 border-b border-slate-100">
+                    <p className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-2 flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5" />
+                        {T.timestamps.createdAt}
+                    </p>
+                    <p className="font-semibold text-slate-800 text-sm">{formatDate(log.createdAt)}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{formatTime(log.createdAt)}</p>
                 </div>
 
-                {/* Remarks */}
+                {/* Reason given for clear, lift, settle and similar actions */}
                 <div className="px-8 py-6">
                     <p className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 flex items-center gap-1.5">
                         <MessageSquare className="h-3.5 w-3.5" />
-                        Remarks
+                        {T.sections.reason}
                     </p>
-                    {log.remarks ? (
-                        <p className="text-sm text-slate-700 leading-relaxed">{log.remarks}</p>
+                    {typeof log.after?.reason === "string" && log.after.reason ? (
+                        <p className="text-sm text-slate-700 leading-relaxed">{log.after.reason}</p>
                     ) : (
-                        <span className="text-slate-300 text-xs italic">No remarks</span>
+                        <span className="text-slate-300 text-xs italic">{T.noReason}</span>
                     )}
                 </div>
             </div>

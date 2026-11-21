@@ -5,6 +5,9 @@ import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import NotFound from "./routes/NotFound";
 import { routeTree } from "./routes/__root";
+import { initTheme } from "./theme/theme";
+
+initTheme();
 
 const router = createRouter({
   routeTree,

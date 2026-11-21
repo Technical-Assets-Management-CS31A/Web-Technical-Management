@@ -1,5 +1,6 @@
 import { MdAssessment } from "react-icons/md";
 import { Construction } from "lucide-react";
+import { REPORTS_CONTENT as T } from "../constants/reportsContent";
 
 export default function Reports() {
   return (
@@ -19,30 +20,26 @@ export default function Reports() {
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold mb-4">
           <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-          Under Construction
+          {T.badge}
         </div>
 
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-3">
-          Reports
+          {T.title}
         </h1>
         <p className="text-slate-500 text-sm leading-relaxed max-w-sm mx-auto">
-          We're building something useful here — detailed reports on inventory usage, borrowing trends, and user activity. Check back soon.
+          {T.description}
         </p>
 
         {/* Divider */}
         <div className="my-8 flex items-center gap-3">
           <div className="flex-1 h-px bg-slate-200" />
-          <span className="text-xs text-slate-400 font-medium">Coming soon</span>
+          <span className="text-xs text-slate-400 font-medium">{T.divider}</span>
           <div className="flex-1 h-px bg-slate-200" />
         </div>
 
         {/* Feature previews */}
         <div className="grid grid-cols-1 gap-3 text-left">
-          {[
-            { label: "Inventory Summary", desc: "Overview of item counts, conditions, and categories" },
-            { label: "Borrowing Trends", desc: "Charts on borrow frequency, peak times, and top items" },
-            { label: "User Activity", desc: "Per-user borrow history and activity breakdown" },
-          ].map((feature) => (
+          {T.features.map((feature) => (
             <div
               key={feature.label}
               className="flex items-start gap-3 px-4 py-3 rounded-xl bg-white border border-slate-200 shadow-sm opacity-60"

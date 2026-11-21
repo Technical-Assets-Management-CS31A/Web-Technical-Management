@@ -1,163 +1,150 @@
-import type { FC } from "react";
 import { useState } from "react";
-import { IoArchive } from "react-icons/io5";
-import { useArchiveItem } from "../hooks/itemHooks";
-import no_image_svg from "../assets/no-image-svgrepo-com.svg";
-import { FormattedDateTime } from "./FormattedDateTime";
+import { useQuery } from "@tanstack/react-query";
+import { ArchiveRestore, Loader2, Nfc, Trash2 } from "lucide-react";
+import { useAllRooms, useDeleteAsset, useRestoreAsset } from "../hooks/assetHooks";
 import { SlugCondition } from "./SlugCondition";
 import { SlugStatus } from "./SlugStatus";
-import { UserData } from "../utils/usersData/userData";
+import { UserData, canManageAssets } from "../utils/usersData/userData";
 import PopUpModal from "./PopUpModal";
 import { useNavigate } from "@tanstack/react-router";
-import type { TItemList } from "../@types/types";
+import type { AssetDto, AssetStatus } from "../@types/types";
 import { showToast } from "./AppToast";
+import { getErrorMessage } from "./form/FormKit";
+import { formatEnum } from "../lib/utils";
 
 type InventoryTableProps = {
-    item: TItemList[];
+    item: AssetDto[];
 };
 
-const BLOCKED_STATUSES = ["Borrowed", "Reserved", "Pending", "Archived"];
-
-type ShowButtonIfUserAdminProps = {
-    userRole?: string;
-    itemStatus?: string;
-    onHandleArchive: () => void;
-};
-
-const ShowButtonIfUserAdmin: FC<ShowButtonIfUserAdminProps> = ({
-    userRole,
-    itemStatus,
-    onHandleArchive,
-}) => {
-    if (userRole !== "Admin" && userRole !== "SuperAdmin" && userRole !== "Staff") return null;
-
-    const isBlocked = BLOCKED_STATUSES.some(
-        (s) => s.toLowerCase() === itemStatus?.toLowerCase()
-    );
-
-    const isAlreadyArchived = itemStatus?.toLowerCase() === "archived";
-
-    return (
-        <button
-            onClick={(e) => {
-                e.stopPropagation();
-                if (!isBlocked) onHandleArchive();
-            }}
-            disabled={isBlocked}
-            title={
-                isAlreadyArchived
-                    ? "Item is already archived"
-                    : isBlocked
-                        ? `Cannot archive — item is currently ${itemStatus}`
-                        : "Archive item"
-            }
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-white bg-rose-500 hover:bg-rose-600 active:bg-rose-700 shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none"
-        >
-            <IoArchive /> Archive
-        </button>
-    );
-};
+// An asset that is out on a loan or under investigation can't be deleted.
+const LOCKED_STATUSES: AssetStatus[] = ["AT_COUNTER", "IN_TRANSIT", "IN_ROOM_VERIFIED", "LOCATION_ANOMALY", "OVERDUE", "MISSING"];
 
 export const InventoryTable = ({ item }: InventoryTableProps) => {
     const navigate = useNavigate();
-    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+    const { data: rooms = [] } = useQuery(useAllRooms());
+    const roomCode = (id: string | null) => rooms.find((room) => room.id === id)?.code ?? "—";
 
-    const data = UserData();
-    const userRole = data.userRole;
+    const viewer = UserData();
+    const canDelete = canManageAssets(viewer.role);
 
-    const { mutate, isPending: isArchiving } = useArchiveItem();
+    const { mutate, isPending: isDeleting } = useDeleteAsset();
+    const restore = useRestoreAsset();
 
-    const handleArchive = (id: string) => {
-        setSelectedItemId(id);
-        setIsConfirmOpen(true);
+    const handleRestore = (id: string, label: string) => {
+        restore.mutate(id, {
+            onSuccess: () => showToast.success("Asset Restored", `${label} is back in the asset list.`),
+            onError: (error) => showToast.error("Restore Failed", getErrorMessage(error, "Failed to restore asset.")),
+        });
     };
 
-    const handleConfirmArchive = () => {
-        if (selectedItemId) {
-            mutate(selectedItemId, {
-                onSuccess: (data) => {
-                    showToast.success("Item Archived", data.message);
-                },
-                onError: (error) => {
-                    showToast.error("Archive Failed", error.message);
-                },
-            });
-            setIsConfirmOpen(false);
-        }
-    };
-
-    const handleCancelArchive = () => {
-        setIsConfirmOpen(false);
-        setSelectedItemId(null);
+    const handleConfirmDelete = () => {
+        if (!selectedItemId) return;
+        mutate(selectedItemId, {
+            onSuccess: () => showToast.success("Asset Deleted", "The asset was moved to deleted records."),
+            onError: (error) => showToast.error("Delete Failed", getErrorMessage(error, "Failed to delete asset.")),
+            onSettled: () => setSelectedItemId(null),
+        });
     };
 
     return (
         <>
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead>
-                    <tr className="sticky top-0 bg-white/90 backdrop-blur-sm">
-                        <th className="py-3 px-4 text-xs font-semibold uppercase border-b text-[#64748b]">Serial Number</th>
-                        <th className="py-3 px-4 text-xs font-semibold uppercase border-b text-[#64748b]">Image</th>
-                        <th className="py-3 px-4 text-xs font-semibold uppercase border-b text-[#64748b]">Item</th>
-                        <th className="py-3 px-4 text-xs font-semibold uppercase border-b text-[#64748b]">Category</th>
-                        <th className="py-3 px-4 text-xs font-semibold uppercase border-b text-[#64748b]">Condition</th>
-                        <th className="py-3 px-4 text-xs font-semibold uppercase border-b text-[#64748b]">DateTime</th>
-                        <th className="py-3 px-4 text-xs font-semibold uppercase border-b text-[#64748b]">Status</th>
-                        <th className="py-3 px-4 text-xs font-semibold uppercase border-b text-[#64748b]">Action</th>
+                    <tr className="sticky top-0 z-10 bg-slate-50">
+                        {["Asset", "Category", "Type", "Condition", "Home / Current", "Status", ""].map((header, i) => (
+                            <th
+                                key={`${header}-${i}`}
+                                className="border-b border-slate-200 px-5 py-3 font-medium text-slate-500"
+                            >
+                                {header}
+                            </th>
+                        ))}
                     </tr>
                 </thead>
-                <tbody>
-                    {item.map((row) => (
-                        <tr
-                            key={row.id}
-                            onClick={() => navigate({ to: `/home/item/$id`, params: { id: row.id } })}
-                            className="transition-colors cursor-pointer odd:bg-white even:bg-[#f9fbff] hover:bg-[#f8fafc]"
-                        >
-                            <td className="py-3 px-4">{row.serialNumber}</td>
-                            <td className="py-3 px-4">
-                                <img
-                                    src={typeof row.image === "string" ? row.image : no_image_svg}
-                                    alt={row.itemName}
-                                    className="w-12 h-12 object-cover rounded"
-                                />
-                            </td>
-                            <td className="py-3 px-4">{row.itemName}</td>
-                            <td className="py-3 px-4">{row.category}</td>
-                            <td className="py-3 px-4">
-                                <span className={`px-3 py-1 rounded-full text-sm ${SlugCondition(row.condition)}`}>
-                                    {row.condition}
-                                </span>
-                            </td>
-                            <td className="py-3 px-4">
-                                <span>{FormattedDateTime(row.createdAt)}</span>
-                            </td>
-                            <td className="py-3 px-4">
-                                <span className={`px-3 py-1 rounded-full text-sm ${SlugStatus(row.status)}`}>
-                                    {row.status}
-                                </span>
-                            </td>
-                            <td className="py-3 px-4">
-                                <ShowButtonIfUserAdmin
-                                    userRole={userRole}
-                                    itemStatus={row.status}
-                                    onHandleArchive={() => handleArchive(row.id)}
-                                />
-                            </td>
-                        </tr>
-                    ))}
+                <tbody className="divide-y divide-slate-100">
+                    {item.map((row) => {
+                        const isLocked = LOCKED_STATUSES.includes(row.status);
+                        const isDeleted = !!row.deletedAt;
+                        const isRestoring = restore.isPending && restore.variables === row.id;
+                        return (
+                            <tr
+                                key={row.id}
+                                onClick={() => navigate({ to: `/home/item/$id`, params: { id: row.id } })}
+                                className={`cursor-pointer transition-colors hover:bg-slate-50 ${isDeleted ? "bg-slate-50/60 text-slate-400" : ""}`}
+                            >
+                                <td className="px-5 py-3">
+                                    <div className="min-w-0">
+                                        <p className={`flex items-center gap-2 font-medium ${isDeleted ? "text-slate-500 line-through decoration-slate-300" : "text-slate-900"}`}>
+                                            {row.name}
+                                            {isDeleted && (
+                                                <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[11px] font-medium text-slate-600 no-underline">Deleted</span>
+                                            )}
+                                        </p>
+                                        <p className="flex items-center gap-1.5 text-xs text-slate-500">
+                                            <span className="font-mono">{row.assetCode}</span>
+                                            {row.rfidTagUid && <Nfc className="h-3 w-3 text-slate-400" aria-label="RFID tagged" />}
+                                        </p>
+                                    </div>
+                                </td>
+                                <td className="px-5 py-3 text-slate-700">{row.category?.name}</td>
+                                <td className="px-5 py-3 text-slate-600">{formatEnum(row.type)}</td>
+                                <td className="px-5 py-3">
+                                    <span className={`rounded px-2 py-0.5 text-xs font-medium ${SlugCondition(row.condition)}`}>
+                                        {formatEnum(row.condition)}
+                                    </span>
+                                </td>
+                                <td className="px-5 py-3 font-mono text-xs text-slate-600">
+                                    {roomCode(row.homeRoomId)}
+                                    {row.currentRoomId && row.currentRoomId !== row.homeRoomId && <span className="text-blue-700"> → {roomCode(row.currentRoomId)}</span>}
+                                </td>
+                                <td className="px-5 py-3">
+                                    <span className={`rounded px-2 py-0.5 text-xs font-medium ${SlugStatus(row.status)}`}>
+                                        {formatEnum(row.status)}
+                                    </span>
+                                </td>
+                                <td className="px-5 py-3 text-right">
+                                    {canDelete && isDeleted && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleRestore(row.id, row.assetCode);
+                                            }}
+                                            disabled={restore.isPending}
+                                            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                                        >
+                                            {isRestoring ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArchiveRestore className="h-3.5 w-3.5" />} Restore
+                                        </button>
+                                    )}
+                                    {canDelete && !isDeleted && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                if (!isLocked) setSelectedItemId(row.id);
+                                            }}
+                                            disabled={isLocked}
+                                            title={isLocked ? `Cannot delete — asset is ${formatEnum(row.status).toLowerCase()}` : "Delete asset"}
+                                            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-40"
+                                        >
+                                            <Trash2 className="h-3.5 w-3.5" /> Delete
+                                        </button>
+                                    )}
+                                </td>
+                            </tr>
+                        );
+                    })}
                 </tbody>
             </table>
 
-            {isConfirmOpen && (
+            {selectedItemId && (
                 <PopUpModal
-                    title="Archive item"
-                    label="archive"
-                    noun="item"
-                    destination="archive"
-                    onHandleCancelAction={handleCancelArchive}
-                    onHandleConfirmAction={handleConfirmArchive}
-                    isLoading={isArchiving}
+                    title="Delete asset"
+                    label="delete"
+                    noun="asset"
+                    destination="Show deleted filter on Assets"
+                    onHandleCancelAction={() => setSelectedItemId(null)}
+                    onHandleConfirmAction={handleConfirmDelete}
+                    isLoading={isDeleting}
                 />
             )}
         </>

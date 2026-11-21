@@ -1,17 +1,14 @@
 import { api } from "./axios";
+import type { AuditLogEntryDto } from "../@types/types";
 
-
-export const activityLogsApi = async () => {
-    const response = await api.get("/activity-logs");
-    return response.data;
+// Team call: the PRD names audit_log but lists no route.
+export const auditLogApi = async (): Promise<AuditLogEntryDto[]> => {
+    const response = await api.get("/audit-log");
+    return response.data.data;
 };
 
-export const borrowLogsApi = async () => {
-    const response = await api.get("/activity-logs/borrow-logs");
-    return response.data;
+export const auditLogByIdApi = async (id: string): Promise<AuditLogEntryDto> => {
+    const response = await api.get(`/audit-log/${id}`);
+    return response.data.data;
 };
 
-export const activityLogByIdApi = async (id: string) => {
-    const response = await api.get(`/activity-logs/${id}`);
-    return response.data;
-};

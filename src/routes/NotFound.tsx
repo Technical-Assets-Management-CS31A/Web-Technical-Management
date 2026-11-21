@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, PackageSearch } from "lucide-react";
 import logo from "../assets/newAclcLogo.webp";
+import { NOT_FOUND_CONTENT as T } from "../constants/notFoundContent";
 
 export default function NotFound() {
   return (
@@ -28,14 +29,14 @@ export default function NotFound() {
             <div className="flex flex-col items-center text-center mb-8">
               <img
                 src={logo}
-                alt="ACLC Logo"
+                alt={T.logoAlt}
                 className="h-16 w-16 rounded-full object-cover shadow-lg mb-4"
               />
               <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                ACLC College of Mandaue
+                {T.school}
               </p>
               <p className="text-sm font-medium text-slate-400 mt-1">
-                Technical Equipment Borrowing System
+                {T.system}
               </p>
             </div>
 
@@ -43,7 +44,7 @@ export default function NotFound() {
             <div className="relative flex flex-col items-center mb-8">
               <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none">
                 <span className="text-[9rem] sm:text-[11rem] font-black text-blue-600/5 leading-none tracking-tighter">
-                  404
+                  {T.code}
                 </span>
               </div>
 
@@ -56,24 +57,19 @@ export default function NotFound() {
               </div>
 
               <h1 className="text-7xl sm:text-8xl font-black tracking-tighter leading-none text-blue-600">
-                404
+                {T.code}
               </h1>
               <h2 className="mt-3 text-xl sm:text-2xl font-extrabold text-slate-900">
-                Page not found
+                {T.title}
               </h2>
               <p className="mt-2 max-w-sm text-sm sm:text-base text-slate-400 font-medium leading-relaxed">
-                This route isn&apos;t in our inventory. The page may have been
-                moved, archived, or never existed.
+                {T.description}
               </p>
             </div>
 
             {/* Quick tips */}
             <div className="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {[
-                "Check the URL for typos",
-                "Use the sidebar to navigate",
-                "Return to the dashboard",
-              ].map((tip) => (
+              {T.tips.map((tip) => (
                 <div
                   key={tip}
                   className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-center text-xs font-semibold text-slate-500"
@@ -88,13 +84,13 @@ export default function NotFound() {
               className="flex items-center justify-center gap-2 h-11 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-sm font-bold tracking-wide shadow-md shadow-blue-200 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-500/30"
             >
               <ArrowLeft className="h-4 w-4" />
-              Go Back to Continue
+              {T.backButton}
             </Link>
           </div>
         </div>
 
         <p className="mt-6 text-center text-xs text-blue-100/75 font-medium">
-          © 2025 ACLC College of Mandaue · Technical Equipment Borrowing System
+          {T.footer}
         </p>
       </div>
     </div>
