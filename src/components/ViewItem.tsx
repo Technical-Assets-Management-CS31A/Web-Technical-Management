@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { AssetDto, StaffAssetStatus } from "../@types/types";
 import { useAllRooms, useGetAsset, useSetAssetStatus } from "../hooks/assetHooks";
 import { fetchAndPrintQrLabel } from "./qrLabel";
-import ViewItemSkeletonLoader from "../loader/ViewItemSkeletonLoader";
+import ViewItemSkeletonLoader from "./ViewItemSkeletonLoader";
 import AssetFormDialog from "./AssetFormDialog";
 import AssetHistoryTimeline from "./AssetHistoryTimeline";
 import { FormattedDateTime } from "./FormattedDateTime";
