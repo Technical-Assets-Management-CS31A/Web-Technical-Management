@@ -65,6 +65,8 @@ export const useStatusBoard = () => {
     loans,
     isLoading: loansQuery.isLoading,
     isError: loansQuery.isError,
+    error: loansQuery.error,
+    refetch: loansQuery.refetch,
   };
 };
 
