@@ -48,12 +48,28 @@ export const useAssetPage = (params: AssetListParams) =>
     staleTime: 30 * 1000,
   });
 
-/** Just the number of assets matching the filters (summary cards). */
+/** Every asset matching the server filters, for the client-side search and filters (FR-4.4). */
+export const useFilteredAssets = (params: Omit<AssetListParams, "page" | "pageSize">, enabled = true) =>
+  queryOptions({
+    queryFn: () => allAssetsApi(params),
+    queryKey: [...ASSETS_KEY, "all", params],
+    placeholderData: keepPreviousData,
+    staleTime: 30 * 1000,
+    enabled,
+  });
+
+/**
+ * Just the number of assets matching the filters (summary cards). GET /assets takes one status, so a list
+ * of statuses is counted one status at a time and added up.
+ */
 export const useAssetCount = (params: Omit<AssetListParams, "page" | "pageSize"> = {}) =>
   queryOptions({
-    queryFn: () => listAssetsApi({ ...params, page: 1, pageSize: 1 }),
+    queryFn: async () => {
+      const statuses = Array.isArray(params.status) ? params.status : [params.status];
+      const pages = await Promise.all(statuses.map((status) => listAssetsApi({ ...params, status, page: 1, pageSize: 1 })));
+      return pages.reduce((sum, page) => sum + page.total, 0);
+    },
     queryKey: [...ASSETS_KEY, "count", params],
-    select: (page) => page.total,
     staleTime: 30 * 1000,
   });
 

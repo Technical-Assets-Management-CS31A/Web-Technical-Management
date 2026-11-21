@@ -149,6 +149,8 @@ export type AssetListParams = ListParams & {
   condition?: AssetCondition;
   type?: AssetType;
   categoryId?: string;
+  /** The asset's home (storage) room. GET /assets has no current-room filter. */
+  homeRoomId?: string;
   includeDeleted?: boolean;
 };
 
