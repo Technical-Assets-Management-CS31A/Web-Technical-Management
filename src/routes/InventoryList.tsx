@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import * as XLSX from "xlsx";
 import AssetFormDialog from "../components/AssetFormDialog";
@@ -11,11 +11,12 @@ import SelectItemFilters, { type FilterGroup } from "../components/SelectItemFil
 import { InventoryTable } from "../components/InventoryTable";
 import { ShowDeletedToggle } from "../components/DeletedRecords";
 import { allAssetsApi } from "../api/asset_api";
-import { useAssetCount, useAssetPage, useGetCategories, useImportAssets } from "../hooks/assetHooks";
+import { useAllRooms, useAssetCount, useAssetPage, useFilteredAssets, useGetCategories, useImportAssets } from "../hooks/assetHooks";
+import { activeFilterCount, applyClientFilters, listMode, pageOf, serverParams, sortAssets } from "../lib/assetFilters";
 import { formatEnum } from "../lib/utils";
 import { UserData, canManageAssets } from "../utils/usersData/userData";
-import type { AssetCondition, AssetListParams, AssetStatus, AssetType } from "../@types/types";
-import { useInventoryListState, type AssetSort } from "../states/inventory-list-state";
+import type { AssetCondition, AssetStatus, AssetType } from "../@types/types";
+import { useInventoryListState, type AssetSort, type RoomScope } from "../states/inventory-list-state";
 import { INVENTORY_LIST_CONTENT as T } from "../constants/inventoryListContent";
 import {
   AlertTriangle,
@@ -75,21 +76,26 @@ export default function InventoryList() {
     return () => clearTimeout(timer);
   }, [searchInput, filters.search, setFilter]);
 
-  // ── Server query ─────────────────────────────────────────────────────────
+  // ── List query (FR-4.4) ──────────────────────────────────────────────────
   // Only staff who can restore see deleted assets.
   const showDeleted = canManage && filters.showDeleted;
-  const listFilters: Omit<AssetListParams, "page" | "pageSize"> = {
-    q: filters.search || undefined,
-    categoryId: filters.categoryId || undefined,
-    status: filters.status || undefined,
-    condition: filters.condition || undefined,
-    type: filters.type || undefined,
-    includeDeleted: showDeleted || undefined,
-    sort: filters.sort,
-  };
-  const pageQuery = useQuery(useAssetPage({ ...listFilters, page: currentPage, pageSize: PAGE_SIZE }));
-  const page = pageQuery.data;
-  // includeDeleted adds deleted rows to the list (marked, with Restore); paging stays server-side.
+  // Server paging for the filters GET /assets knows; otherwise fetch the matches and finish here (lib/assetFilters).
+  const mode = listMode(filters);
+  const listFilters = serverParams(filters, showDeleted);
+  const serverPage = useQuery({
+    ...useAssetPage({ ...listFilters, page: currentPage, pageSize: PAGE_SIZE }),
+    enabled: mode === "server",
+  });
+  const allMatches = useQuery(useFilteredAssets(listFilters, mode === "client"));
+  const clientMatches = useMemo(
+    () => (allMatches.data ? sortAssets(applyClientFilters(allMatches.data, filters), filters.sort) : undefined),
+    [allMatches.data, filters],
+  );
+  const pageQuery = mode === "server" ? serverPage : allMatches;
+  const page = mode === "server" ? serverPage.data : clientMatches && pageOf(clientMatches, currentPage, PAGE_SIZE);
+  // includeDeleted adds deleted rows to the list (marked, with Restore).
+  const [hasShownList, setHasShownList] = useState(false);
+  if (page && !hasShownList) setHasShownList(true);
   const rows = page?.items ?? [];
   const total = page?.total ?? 0;
   const totalPages = page?.totalPages ?? 1;
@@ -100,6 +106,11 @@ export default function InventoryList() {
   }, [page, currentPage, setCurrentPage]);
 
   const { data: categories = [] } = useQuery(useGetCategories());
+  const { data: roomsData } = useQuery(useAllRooms());
+  const rooms = useMemo(
+    () => (Array.isArray(roomsData) ? [...roomsData].sort((a, b) => a.code.localeCompare(b.code)) : []),
+    [roomsData],
+  );
 
   // ── Summary cards (counts across all assets, ignoring filters) ─────────────
   const totalCount = useQuery(useAssetCount());
@@ -137,7 +148,7 @@ export default function InventoryList() {
     },
   ];
 
-  const hasNarrowingFilters = !!(filters.categoryId || filters.status || filters.condition || filters.type);
+  const hasNarrowingFilters = activeFilterCount(filters) > 0;
   const hasAnyFilter = hasNarrowingFilters || !!filters.search;
 
   const clearAll = () => {
@@ -201,7 +212,8 @@ export default function InventoryList() {
 
     setIsExporting(true);
     try {
-      const assets = await allAssetsApi(listFilters);
+      // Client mode already holds every match; server mode fetches them with the same filters.
+      const assets = mode === "client" && clientMatches ? clientMatches : await allAssetsApi(listFilters);
       const exportData = assets.map((item) => ({
         AssetCode: item.assetCode,
         Name: item.name,
@@ -238,10 +250,13 @@ export default function InventoryList() {
     }
   };
 
-  if (pageQuery.isPending) return <InventoryListSkeletonLoader />;
+  // The skeleton is for the first load only. Later loads (e.g. typing a search switches to client mode) keep
+  // the toolbar mounted so the search box does not lose focus.
+  if (!hasShownList && pageQuery.isPending) return <InventoryListSkeletonLoader />;
 
   const isRefreshing = pageQuery.isFetching && pageQuery.isPlaceholderData;
   const selectedCategoryName = categories.find((c) => c.id === filters.categoryId)?.name;
+  const selectedRoomCode = rooms.find((r) => r.id === filters.roomId)?.code;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -340,6 +355,7 @@ export default function InventoryList() {
                     {T.table.count(total)}
                     {showDeleted && T.table.includingDeleted}
                     {selectedCategoryName && T.table.inCategory(selectedCategoryName)}
+                    {selectedRoomCode && T.table.inRoom(selectedRoomCode, filters.roomScope)}
                   </span>
                   {isRefreshing && (
                     <span className="inline-flex items-center gap-1 text-xs text-slate-400">
@@ -355,6 +371,36 @@ export default function InventoryList() {
                   name="search"
                   placeholder={T.table.searchPlaceholder}
                 />
+                <label className="sr-only" htmlFor="asset-room">{T.filters.room}</label>
+                <select
+                  id="asset-room"
+                  value={filters.roomId}
+                  onChange={(e) => setFilter("roomId", e.target.value)}
+                  className={`h-[42px] max-w-[220px] rounded-lg border bg-white px-3 text-sm hover:border-blue-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/20 ${
+                    filters.roomId ? "border-blue-500 text-blue-700" : "border-slate-300 text-slate-700"
+                  }`}
+                >
+                  <option value="">{T.filters.allRooms}</option>
+                  {rooms.map((room) => (
+                    <option key={room.id} value={room.id}>{room.code} — {room.name}</option>
+                  ))}
+                </select>
+                {filters.roomId && (
+                  <>
+                    <label className="sr-only" htmlFor="asset-room-scope">{T.filters.roomScope}</label>
+                    <select
+                      id="asset-room-scope"
+                      value={filters.roomScope}
+                      title={T.filters.roomScopeHint}
+                      onChange={(e) => setFilter("roomScope", e.target.value as RoomScope)}
+                      className="h-[42px] rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 hover:border-blue-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/20"
+                    >
+                      {T.filters.roomScopes.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </>
+                )}
                 <SelectItemFilters groups={filterGroups} onClearAll={clearFilters} />
                 <label className="sr-only" htmlFor="asset-sort">{T.sort.label}</label>
                 <select
@@ -411,6 +457,10 @@ export default function InventoryList() {
                   <button type="button" onClick={() => pageQuery.refetch()} className="mt-4 text-sm font-medium text-blue-600 hover:underline">
                     {T.error.retry}
                   </button>
+                </div>
+              ) : !page ? (
+                <div className="flex items-center justify-center gap-2 px-8 py-24 text-sm text-slate-500" aria-busy="true">
+                  <Loader2 className="h-4 w-4 animate-spin text-slate-400" /> {T.table.updating}
                 </div>
               ) : rows.length === 0 ? (
                 <div className="flex flex-col items-center justify-center px-8 py-24 text-center">
