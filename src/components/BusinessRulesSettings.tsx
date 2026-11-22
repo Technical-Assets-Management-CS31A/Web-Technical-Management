@@ -181,7 +181,7 @@ function SectionCard({
 }
 
 export default function BusinessRulesSettings({ canEdit }: { canEdit: boolean }) {
-  const { data: settings = [], isLoading, isError } = useQuery(useSystemSettings());
+  const { data: settings = [], isLoading, isError, error, refetch } = useQuery(useSystemSettings());
   const updateSettings = useUpdateSettings();
   const { ruleDraft, setRuleDraftValue, clearRuleDraft } = useRuleDraftState();
 
@@ -232,7 +232,7 @@ export default function BusinessRulesSettings({ canEdit }: { canEdit: boolean })
     );
   }
 
-  if (isError) return <ErrorTable />;
+  if (isError) return <ErrorTable error={error} onRetry={() => refetch()} />;
 
   const grace = Number(values[RULE_KEYS.returnGrace]);
   const longestClass = Math.max(...CLASS_LENGTH_OPTIONS) * 60;

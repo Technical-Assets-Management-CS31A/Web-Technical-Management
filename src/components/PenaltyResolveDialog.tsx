@@ -78,6 +78,7 @@ export default function PenaltyResolveDialog({
       title={copy.title}
       subtitle={`${target.label} · ${target.subject}`}
       confirmLabel={copy.confirm}
+      tone="success"
       isSubmitting={isSubmitting}
       onClose={onClose}
       onConfirm={confirm}

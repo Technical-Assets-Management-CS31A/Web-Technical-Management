@@ -10,17 +10,16 @@ import {
   MdReportProblem,
   MdGavel,
 } from "react-icons/md";
-import { BiLogoSass } from "react-icons/bi";
 import { BsPersonCircle, BsClipboardCheck, BsPersonBadge } from "react-icons/bs";
 import { FaWifi } from "react-icons/fa";
 import { useState, useEffect } from "react";
-import SidebarSkeletonLoader from "../loader/SidebarSkeletonLoader";
+import SidebarSkeletonLoader from "./SidebarSkeletonLoader";
 import { useSidebar } from "../context/SidebarContext";
 import { useActiveBorrowCount } from "../hooks/useActiveBorrowCount";
 import { useOpenAnomalyCount } from "../hooks/useOpenAnomalyCount";
 import { useLogoutUser } from "../hooks/authHooks";
-import { ChevronDown } from "lucide-react";
 import type { IconType } from "react-icons";
+import { Loader2 } from "lucide-react";
 
 type NavLink = {
   label: string;
@@ -34,7 +33,6 @@ export default function Sidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isSidebarLoading, setIsSidebarLoading] = useState<boolean>(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [isLogsOpen, setIsLogsOpen] = useState(false);
 
   const { mutate, isPending } = useLogoutUser();
   const { setIsSidebarExpanded } = useSidebar();
@@ -58,10 +56,7 @@ export default function Sidebar() {
     { label: "Auth cards", link: "/home/auth-cards", icon: BsPersonBadge },
     { label: "Rooms & stations", link: "/home/rooms", icon: MdMeetingRoom },
     { label: "Reports", link: "/home/reports", icon: MdAssessment },
-  ];
-
-  const logsLinks: NavLink[] = [
-    { label: "Activity Logs", link: "/home/activity-logs", icon: BiLogoSass },
+    { label: "Activity logs", link: "/home/activity-logs", icon: MdHistory },
   ];
 
   const bottomLinks: NavLink[] = [
@@ -76,30 +71,37 @@ export default function Sidebar() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Sign out right away; the overlay stays up for at least a moment so it does not just flash.
   const logoutUser = () => {
+    if (isLoggingOut) return;
     setIsLoggingOut(true);
-    setTimeout(() => {
-      mutate(undefined, {
-        // The token is cleared either way, so leave for the login page even when the server call fails.
-        onSettled: (_data, err) => {
-          if (err) console.error(err.message);
-          navigate({ to: "/" });
-        },
-      });
-    }, 2200);
+    const minimumShown = new Promise((resolve) => setTimeout(resolve, 800));
+    mutate(undefined, {
+      // The token is cleared either way, so leave for the login page even when the server call fails.
+      onSettled: (_data, err) => {
+        if (err) console.error(err.message);
+        void minimumShown.then(() => navigate({ to: "/" }));
+      },
+    });
   };
 
   if (isSidebarLoading) return <SidebarSkeletonLoader />;
 
   const navLinkBase =
-    "flex items-center gap-2.5 px-2.5 py-2 rounded-lg font-medium text-[13px] tracking-wide text-slate-600 hover:bg-slate-100 hover:text-blue-600 transition-all duration-200";
+    "relative flex items-center gap-3 px-1.5 py-1.5 [@media(max-height:760px)]:py-1 [@media(max-height:680px)]:py-0.5 rounded-lg font-medium text-[13px] tracking-wide text-slate-600 hover:bg-slate-100 hover:text-blue-600 transition-colors duration-200";
+  // The left bar marks the current page even when the rail is collapsed to icons.
   const navLinkActive =
-    "active !bg-blue-600 !text-white shadow-sm shadow-blue-600/30";
+    "active !bg-blue-600 !text-white shadow-sm shadow-blue-600/30 before:absolute before:-left-2 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-1 before:rounded-r-full before:bg-blue-600";
   const iconWrap =
-    "flex items-center justify-center w-8 h-8 rounded-md shrink-0 bg-slate-100 group-hover:bg-blue-50 [.active_&]:!bg-white/20";
+    "flex items-center justify-center w-7 h-7 rounded-md shrink-0 bg-slate-100 group-hover:bg-blue-50 [.active_&]:!bg-white/20";
 
-  const SectionLabel = ({ label }: { label: string }) => (
-    <li className="px-2.5 pt-4 pb-1">
+  const SectionLabel = ({ label, first = false }: { label: string; first?: boolean }) => (
+    <li
+      className={`relative flex items-end px-2 pb-1 ${first ? "h-6" : "h-8 [@media(max-height:760px)]:h-6 [@media(max-height:680px)]:h-4"}`}
+    >
+      {!first && (
+        <span aria-hidden className="absolute left-1.5 bottom-2.5 w-7 h-px bg-slate-200 transition-opacity duration-200 group-hover:opacity-0" />
+      )}
       <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 opacity-0 transition-opacity duration-300 group-hover:opacity-100 whitespace-nowrap">
         {label}
       </span>
@@ -127,7 +129,7 @@ export default function Sidebar() {
           activeProps={{ className: `${navLinkBase} ${navLinkActive} group` }}
         >
           <span className={`${iconWrap} relative`}>
-            <item.icon className="text-[17px] text-slate-500 group-hover:text-blue-600 [.active_&]:!text-white" />
+            <item.icon className="text-[16px] text-slate-500 group-hover:text-blue-600 [.active_&]:!text-white" />
             {item.badge !== undefined && item.badge > 0 && (
               <span className={`absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[16px] h-[16px] px-0.5 text-[9px] font-bold text-white ${bgBadge} rounded-full ring-2 ring-slate-50 shadow-md ${alwaysShowLabel ? "" : "lg:group-hover:hidden"}`}>
                 {item.badge > 99 ? "99+" : item.badge}
@@ -152,73 +154,28 @@ export default function Sidebar() {
     );
   };
 
-  const LogsDropdown = ({
-    alwaysShowLabel = false,
-    onClick,
-  }: {
-    alwaysShowLabel?: boolean;
-    onClick?: () => void;
-  }) => (
-    <li>
-      <button
-        type="button"
-        onClick={() => setIsLogsOpen((o) => !o)}
-        className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg font-medium text-[13px] tracking-wide transition-all duration-200 group text-slate-600 hover:bg-slate-100 hover:text-blue-600"
-      >
-        <span className="flex items-center justify-center w-8 h-8 rounded-md shrink-0 bg-slate-100 group-hover:bg-blue-50">
-          <MdHistory className="text-[17px] text-slate-500 group-hover:text-blue-600" />
-        </span>
-        <span className={`whitespace-nowrap flex-1 text-left ${alwaysShowLabel ? "" : "opacity-0 transition-opacity duration-300 lg:group-hover:opacity-100"}`}>
-          Logs
-        </span>
-        <ChevronDown
-          className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform duration-200
-            ${isLogsOpen ? "rotate-180" : ""}
-            ${alwaysShowLabel ? "" : "opacity-0 transition-opacity duration-300 lg:group-hover:opacity-100"}`}
-        />
-      </button>
-
-      {isLogsOpen && (
-        <ul className={`mt-0.5 flex flex-col gap-0.5 ${alwaysShowLabel ? "pl-4" : "pl-2"}`}>
-          {logsLinks.map((item) => (
-            <NavItem
-              key={item.label}
-              item={item}
-              alwaysShowLabel={alwaysShowLabel}
-              onClick={onClick}
-            />
-          ))}
-        </ul>
-      )}
-    </li>
-  );
-
   return (
     <>
       {/* Desktop Sidebar */}
       <aside
-        className="hidden fixed top-0 left-0 z-50 flex-col justify-between h-screen bg-white border-r border-slate-200 shadow-sm transition-all duration-300 lg:flex group animate-fadeIn w-[68px] hover:w-[260px]"
+        aria-label="Sidebar"
+        className="hidden fixed top-0 left-0 z-50 flex-col justify-between h-screen overflow-hidden bg-white border-r border-slate-200 shadow-sm transition-all duration-300 lg:flex group animate-fadeIn w-[68px] hover:w-[260px]"
         onMouseEnter={() => setIsSidebarExpanded(true)}
         onMouseLeave={() => setIsSidebarExpanded(false)}
       >
         {/* Logo */}
-        <div className="flex flex-col items-center pt-5 pb-3 px-2 border-b border-slate-100">
-          <div className="rounded-full p-1 bg-slate-50 ring-1 ring-slate-200 transition-all duration-300 group-hover:scale-105">
-            <img
-              src={logo}
-              alt="Logo"
-              className="rounded-full w-10 h-10 transition-all duration-300 group-hover:w-16 group-hover:h-16"
-            />
+        <div className="flex items-center gap-3 h-16 shrink-0 px-3 border-b border-slate-100">
+          <img src={logo} alt="Logo" className="rounded-full w-10 h-10 shrink-0 ring-1 ring-slate-200" />
+          <div className="whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+            <p className="text-sm font-bold tracking-widest text-blue-600 uppercase leading-tight">ACLC</p>
+            <p className="text-[11px] text-slate-400 font-medium leading-tight">College of Mandaue</p>
           </div>
-          <span className="mt-1.5 text-sm font-bold tracking-widest opacity-0 transition-opacity duration-300 group-hover:opacity-100 text-blue-600 uppercase">
-            ACLC
-          </span>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-2 py-2 group-hover:scrollbar-thin scrollbar-none">
-          <ul className="flex flex-col gap-0.5">
-            <SectionLabel label="Main" />
+        <nav aria-label="Main" className="flex-1 min-h-0 overflow-hidden px-2 py-2">
+          <ul className="flex flex-col gap-1 [@media(max-height:680px)]:gap-0.5">
+            <SectionLabel label="Main" first />
             {primaryLinks.map((item) => (
               <NavItem key={item.label} item={item} badgeColor="orange" />
             ))}
@@ -228,16 +185,10 @@ export default function Sidebar() {
               <NavItem key={item.label} item={item} badgeColor="green" />
             ))}
 
-            {/* Divider */}
-            <li className="my-1.5 px-2">
-              <div className="h-px bg-slate-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </li>
-
             <SectionLabel label="Administration" />
             {administrativeLinks.map((item) => (
               <NavItem key={item.label} item={item} />
             ))}
-            <LogsDropdown />
 
             <SectionLabel label="Account" />
             {bottomLinks.map((item) => (
@@ -247,15 +198,15 @@ export default function Sidebar() {
         </nav>
 
         {/* Logout */}
-        <footer className="p-2 border-t border-slate-100">
+        <footer className="shrink-0 px-2 py-1.5 border-t border-slate-100">
           <button
             type="button"
             onClick={logoutUser}
             disabled={isPending}
-            className="flex gap-2.5 items-center py-2 px-2.5 w-full rounded-lg text-[13px] font-medium tracking-wide text-red-500 hover:bg-red-50 hover:text-red-600 transition-all duration-200 disabled:opacity-50"
+            className="flex gap-3 items-center py-1.5 px-1.5 w-full rounded-lg text-[13px] font-medium tracking-wide text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors duration-200 disabled:opacity-50"
           >
-            <span className="flex items-center justify-center w-8 h-8 rounded-md shrink-0 bg-red-50">
-              <CiLogout className="text-[17px] text-red-500" />
+            <span className="flex items-center justify-center w-7 h-7 rounded-md shrink-0 bg-red-50">
+              <CiLogout className="text-[16px] text-red-500" />
             </span>
             <span className="whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
               Sign Out
@@ -331,7 +282,6 @@ export default function Sidebar() {
               {administrativeLinks.map((item) => (
                 <NavItem key={item.label} item={item} onClick={closeMobileMenu} alwaysShowLabel />
               ))}
-              <LogsDropdown alwaysShowLabel onClick={closeMobileMenu} />
 
               {/* Section: Account */}
               <li className="px-2.5 pt-3 pb-1">
@@ -359,34 +309,19 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/*  Logout overlay */}
+      {/* Sign-out screen */}
       {isLoggingOut && (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-900/90 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="flex flex-col items-center gap-6 text-center px-8">
-            <div className="relative flex h-20 w-20 items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping" />
-              <div className="relative h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-xl shadow-blue-500/30">
-                <img src={logo} alt="Logo" className="w-10 h-10 rounded-full" />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <h2 className="text-xl font-bold text-white tracking-tight">
-                Signed out successfully
-              </h2>
-              <p className="text-slate-400 text-sm font-medium">
-                Thank you for using the system.
-              </p>
-            </div>
-            <div className="flex gap-1.5 mt-1">
-              {[0, 1, 2].map((i) => (
-                <span
-                  key={i}
-                  className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-bounce"
-                  style={{ animationDelay: `${i * 0.15}s` }}
-                />
-              ))}
-            </div>
-          </div>
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white px-6 animate-fadeIn"
+        >
+          <img src={logo} alt="" className="h-12 w-12 rounded-full ring-1 ring-slate-200" />
+          <p className="mt-6 flex items-center gap-2 text-base font-semibold text-slate-900">
+            <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+            Signing out…
+          </p>
+          <p className="mt-1.5 text-sm text-slate-500">You'll be taken back to the sign-in page.</p>
         </div>
       )}
     </>
