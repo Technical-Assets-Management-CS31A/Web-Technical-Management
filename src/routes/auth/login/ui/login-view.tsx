@@ -37,13 +37,12 @@ export default function LoginView({
           <img src={logo} alt={T.logo.alt} className="h-11 w-11 rounded-full ring-2 ring-white/30" />
           <span className="leading-tight">
             <span className="block text-sm font-semibold">{T.brand.name}</span>
-            <span className="block text-xs text-white/80">{T.brand.product}</span>
           </span>
         </a>
 
         <div className="max-w-lg">
           <h1 className="text-4xl xl:text-5xl font-semibold leading-[1.1] tracking-tight text-balance">
-            {T.hero.title}
+            {T.hero.product}
           </h1>
           <p className="mt-5 text-base leading-relaxed text-white/90">
             {T.hero.description}
@@ -72,7 +71,6 @@ export default function LoginView({
           <img src={logo} alt={T.logo.alt} className="h-10 w-10 rounded-full ring-1 ring-slate-200" />
           <span className="leading-tight">
             <span className="block text-sm font-semibold text-slate-900">{T.brand.name}</span>
-            <span className="block text-xs text-slate-500">{T.brand.product}</span>
           </span>
         </div>
 
