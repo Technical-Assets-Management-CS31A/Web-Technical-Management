@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- Link-preview thumbnail (Open Graph / Twitter). Render: make og-image (see scripts/og/README.md) -->
+  <defs>
+    <clipPath id="logo-clip"><circle cx="116" cy="112" r="36"/></clipPath>
+  </defs>
+
+  <rect width="1200" height="630" fill="#1e3a8a"/>
+
+  <!-- Brand -->
+  <circle cx="116" cy="112" r="39" fill="#ffffff" fill-opacity="0.3"/>
+  <image href="logo.png" xlink:href="logo.png" x="80" y="76" width="72" height="72" preserveAspectRatio="xMidYMid slice" clip-path="url(#logo-clip)"/>
+  <text x="176" y="121" font-family="Montserrat" font-weight="600" font-size="26" fill="#ffffff">ACLC College of Mandaue</text>
+
+  <!-- Headline -->
+  <text font-family="Montserrat" font-weight="700" font-size="68" letter-spacing="-1.5" fill="#ffffff">
+    <tspan x="80" y="262">Technical Assets</tspan>
+    <tspan x="80" y="342">Management System</tspan>
+  </text>
+  <text x="80" y="400" font-family="Montserrat" font-weight="400" font-size="22" fill="#ffffff" fill-opacity="0.9">Track equipment from the shelf to the classroom and back, with RFID check-out,</text>
+  <text x="80" y="432" font-family="Montserrat" font-weight="400" font-size="22" fill="#ffffff" fill-opacity="0.9">live loan status and a full audit trail.</text>
+
+  <!-- Features -->
+  <line x1="80" y1="470" x2="1120" y2="470" stroke="#ffffff" stroke-opacity="0.25" stroke-width="1"/>
+  <line x1="426" y1="470" x2="426" y2="580" stroke="#ffffff" stroke-opacity="0.25" stroke-width="1"/>
+  <line x1="773" y1="470" x2="773" y2="580" stroke="#ffffff" stroke-opacity="0.25" stroke-width="1"/>
+
+  <g font-family="Montserrat" fill="#ffffff">
+    <text x="80" y="520" font-weight="600" font-size="24">Assets</text>
+    <text x="80" y="554" font-size="16" fill-opacity="0.8">Tagged by RFID and QR, with full history.</text>
+
+    <text x="458" y="520" font-weight="600" font-size="24">Loans</text>
+    <text x="458" y="554" font-size="16" fill-opacity="0.8">Who has what, where, and when it's due.</text>
+
+    <text x="805" y="520" font-weight="600" font-size="24">Accountability</text>
+    <text x="805" y="554" font-size="16" fill-opacity="0.8">Penalties, liabilities and activity logs.</text>
+  </g>
+</svg>
