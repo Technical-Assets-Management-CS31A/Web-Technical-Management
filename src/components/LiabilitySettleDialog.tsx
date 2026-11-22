@@ -83,6 +83,7 @@ export default function LiabilitySettleDialog({
       title={T.title}
       subtitle={`${loan.asset.assetCode} · ${loan.loanNo}`}
       confirmLabel={T.confirm}
+      tone="success"
       fieldLabel={T.noteLabel}
       placeholder={T.notePlaceholder}
       hint={T.noteHint}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { MessageSquareText } from "lucide-react";
-import { Field, FormAlert, FormDialog } from "./form/FormKit";
+import { Field, FormAlert, FormDialog, type DialogTone } from "./form/FormKit";
 
 // Every clear, lift, settle or resolve action asks for a reason that goes to audit_log.
 
@@ -17,6 +17,8 @@ type ReasonDialogProps = {
   error?: string;
   onClose: () => void;
   onConfirm: (reason: string) => void;
+  /** danger for destructive actions (mark missing, reset), success for resolve / lift / settle */
+  tone?: DialogTone;
   children?: React.ReactNode;
 };
 
@@ -32,6 +34,7 @@ export default function ReasonDialog({
   error,
   onClose,
   onConfirm,
+  tone = "primary",
   children,
 }: ReasonDialogProps) {
   const [reason, setReason] = useState("");
@@ -52,6 +55,7 @@ export default function ReasonDialog({
       }}
       isSubmitting={isSubmitting}
       submitLabel={confirmLabel}
+      tone={tone}
     >
       {children}
       <Field label={fieldLabel} htmlFor="reason-text" required error={touched && missing ? requiredMessage : undefined} hint={hint}>

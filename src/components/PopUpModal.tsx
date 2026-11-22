@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Archive, ArchiveRestore, X, Loader2, RotateCcw } from "lucide-react";
+import { Archive, ArchiveRestore, Ban, X, Loader2, RotateCcw, Trash2 } from "lucide-react";
 
 type PopUpModalProps = {
   title: string;
@@ -11,24 +11,34 @@ type PopUpModalProps = {
   isLoading?: boolean;
 };
 
-// Restoring is a positive action (green); anything else, e.g. archiving, is a caution (amber)
+// The colour follows what the button does: destructive (delete, revoke) is red,
+// restoring is green, and anything else that only sets something aside (archive) is amber.
 const TONES = {
+  danger: {
+    iconTile: "bg-red-50 text-red-600 ring-red-100",
+    highlight: "text-red-600",
+    button: "bg-red-600 hover:bg-red-700 focus-visible:ring-red-200",
+  },
   restore: {
-    icon: ArchiveRestore,
-    accent: "from-emerald-400 to-teal-500",
     iconTile: "bg-emerald-50 text-emerald-600 ring-emerald-100",
-    halo: "bg-emerald-100",
     highlight: "text-emerald-700",
-    button: "bg-emerald-600 hover:bg-emerald-700 focus-visible:ring-emerald-200 shadow-emerald-600/20",
+    button: "bg-emerald-600 hover:bg-emerald-700 focus-visible:ring-emerald-200",
   },
   caution: {
-    icon: Archive,
-    accent: "from-amber-400 to-orange-500",
     iconTile: "bg-amber-50 text-amber-600 ring-amber-100",
-    halo: "bg-amber-100",
     highlight: "text-amber-700",
-    button: "bg-amber-500 hover:bg-amber-600 focus-visible:ring-amber-200 shadow-amber-500/20",
+    button: "bg-amber-500 hover:bg-amber-600 focus-visible:ring-amber-200",
   },
+};
+
+const DANGER_ACTIONS = ["delete", "remove", "revoke", "deactivate"];
+
+const toneFor = (label: string) => {
+  const action = label.toLowerCase();
+  if (action === "restore") return { ...TONES.restore, icon: ArchiveRestore };
+  if (action === "revoke" || action === "deactivate") return { ...TONES.danger, icon: Ban };
+  if (DANGER_ACTIONS.includes(action)) return { ...TONES.danger, icon: Trash2 };
+  return { ...TONES.caution, icon: Archive };
 };
 
 const capitalize = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
@@ -51,7 +61,7 @@ export default function PopUpModal({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isLoading, onHandleCancelAction]);
 
-  const tone = label.toLowerCase() === "restore" ? TONES.restore : TONES.caution;
+  const tone = toneFor(label);
   const Icon = tone.icon;
 
   const handleCancel = () => {
@@ -70,9 +80,6 @@ export default function PopUpModal({
         className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-slate-900/5 animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Accent bar */}
-        <div className={`h-1 w-full bg-gradient-to-r ${tone.accent}`} />
-
         <button
           type="button"
           onClick={handleCancel}
@@ -83,14 +90,10 @@ export default function PopUpModal({
           <X className="h-4 w-4" />
         </button>
 
-        <div className="px-6 pb-6 pt-7">
-          {/* Icon with soft halo */}
-          <div className="relative mb-5 h-12 w-12">
-            <span className={`absolute -inset-2 rounded-2xl opacity-40 blur-md ${tone.halo}`} />
-            <span className={`relative flex h-12 w-12 items-center justify-center rounded-xl ring-1 ring-inset ${tone.iconTile}`}>
-              <Icon className="h-6 w-6" />
-            </span>
-          </div>
+        <div className="px-6 pb-6 pt-6">
+          <span className={`mb-5 flex h-12 w-12 items-center justify-center rounded-xl ring-1 ring-inset ${tone.iconTile}`}>
+            <Icon className="h-6 w-6" />
+          </span>
 
           <h3 id="popup-modal-title" className="text-lg font-semibold tracking-tight text-slate-900">
             {title}

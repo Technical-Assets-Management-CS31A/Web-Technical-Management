@@ -175,6 +175,7 @@ const ViewUserCredentials = ({ user, isOpen, onClose }: ViewUserCredentialsProps
                     title="Lift approval freeze"
                     subtitle={fullName(user)}
                     confirmLabel="Lift freeze"
+                    tone="success"
                     isSubmitting={liftFreeze.isPending}
                     onClose={() => setIsLiftOpen(false)}
                     onConfirm={(reason) =>
