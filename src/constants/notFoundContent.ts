@@ -1,7 +1,7 @@
 export const NOT_FOUND_CONTENT = {
   logoAlt: "ACLC Logo",
   school: "ACLC College of Mandaue",
-  system: "Technical Equipment Borrowing",
+  system: "Technical Assets Management System",
   eyebrow: "Error 404",
   title: "We couldn't find that page.",
   description: "The link may be broken, or the page may have been moved or removed.",
