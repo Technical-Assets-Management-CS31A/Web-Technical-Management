@@ -6,10 +6,9 @@ export const LOGIN_CONTENT = {
   },
   brand: {
     name: "ACLC College of Mandaue",
-    product: "Technical Equipment Borrowing",
   },
   hero: {
-    title: "Every item, every loan, accounted for.",
+    product: "Technical Assets Management System",
     description:
       "Track equipment from the shelf to the classroom and back, with RFID check-out, live loan status and a full audit trail.",
     features: [
