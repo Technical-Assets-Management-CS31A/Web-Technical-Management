@@ -15,7 +15,7 @@ export default function SettingsSkeletonLoader() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">
           {/* Navigation */}
-          <div className="flex gap-1 lg:flex-col">
+          <div className="flex gap-1 overflow-hidden lg:flex-col">
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="flex items-center gap-3 rounded-lg px-3 py-2.5">
                 <Bone className="h-8 w-8 rounded-md" />
@@ -63,6 +63,18 @@ export default function SettingsSkeletonLoader() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Account status */}
+            <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4">
+              <div className="flex items-center gap-3">
+                <Bone className="h-9 w-9" />
+                <div className="space-y-1.5">
+                  <Bone className="h-3.5 w-28" />
+                  <Bone className="h-3 w-48" />
+                </div>
+              </div>
+              <Bone className="h-6 w-16 rounded-full" />
             </div>
           </div>
         </div>
