@@ -66,9 +66,6 @@ class SignalRService {
     this.hasConnected = false;
     this.retryAttempt = 0;
     if (connection) {
-      if (connection.state === signalR.HubConnectionState.Connected) {
-        await connection.invoke("LeaveAdminStaffGroup").catch(() => undefined);
-      }
       await connection.stop().catch((error) => console.error("[SignalR] Error while stopping:", error));
     }
     this.setStatus("idle");
@@ -100,15 +97,14 @@ class SignalRService {
     this.setStatus(this.hasConnected || this.retryAttempt > 0 ? "reconnecting" : "connecting");
 
     try {
+      // The server adds staff to its "staff" group in OnConnectedAsync; the hub has no callable methods.
       await connection.start();
-      await connection.invoke("JoinAdminStaffGroup");
     } catch (error) {
       if (!this.wanted || connection !== this.connection) return;
       if (error instanceof SessionExpiredError || this.isSessionError(error)) {
         await this.endDeadSession();
         return;
       }
-      // A failed invoke leaves a live connection without the group; drop it so the retry starts clean.
       await connection.stop().catch(() => undefined);
       this.setStatus("reconnecting", { error: describe(error) });
       this.scheduleRetry();
@@ -149,14 +145,8 @@ class SignalRService {
 
     connection.onreconnected(() => {
       if (connection !== this.connection) return;
-      connection
-        .invoke("JoinAdminStaffGroup")
-        .then(() => this.setStatus("connected", { resumed: true }))
-        .catch((error) => {
-          // Connected but outside the group means no events; restart from scratch.
-          console.error("[SignalR] Rejoining the staff group failed:", error);
-          void connection.stop();
-        });
+      // A new connection id rejoins the staff group server-side in OnConnectedAsync.
+      this.setStatus("connected", { resumed: true });
     });
 
     connection.onclose((error) => {
