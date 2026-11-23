@@ -15,13 +15,13 @@ const jwt = (payload: object) => `h.${btoa(JSON.stringify(payload)).replace(/=+$
 
 describe("buildHubUrl", () => {
   it("strips the API version suffix and trailing slashes", () => {
-    expect(buildHubUrl("https://api.example.com/api/v1")).toBe("https://api.example.com/notificationHub");
-    expect(buildHubUrl("https://api.example.com/api/v2/")).toBe("https://api.example.com/notificationHub");
-    expect(buildHubUrl("http://localhost:5278/")).toBe("http://localhost:5278/notificationHub");
+    expect(buildHubUrl("https://api.example.com/api/v1")).toBe("https://api.example.com/hubs/live");
+    expect(buildHubUrl("https://api.example.com/api/v2/")).toBe("https://api.example.com/hubs/live");
+    expect(buildHubUrl("http://localhost:5278/")).toBe("http://localhost:5278/hubs/live");
   });
 
   it("falls back to the local backend", () => {
-    expect(buildHubUrl(undefined)).toBe("http://localhost:5278/notificationHub");
+    expect(buildHubUrl(undefined)).toBe("http://localhost:5278/hubs/live");
   });
 });
 

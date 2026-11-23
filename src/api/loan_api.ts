@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import { api } from "./axios";
 import { fetchAllPages, toListQuery, toPaged } from "./paging";
 import type {
@@ -70,9 +71,22 @@ export const stationHealthApi = async (): Promise<StationHealthDto[]> => {
 
 // ── Kiosk sessions ───────────────────────────────────────────────────────────
 
+// The backend has no staff-facing list of active kiosk sessions yet (its /kiosk routes use station auth).
+// A 404 is read as "not available": an empty list, and no more requests for the rest of the page's life.
+let kioskSessionListMissing = false;
+
 export const activeKioskSessionsApi = async (): Promise<CheckoutSessionDto[]> => {
-  const response = await api.get("/kiosk/sessions", { params: { active: true } });
-  return response.data.data;
+  if (kioskSessionListMissing) return [];
+  try {
+    const response = await api.get("/kiosk/sessions", { params: { active: true } });
+    return response.data.data ?? [];
+  } catch (error) {
+    if (isAxiosError(error) && error.response?.status === 404) {
+      kioskSessionListMissing = true;
+      return [];
+    }
+    throw error;
+  }
 };
 
 // PRD 6.2 step 5. Used to read a session's final result after it leaves the active list.

@@ -4,6 +4,7 @@ import type {
   AuthCardRequest,
   CheckoutSessionDto,
   CreateUserRequest,
+  ListParams,
   Paged,
   RosterImportIssue,
   RosterImportResult,
@@ -147,10 +148,13 @@ export const importStudentsApi = async (formData: FormData): Promise<RosterImpor
   return toImportResult(response.data);
 };
 
-export const allSectionsApi = async (): Promise<SectionDto[]> => {
-  const response = await api.get("/sections", { params: { page: 1, pageSize: 200, sort: "code" } });
-  return toPaged<SectionDto>(response.data, { page: 1, pageSize: 200 }).items;
+// The backend caps pageSize at 100, so walk the pages instead of asking for one big page.
+const sectionPage = async (params: Pick<ListParams, "page" | "pageSize">): Promise<Paged<SectionDto>> => {
+  const response = await api.get("/sections", { params: { ...params, sort: "code" } });
+  return toPaged<SectionDto>(response.data, params);
 };
+
+export const allSectionsApi = (): Promise<SectionDto[]> => fetchAllPages(sectionPage, {});
 
 export const createSectionApi = async (data: SectionForm): Promise<SectionDto> => {
   const response = await api.post("/sections", data);

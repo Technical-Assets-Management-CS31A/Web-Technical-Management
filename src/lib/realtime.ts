@@ -26,7 +26,8 @@ export const REALTIME_EVENTS = [
   "scan.recorded",
 ] as const satisfies readonly RealtimeEventName[];
 
-export const HUB_PATH = "/notificationHub";
+// The backend maps LiveHub at /hubs/live (tams-backend Program.cs).
+export const HUB_PATH = "/hubs/live";
 
 /** The hub sits at the API host root, so a trailing /api/v1 is stripped from the base URL. */
 export const buildHubUrl = (apiBaseUrl: string | undefined): string => {

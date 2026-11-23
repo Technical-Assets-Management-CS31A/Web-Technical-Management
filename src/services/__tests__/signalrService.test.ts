@@ -99,7 +99,7 @@ describe("signalRService", () => {
 
     expect(hub.built).toHaveLength(1);
     expect(await conn().options.accessTokenFactory()).toBe(auth.token);
-    expect(conn().invoke).toHaveBeenCalledWith("JoinAdminStaffGroup");
+    expect(conn().invoke).not.toHaveBeenCalled(); // the server joins the staff group itself
     expect(service.isConnected()).toBe(true);
     expect(statuses.at(-1)).toEqual({ status: "connected", resumed: false });
 
@@ -139,7 +139,7 @@ describe("signalRService", () => {
     expect(hub.built).toHaveLength(1);
   });
 
-  it("rejoins the staff group after an automatic reconnect", async () => {
+  it("reports connected again after an automatic reconnect", async () => {
     const { service, statuses, conn } = await load();
     await service.start();
     conn().invoke.mockClear();
@@ -149,7 +149,7 @@ describe("signalRService", () => {
 
     conn().recover();
     await vi.runAllTimersAsync();
-    expect(conn().invoke).toHaveBeenCalledWith("JoinAdminStaffGroup");
+    expect(conn().invoke).not.toHaveBeenCalled();
     expect(statuses.at(-1)).toEqual({ status: "connected", resumed: true });
   });
 
@@ -185,13 +185,13 @@ describe("signalRService", () => {
     expect(auth.refresh).toHaveBeenCalledTimes(1);
   });
 
-  it("leaves the group and stays down after stop()", async () => {
+  it("stays down after stop()", async () => {
     const { service, conn } = await load();
     await service.start();
     const c = conn();
 
     await service.stop();
-    expect(c.invoke).toHaveBeenCalledWith("LeaveAdminStaffGroup");
+    expect(c.invoke).not.toHaveBeenCalled();
     expect(service.getStatus()).toBe("idle");
 
     await vi.advanceTimersByTimeAsync(60_000);
