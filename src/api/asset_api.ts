@@ -88,11 +88,13 @@ export const importAssetsApi = async (formData: FormData) => {
 
 // ── Categories ───────────────────────────────────────────────────────────────
 
-// Categories are a short list; ask for one big page and accept a paged or plain response.
-export const allCategoriesApi = async (): Promise<AssetCategoryDto[]> => {
-  const response = await api.get(category_end_point, { params: { page: 1, pageSize: 200, sort: "name" } });
-  return toPaged<AssetCategoryDto>(response.data, { page: 1, pageSize: 200 }).items;
+// The backend rejects pageSize > 100 (400), so walk the pages 100 at a time.
+const categoryPage = async (params: Pick<ListParams, "page" | "pageSize">): Promise<Paged<AssetCategoryDto>> => {
+  const response = await api.get(category_end_point, { params: { ...params, sort: "name" } });
+  return toPaged<AssetCategoryDto>(response.data, params);
 };
+
+export const allCategoriesApi = (): Promise<AssetCategoryDto[]> => fetchAllPages(categoryPage, {});
 
 export const addCategoryApi = async (data: AssetCategoryForm): Promise<AssetCategoryDto> => {
   const response = await api.post(category_end_point, data);
