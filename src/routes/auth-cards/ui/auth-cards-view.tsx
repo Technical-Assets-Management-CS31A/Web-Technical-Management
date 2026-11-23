@@ -33,7 +33,7 @@ export default function AuthCardsView(vm: AuthCardsViewModel) {
     isUpdating,
   } = vm;
 
-  if (isPending) return <UserSkeletonLoader />;
+  if (isPending) return <UserSkeletonLoader tabs={false} filters={[220]} columns={["icon", "stack", "pill", "text", "action"]} />;
 
   return (
     <div className="min-h-screen bg-slate-50">
