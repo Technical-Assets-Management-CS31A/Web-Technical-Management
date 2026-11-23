@@ -44,7 +44,17 @@ export default function ViolationsView(vm: ViolationsViewModel) {
     onReset,
   } = vm;
 
-  if (studentsQuery.isPending || usersQuery.isPending) return <UserSkeletonLoader />;
+  if (studentsQuery.isPending || usersQuery.isPending) {
+    return (
+      <UserSkeletonLoader
+        action={canReset ? "outline" : false}
+        tabs={false}
+        toolbar="segmented"
+        filters={[300]}
+        columns={["expand", "stack", "mono", "pill", "count", "count", "pill"]}
+      />
+    );
+  }
 
   const stats: { label: string; value: number; sub: string; icon: LucideIcon; tone: string }[] = [
     { label: T.stats.students, value: summary.students, sub: T.stats.studentsSub(summary.blocked), icon: ShieldX, tone: "bg-rose-50 text-rose-600" },

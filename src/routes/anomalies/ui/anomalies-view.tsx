@@ -33,7 +33,7 @@ export default function AnomaliesView(vm: AnomaliesViewModel) {
     isAcknowledging,
   } = vm;
 
-  if (activeQuery.isPending) return <UserSkeletonLoader />;
+  if (activeQuery.isPending) return <UserSkeletonLoader action={false} tabs={false} toolbar="segmented" filters={[360]} columns={["icon", "stack", "stack", "mono", "stack", "pill", "action"]} />;
 
   const headers = view === "active" ? T.activeHeaders : T.resolvedHeaders;
   const showActions = canHandle && view === "active";

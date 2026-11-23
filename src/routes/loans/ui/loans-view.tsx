@@ -82,7 +82,7 @@ export default function LoansView(vm: LoansViewModel) {
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
 
           {/* Status tabs */}
-          <div className="flex gap-1 overflow-x-auto border-b border-slate-200 px-3" role="tablist" aria-label="Filter by status">
+          <div className="flex gap-1 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden border-b border-slate-200 px-3" role="tablist" aria-label="Filter by status">
             {LOAN_STATUS_FILTERS.map((id) => (
               <button
                 key={id}

@@ -36,11 +36,14 @@ export const RoomsSkeletonLoader = () => {
                     {/* Rooms list */}
                     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white lg:col-span-2">
                         <div className="space-y-3 border-b border-slate-200 px-5 py-4">
-                            <div className="flex items-center justify-between">
-                                <Bone className="h-5 w-24" />
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="space-y-1.5">
+                                    <Bone className="h-5 w-24" />
+                                    <Bone className="h-3 w-16" />
+                                </div>
                                 <Bone className="h-8 w-48" />
                             </div>
-                            <Bone className="h-10 w-full" />
+                            <Bone className="h-10 w-full rounded-xl" />
                         </div>
                         <div className="divide-y divide-slate-100">
                             {[...Array(7)].map((_, i) => (
@@ -56,22 +59,51 @@ export const RoomsSkeletonLoader = () => {
                         </div>
                     </div>
 
-                    {/* Selected room */}
+                    {/* Selected room: header with edit/delete, occupancy, stations table */}
                     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white lg:col-span-3">
-                        <div className="space-y-2 border-b border-slate-200 px-5 py-4">
-                            <Bone className="h-6 w-24" />
-                            <Bone className="h-4 w-48" />
-                            <Bone className="h-3 w-32" />
+                        <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                    <Bone className="h-6 w-24" />
+                                    <Bone className="h-5 w-20 rounded-full" />
+                                </div>
+                                <Bone className="h-4 w-48" />
+                                <Bone className="h-3 w-32" />
+                            </div>
+                            <div className="flex shrink-0 gap-2">
+                                <Bone className="h-8 w-20" />
+                                <Bone className="h-8 w-24" />
+                            </div>
                         </div>
-                        <div className="grid grid-cols-1 gap-3 border-b border-slate-200 px-5 py-4 sm:grid-cols-3">
-                            <Bone className="h-16" />
-                            <Bone className="h-16 sm:col-span-2" />
+                        <div className="border-b border-slate-200 px-5 py-4">
+                            <Bone className="mb-3 h-3 w-24" />
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                <Bone className="h-16" />
+                                <Bone className="h-16 sm:col-span-2" />
+                            </div>
                         </div>
-                        <div className="space-y-2 px-5 py-4">
-                            <Bone className="h-4 w-28" />
-                            {[...Array(3)].map((_, i) => (
-                                <Bone key={i} className="h-11 w-full" />
-                            ))}
+                        <div className="px-5 py-4">
+                            <div className="mb-3 flex items-center justify-between gap-3">
+                                <Bone className="h-3 w-20" />
+                                <Bone className="h-8 w-28" />
+                            </div>
+                            <div className="overflow-hidden rounded-xl border border-slate-200">
+                                <div className="flex gap-6 bg-slate-50 px-4 py-3">
+                                    {[56, 40, 56, 48].map((w, i) => (
+                                        <Bone key={i} className="h-3" style={{ width: w }} />
+                                    ))}
+                                </div>
+                                <div className="divide-y divide-slate-100">
+                                    {[...Array(3)].map((_, i) => (
+                                        <div key={i} className="flex items-center gap-6 px-4 py-3">
+                                            <Bone className="h-3.5 w-20" />
+                                            <Bone className="h-3.5 w-16" />
+                                            <Bone className="h-5 w-16 rounded-full" />
+                                            <Bone className="h-3.5 w-24" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
