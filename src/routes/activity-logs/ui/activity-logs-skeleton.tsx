@@ -86,6 +86,17 @@ export default function ActivityLogsSkeletonLoader() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 px-5 py-3 sm:flex-row">
+            <Bone className="h-4 w-44" />
+            <div className="flex items-center gap-1">
+              <Bone className="h-8 w-20" />
+              <Bone className="h-8 w-8" />
+              <Bone className="h-8 w-8" />
+              <Bone className="h-8 w-16" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
