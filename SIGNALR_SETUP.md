@@ -17,12 +17,12 @@ useRealtimeConnection (src/hooks/useRealtime.ts)    mounted once by AdminNotific
 - **Auth:** the staff JWT is read from the access-token cookie on every connect and reconnect. If it expires
   within 30 s it is refreshed first through `/auth/refresh` (the same call the axios interceptor uses). With
   WebSockets and SSE the browser cannot send headers, so SignalR sends the token as `?access_token=` on
-  `/notificationHub`.
+  `/hubs/live`.
 - **Reconnect:** it retries after 0 s, 2 s, 5 s and 10 s, then every 30 s (±20 %), and never gives up. This covers
   dropped connections, a failed first start, and the server closing the connection. It stops only on logout
   or when the refresh token is also dead.
-- **Groups:** `JoinAdminStaffGroup` is called after every connect, because SignalR drops group membership
-  when the connection id changes.
+- **Groups:** the server adds staff accounts to its `staff` group in `OnConnectedAsync`, so every new
+  connection id is regrouped without a client call. The hub has no callable methods.
 - **Missed events:** events sent while offline are not replayed, so after a reconnect every query key the
   events touch is refetched.
 - **Logout:** `useLogoutUser` calls `signalRService.stop()` (which leaves the group) and `resetRealtimeState()`.
@@ -65,9 +65,9 @@ To add an event: add it to `RealtimeEventMap`, `REALTIME_EVENTS` and `QUERY_KEYS
 
 ## Backend Contract
 
-- Hub at `/notificationHub` on the API host root (a trailing `/api/vN` in `VITE_API_BASE_URL` is stripped).
+- Hub at `/hubs/live` on the API host root (a trailing `/api/vN` in `VITE_API_BASE_URL` is stripped).
 - JWT bearer auth must read `access_token` from the query string for that path (`JwtBearerEvents.OnMessageReceived`).
-- Hub methods `JoinAdminStaffGroup` / `LeaveAdminStaffGroup`. The server should reject the join for INSTRUCTOR tokens.
+- No hub methods: ADMIN, TECH_STAFF and CUSTODIAN tokens join the `staff` group on connect.
 - CORS must allow credentials for the web origin.
 
 ## Troubleshooting
