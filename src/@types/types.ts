@@ -244,7 +244,7 @@ export type LoanFilters = {
 // ── Anomalies (GET /anomalies, FR-4.5) ───────────────────────────────────────
 
 export type AnomalyFilters = {
-  /** Several statuses are sent comma-separated, e.g. OPEN,ACKNOWLEDGED for the active queue */
+  /** OPEN+ACKNOWLEDGED is sent as status=active (see anomaly_api.ts) */
   status?: AnomalyStatus | AnomalyStatus[];
   type?: AnomalyType;
   roomId?: string;
