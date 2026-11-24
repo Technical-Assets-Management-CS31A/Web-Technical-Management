@@ -1,6 +1,6 @@
 import { isAxiosError } from "axios";
 import { api } from "./axios";
-import { fetchAllPages, toListQuery, toPaged } from "./paging";
+import { fetchAllPages, toListQuery, toPaged, unwrap } from "./paging";
 import type {
   ChangeLoanRoomRequest,
   CheckoutSessionDto,
@@ -31,7 +31,7 @@ export const allLoansApi = async (filters: LoanFilters = {}): Promise<LoanDto[]>
 
 export const getLoanApi = async (id: string): Promise<LoanDto> => {
   const response = await api.get(`${loan_end_point}/${id}`);
-  return response.data.data;
+  return unwrap(response.data);
 };
 
 // FR-6.7: declares the loan MISSING and issues a liability (replacement cost unless an amount is given).
@@ -56,17 +56,22 @@ export const changeLoanRoomApi = async ({ id, data }: { id: string; data: Change
 // Team call: one summary endpoint instead of several calls.
 export const dashboardSummaryApi = async (): Promise<DashboardSummaryDto> => {
   const response = await api.get("/dashboard/summary");
-  return response.data.data;
+  return unwrap(response.data);
 };
 
 export const roomOccupancyApi = async (roomId: string): Promise<RoomOccupancyDto> => {
   const response = await api.get(`/rooms/${roomId}/occupancy`);
-  return response.data.data;
+  return unwrap(response.data);
 };
 
+type StationHealthItem = Omit<StationHealthDto, "stationId"> & { id?: string; stationId?: string };
+
+// The backend returns { counts, asOf, stations: [...] } and names the id "id"; a plain array is accepted too.
 export const stationHealthApi = async (): Promise<StationHealthDto[]> => {
   const response = await api.get("/stations/health");
-  return response.data.data;
+  const body = unwrap<StationHealthItem[] | { stations?: StationHealthItem[] }>(response.data);
+  const rows = Array.isArray(body) ? body : (body?.stations ?? []);
+  return rows.map(({ id, stationId, ...rest }) => ({ ...rest, stationId: stationId ?? id ?? "" }));
 };
 
 // ── Kiosk sessions ───────────────────────────────────────────────────────────
@@ -79,7 +84,7 @@ export const activeKioskSessionsApi = async (): Promise<CheckoutSessionDto[]> =>
   if (kioskSessionListMissing) return [];
   try {
     const response = await api.get("/kiosk/sessions", { params: { active: true } });
-    return response.data.data ?? [];
+    return unwrap<CheckoutSessionDto[] | undefined>(response.data) ?? [];
   } catch (error) {
     if (isAxiosError(error) && error.response?.status === 404) {
       kioskSessionListMissing = true;
@@ -92,7 +97,7 @@ export const activeKioskSessionsApi = async (): Promise<CheckoutSessionDto[]> =>
 // PRD 6.2 step 5. Used to read a session's final result after it leaves the active list.
 export const getKioskSessionApi = async (id: string): Promise<CheckoutSessionDto> => {
   const response = await api.get(`/kiosk/sessions/${id}`);
-  return response.data.data;
+  return unwrap(response.data);
 };
 
 // The counter computer's USB webcam supplies the checkout photo (team decision, 28 Oct).
