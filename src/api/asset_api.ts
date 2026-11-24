@@ -1,5 +1,5 @@
 import { api } from "./axios";
-import { fetchAllPages, toListQuery, toPaged } from "./paging";
+import { fetchAllPages, toListQuery, toPaged, unwrap } from "./paging";
 import type {
   AssetCategoryDto,
   AssetCategoryForm,
@@ -40,22 +40,44 @@ export const allAssetsApi = async (params: Omit<AssetListParams, "page" | "pageS
 
 export const getAssetApi = async (id: string): Promise<AssetDto> => {
   const response = await api.get(`${asset_end_point}/${id}`);
-  return response.data.data;
+  return unwrap(response.data);
 };
 
 export const addAssetApi = async (data: AssetForm): Promise<AssetDto> => {
   const response = await api.post(asset_end_point, toAssetBody(data));
-  return response.data.data;
+  return unwrap(response.data);
 };
 
 export const updateAssetApi = async ({ id, data }: { id: string; data: AssetForm }): Promise<AssetDto> => {
   const response = await api.put(`${asset_end_point}/${id}`, toAssetBody(data));
-  return response.data.data;
+  return unwrap(response.data);
 };
 
+/**
+ * The backend has no /assets/{id}/status route: status is set through PUT /assets/{id}, which replaces every
+ * field (anything left out is cleared). So read the current asset and send it back with only the status changed.
+ * The backend allows IN_STORAGE <-> MAINTENANCE <-> RETIRED here; other statuses belong to the loan flows.
+ */
 export const setAssetStatusApi = async ({ id, status }: { id: string; status: StaffAssetStatus }) => {
-  const response = await api.put(`${asset_end_point}/${id}/status`, { status });
-  return response.data;
+  const current = unwrap<Record<string, unknown>>((await api.get(`${asset_end_point}/${id}`)).data);
+  const body = {
+    assetCode: current.assetCode,
+    name: current.name,
+    categoryId: current.categoryId,
+    type: current.type,
+    brand: current.brand ?? null,
+    model: current.model ?? null,
+    serialNo: current.serialNo ?? null,
+    rfidTagUid: current.rfidTagUid ?? null,
+    homeRoomId: current.homeRoomId,
+    status,
+    condition: current.condition,
+    replacementCost: current.replacementCost,
+    acquiredAt: current.acquiredAt ?? null,
+    notes: current.notes ?? null,
+  };
+  const response = await api.put(`${asset_end_point}/${id}`, body);
+  return unwrap(response.data);
 };
 
 // Soft delete: sets deletedAt.
@@ -70,9 +92,46 @@ export const restoreAssetApi = async (id: string) => {
   return response.data;
 };
 
+/** One row of GET /assets/{id}/history as the backend sends it (LoanEndpoints.HistoryItem). */
+type HistoryItem = {
+  at: string;
+  kind: "LEDGER" | "SCAN" | "ANOMALY";
+  event: string;
+  loanId: string | null;
+  loanNo: string | null;
+  stationId: string | null;
+  roomId: string | null;
+  details: Record<string, unknown> | null;
+};
+
+const toLedgerEntry = (item: HistoryItem, index: number): LedgerEntryDto => ({
+  id: `${item.kind}:${item.at}:${index}`,
+  event: item.event as LedgerEntryDto["event"],
+  loanId: item.loanId ?? "",
+  asset: null as unknown as LedgerEntryDto["asset"],
+  student: null,
+  instructor: null,
+  actor: null,
+  actorStation: null,
+  photoUrl: null,
+  approvalDecidedAt: null,
+  details: item.details,
+  occurredAt: item.at,
+});
+
+/**
+ * The backend returns { assetId, items: HistoryItem[] } mixing ledger rows, room scans and anomalies.
+ * The timeline shows ledger events and anomalies; raw room scans are left out (a verified scan already
+ * shows up as its ROOM_VERIFIED ledger row). A plain LedgerEntryDto[] is still accepted.
+ */
 export const assetHistoryApi = async (id: string): Promise<LedgerEntryDto[]> => {
   const response = await api.get(`${asset_end_point}/${id}/history`);
-  return response.data.data;
+  const body = unwrap<unknown>(response.data);
+  const rows = Array.isArray(body) ? body : ((body as { items?: unknown[] } | null)?.items ?? []);
+  return rows.map((row, i) => {
+    const item = row as HistoryItem & Partial<LedgerEntryDto>;
+    return item.occurredAt ? (item as LedgerEntryDto) : item.kind === "SCAN" ? null : toLedgerEntry(item, i);
+  }).filter((e): e is LedgerEntryDto => e !== null);
 };
 
 // QR label image (tams:asset:<uuid>) for printing.
@@ -98,7 +157,7 @@ export const allCategoriesApi = (): Promise<AssetCategoryDto[]> => fetchAllPages
 
 export const addCategoryApi = async (data: AssetCategoryForm): Promise<AssetCategoryDto> => {
   const response = await api.post(category_end_point, data);
-  return response.data.data;
+  return unwrap(response.data);
 };
 
 export const updateCategoryApi = async ({ id, data }: { id: string; data: AssetCategoryForm }) => {

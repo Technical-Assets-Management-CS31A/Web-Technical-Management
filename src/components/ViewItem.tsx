@@ -2,7 +2,7 @@ import { Link, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { AssetDto, StaffAssetStatus } from "../@types/types";
-import { useAllRooms, useGetAsset, useSetAssetStatus } from "../hooks/assetHooks";
+import { useAllRooms, useGetAsset, useGetCategories, useSetAssetStatus } from "../hooks/assetHooks";
 import { fetchAndPrintQrLabel } from "./qrLabel";
 import ViewItemSkeletonLoader from "./ViewItemSkeletonLoader";
 import AssetFormDialog from "./AssetFormDialog";
@@ -41,6 +41,7 @@ export default function ViewItem() {
   const [isEditItemFormOpen, setIsEditItemFormOpen] = useState(false);
   const { data, isLoading, error } = useQuery(useGetAsset(itemId));
   const { data: rooms = [] } = useQuery(useAllRooms());
+  const { data: categories = [] } = useQuery(useGetCategories());
   const setStatus = useSetAssetStatus();
 
   if (isLoading) return <ViewItemSkeletonLoader />;
@@ -67,6 +68,9 @@ export default function ViewItem() {
   }
 
   const item: AssetDto = data;
+  // The backend sends only categoryId; resolve the name from the categories list.
+  const categoryName =
+    item.category?.name ?? categories.find((c) => c.id === (item as AssetDto & { categoryId?: string }).categoryId)?.name;
   const room = (roomId: string | null) => {
     const r = rooms.find((x) => x.id === roomId);
     return r ? `${r.code} — ${r.name}` : null;
@@ -101,7 +105,7 @@ export default function ViewItem() {
   const detailFields = [
     { icon: <Hash className="h-4 w-4" />, label: "Serial No.", value: item.serialNo },
     { icon: <CheckCircle className="h-4 w-4" />, label: "Condition", value: formatEnum(item.condition) },
-    { icon: <Tag className="h-4 w-4" />, label: "Category", value: item.category?.name },
+    { icon: <Tag className="h-4 w-4" />, label: "Category", value: categoryName },
     { icon: <Wrench className="h-4 w-4" />, label: "Brand", value: item.brand },
     { icon: <Package className="h-4 w-4" />, label: "Model", value: item.model },
     { icon: <Nfc className="h-4 w-4" />, label: "RFID tag", value: item.rfidTagUid },
@@ -186,7 +190,7 @@ export default function ViewItem() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Chip label="Category" value={item.category?.name ?? "—"} />
+              <Chip label="Category" value={categoryName ?? "—"} />
               <Chip label="Condition" value={formatEnum(item.condition)} />
               <Chip label="Type" value={formatEnum(item.type)} />
             </div>
