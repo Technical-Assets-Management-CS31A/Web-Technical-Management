@@ -72,3 +72,12 @@ export const fetchAllPages = async <T, P extends object>(
   );
   return [first, ...rest].flatMap((p) => p.items);
 };
+
+/**
+ * The backend returns single resources bare (Results.Ok(dto)); older code expected a { data } envelope.
+ * Accepts both, so the call sites keep working whichever shape the server sends.
+ */
+export const unwrap = <T>(body: unknown): T => {
+  if (body && typeof body === "object" && !Array.isArray(body) && "data" in body) return (body as { data: T }).data;
+  return body as T;
+};
