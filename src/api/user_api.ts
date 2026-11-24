@@ -1,5 +1,5 @@
 import { api } from "./axios";
-import { fetchAllPages, toListQuery, toPaged } from "./paging";
+import { fetchAllPages, toListQuery, toPaged, unwrap } from "./paging";
 import type {
   AuthCardRequest,
   CheckoutSessionDto,
@@ -38,12 +38,12 @@ export const allUsersApi = async (
 
 export const getUserApi = async (id: string): Promise<UserDto> => {
   const response = await api.get(`/users/${id}`);
-  return response.data.data;
+  return unwrap(response.data);
 };
 
 export const createUserApi = async (data: CreateUserRequest): Promise<UserDto> => {
   const response = await api.post("/users", data);
-  return response.data.data;
+  return unwrap(response.data);
 };
 
 export const updateUserApi = async ({ id, data }: { id: string; data: UpdateUserRequest }) => {
@@ -90,12 +90,12 @@ export const allStudentsApi = async ({ includeDeleted }: ListOptions = {}): Prom
 
 export const getStudentApi = async (id: string): Promise<StudentDto> => {
   const response = await api.get(`/students/${id}`);
-  return response.data.data;
+  return unwrap(response.data);
 };
 
 export const createStudentApi = async (data: StudentForm): Promise<StudentDto> => {
   const response = await api.post("/students", data);
-  return response.data.data;
+  return unwrap(response.data);
 };
 
 export const updateStudentApi = async ({ id, data }: { id: string; data: StudentForm }) => {
@@ -158,14 +158,14 @@ export const allSectionsApi = (): Promise<SectionDto[]> => fetchAllPages(section
 
 export const createSectionApi = async (data: SectionForm): Promise<SectionDto> => {
   const response = await api.post("/sections", data);
-  return response.data.data;
+  return unwrap(response.data);
 };
 
 // ── Standing and penalty resolution ──────────────────────────────────────────
 
 export const getStudentStandingApi = async (id: string): Promise<StudentStandingDto> => {
   const response = await api.get(`/students/${id}/standing`);
-  return response.data.data;
+  return unwrap(response.data);
 };
 
 export const clearWarningApi = async ({ id, data }: { id: string; data: ResolveRequest }) => {
@@ -200,12 +200,12 @@ export const startEnrollmentApi = async (
   { studentId, stationCode }: { studentId: string; stationCode: string },
 ): Promise<CheckoutSessionDto> => {
   const response = await api.post(`/kiosk/${encodeURIComponent(stationCode)}/sessions`, { type: "ENROLLMENT", studentId });
-  return response.data.data;
+  return unwrap(response.data);
 };
 
 export const getKioskSessionApi = async (sessionId: string): Promise<CheckoutSessionDto> => {
   const response = await api.get(`/kiosk/sessions/${sessionId}`);
-  return response.data.data;
+  return unwrap(response.data);
 };
 
 export const cancelKioskSessionApi = async (sessionId: string) => {
