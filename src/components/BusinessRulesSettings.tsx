@@ -38,8 +38,12 @@ const GROUP_ICONS: Record<string, React.ElementType> = {
 };
 
 // Numbers from the backend may come back as "15" or "15.0"; compare them as numbers.
-const sameValue = (a: string | undefined, b: string | undefined) =>
-  a !== undefined && b !== undefined && a.trim() !== "" && b.trim() !== "" && Number(a) === Number(b);
+const sameValue = (a: unknown, b: unknown) => {
+  if (a === undefined || a === null || b === undefined || b === null) return false;
+  const sa = String(a).trim();
+  const sb = String(b).trim();
+  return sa !== "" && sb !== "" && Number(sa) === Number(sb);
+};
 
 type RuleRowProps = {
   rule: EditableRule;
@@ -187,7 +191,12 @@ export default function BusinessRulesSettings({ canEdit }: { canEdit: boolean })
 
   // Saved value per key; a key missing on the server falls back to the PRD default.
   const saved = useMemo(() => {
-    const byKey = new Map(settings.map((s) => [s.key, s.value]));
+    // The backend may send values as numbers (15) instead of strings ("15"); normalize to strings.
+    const byKey = new Map(
+      settings
+        .filter((s) => s.value !== null && s.value !== undefined)
+        .map((s) => [s.key, String(s.value)] as const),
+    );
     return Object.fromEntries(
       EDITABLE_RULES.map((rule) => [rule.key, { value: byKey.get(rule.key) ?? String(rule.defaultValue), isSet: byKey.has(rule.key) }]),
     ) as Record<string, { value: string; isSet: boolean }>;

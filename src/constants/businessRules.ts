@@ -245,7 +245,7 @@ export const formatMinutes = (minutes: number) => {
 
 /** Checks one raw input against its rule. Returns an error message, or undefined when valid. */
 export const validateRuleValue = (rule: EditableRule, raw: string): string | undefined => {
-  const trimmed = raw.trim();
+  const trimmed = String(raw ?? "").trim();
   if (!trimmed) return "Enter a value.";
   const value = Number(trimmed);
   if (!Number.isFinite(value)) return "Enter a number.";
