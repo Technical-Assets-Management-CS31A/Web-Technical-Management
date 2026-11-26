@@ -8,19 +8,22 @@ import {
     CalendarCheck,
     CreditCard,
     DoorOpen,
+    Nfc,
     Plus,
     ShieldCheck,
     Snowflake,
     UserRound,
 } from "lucide-react";
-import type { CardStatus, UserDto } from "../@types/types";
+import type { AuthCardDto, CardStatus, UserDto } from "../@types/types";
 import { FormattedDateTime } from "./FormattedDateTime";
 import { formatEnum, formatRole, fullName, initials, normalizeHexUid } from "../lib/utils";
 import CardStatusPill from "./CardStatusPill";
 import { ArchiveDialog, DeletedNotice, DetailHeader, DetailSection, InfoRow, InitialsAvatar, NeutralBadge } from "./ArchiveDetailShell";
 import { useAddAuthCard, useLiftFreeze, useUpdateAuthCard } from "../hooks/userHooks";
 import { useAllRooms } from "../hooks/assetHooks";
-import { UserData, canManageAccounts, canResolvePenalties } from "../utils/usersData/userData";
+import { UserData, canEnrollCards, canHoldCard, canManageAccounts, canResolvePenalties } from "../utils/usersData/userData";
+import { cardErrorMessage, cardStatusErrorMessage } from "../lib/cardErrors";
+import AddCardKioskDialog from "./AddCardKioskDialog";
 import ReasonDialog from "./ReasonDialog";
 import { showToast } from "./AppToast";
 import { TextInput, getErrorMessage } from "./form/FormKit";
@@ -39,12 +42,19 @@ const ViewUserCredentials = ({ user, isOpen, onClose }: ViewUserCredentialsProps
     const liftFreeze = useLiftFreeze();
     const [newCardUid, setNewCardUid] = useState("");
     const [isLiftOpen, setIsLiftOpen] = useState(false);
+    const [isKioskAddOpen, setIsKioskAddOpen] = useState(false);
 
     if (!isOpen) return null;
 
     const isInstructor = user.role === "INSTRUCTOR";
     const canManage = canManageAccounts(viewer.role);
     const defaultRoom = rooms.find((room) => room.id === user.defaultRoomId);
+    // Cards belong to instructors and event coordinators. authCards lists every card, newest first.
+    const isCardholder = isInstructor || user.isEventCoordinator;
+    const cards = user.authCards ?? [];
+    const activeCards = cards.filter((card) => card.status === "ACTIVE");
+    const cardHistory = cards.filter((card) => card.status !== "ACTIVE");
+    const canKioskAdd = canEnrollCards(viewer.role) && canHoldCard(user);
 
     const handleAddCard = () => {
         const cardUid = normalizeHexUid(newCardUid);
@@ -56,7 +66,7 @@ const ViewUserCredentials = ({ user, isOpen, onClose }: ViewUserCredentialsProps
                     setNewCardUid("");
                     showToast.success("Card Registered", `Card ${cardUid} is now active.`);
                 },
-                onError: (err) => showToast.error("Card Not Saved", getErrorMessage(err, "Failed to register card.")),
+                onError: (err) => showToast.error("Card Not Saved", cardErrorMessage(err, "Failed to register card.")),
             },
         );
     };
@@ -64,9 +74,32 @@ const ViewUserCredentials = ({ user, isOpen, onClose }: ViewUserCredentialsProps
     const handleCardStatus = (cardId: string, status: CardStatus) => {
         updateCard.mutate(
             { cardId, data: { status } },
-            { onError: (err) => showToast.error("Card Not Updated", getErrorMessage(err, "Failed to update card.")) },
+            { onError: (err) => showToast.error("Card Not Updated", cardStatusErrorMessage(err, "Failed to update card.")) },
         );
     };
+
+    // The same physical card can appear more than once (revoked, then issued again), so key on id.
+    const renderCard = (card: AuthCardDto) => (
+        <div key={card.id} className={`flex items-center gap-3 bg-white px-4 py-3 ${card.status === "ACTIVE" ? "" : "text-slate-400"}`}>
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                <CreditCard className="h-4 w-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+                <p className={`truncate font-mono text-sm font-medium ${card.status === "ACTIVE" ? "text-slate-900" : "text-slate-500"}`}>{card.cardUid}</p>
+                <p className="text-xs text-slate-500">Issued {FormattedDateTime(card.issuedAt)}</p>
+            </div>
+            <CardStatusPill status={card.status} />
+            {canManage && card.status === "ACTIVE" && (
+                <div className="flex gap-1">
+                    <button type="button" onClick={() => handleCardStatus(card.id, "LOST")} disabled={updateCard.isPending} className="rounded-md px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50 disabled:opacity-50">Lost</button>
+                    <button type="button" onClick={() => handleCardStatus(card.id, "REVOKED")} disabled={updateCard.isPending} className="rounded-md px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50 disabled:opacity-50">Revoke</button>
+                </div>
+            )}
+            {canManage && card.status === "LOST" && (
+                <button type="button" onClick={() => handleCardStatus(card.id, "ACTIVE")} disabled={updateCard.isPending} className="rounded-md px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">Found</button>
+            )}
+        </div>
+    );
 
     return (
         <ArchiveDialog label={formatRole(user.role)} icon={ShieldCheck} titleId="user-detail-title" recordId={user.id} recordIdLabel="User ID" onClose={onClose}>
@@ -120,38 +153,37 @@ const ViewUserCredentials = ({ user, isOpen, onClose }: ViewUserCredentialsProps
                 <InfoRow icon={CalendarClock} label="Updated" value={FormattedDateTime(user.updatedAt)} />
             </DetailSection>
 
-            {/* RFID authorization cards — the card tapped first at the kiosk belongs to the instructor */}
-            {isInstructor && (
+            {/* RFID authorization cards: the instructor taps one at the kiosk to authorize a checkout */}
+            {isCardholder && (
                 <section>
-                    <h3 className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-400">Authorization cards</h3>
-                    <div className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200">
-                        {(user.authCards ?? []).length === 0 && (
-                            <p className="bg-white px-4 py-3 text-sm italic text-slate-400">No card registered. This instructor cannot start a kiosk checkout.</p>
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                        <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400">Authorization cards</h3>
+                        {canKioskAdd && (
+                            <button
+                                type="button"
+                                onClick={() => setIsKioskAddOpen(true)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-700"
+                            >
+                                <Nfc className="h-3.5 w-3.5" />
+                                Add card
+                            </button>
                         )}
-                        {(user.authCards ?? []).map((card) => (
-                            <div key={card.id} className="flex items-center gap-3 bg-white px-4 py-3">
-                                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
-                                    <CreditCard className="h-4 w-4" />
-                                </span>
-                                <div className="min-w-0 flex-1">
-                                    <p className="truncate font-mono text-sm font-medium text-slate-900">{card.cardUid}</p>
-                                    <p className="text-xs text-slate-500">Issued {FormattedDateTime(card.issuedAt)}</p>
-                                </div>
-                                <CardStatusPill status={card.status} />
-                                {canManage && card.status === "ACTIVE" && (
-                                    <div className="flex gap-1">
-                                        <button type="button" onClick={() => handleCardStatus(card.id, "LOST")} className="rounded-md px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50">Lost</button>
-                                        <button type="button" onClick={() => handleCardStatus(card.id, "REVOKED")} className="rounded-md px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-50">Revoke</button>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                    </div>
+                    <div className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200">
+                        {activeCards.length === 0 && (
+                            <p className="bg-white px-4 py-3 text-sm italic text-slate-400">No active card. This {isInstructor ? "instructor" : "coordinator"} cannot start a kiosk checkout.</p>
+                        )}
+                        {activeCards.map((card) => renderCard(card))}
+                        {cardHistory.length > 0 && (
+                            <p className="bg-slate-50/60 px-4 py-2 text-xs font-medium uppercase tracking-wider text-slate-400">History</p>
+                        )}
+                        {cardHistory.map((card) => renderCard(card))}
                         {canManage && (
                             <div className="flex items-center gap-2 bg-slate-50/60 px-4 py-3">
                                 <TextInput
                                     value={newCardUid}
                                     onChange={(e) => setNewCardUid(e.target.value)}
-                                    placeholder="Card UID, e.g. 04A3B2C1"
+                                    placeholder="Or type a card UID, e.g. 04A3B2C1"
                                     aria-label="New card UID"
                                     className="font-mono"
                                 />
@@ -159,16 +191,18 @@ const ViewUserCredentials = ({ user, isOpen, onClose }: ViewUserCredentialsProps
                                     type="button"
                                     onClick={handleAddCard}
                                     disabled={!newCardUid.trim() || addCard.isPending}
-                                    className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-blue-600 px-3 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                                    className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
                                 >
                                     <Plus className="h-4 w-4" />
-                                    Add card
+                                    Register UID
                                 </button>
                             </div>
                         )}
                     </div>
                 </section>
             )}
+
+            {isKioskAddOpen && <AddCardKioskDialog user={user} onClose={() => setIsKioskAddOpen(false)} />}
 
             {isLiftOpen && user.activeFreeze && (
                 <ReasonDialog
