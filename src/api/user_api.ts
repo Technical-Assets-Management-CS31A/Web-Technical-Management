@@ -2,6 +2,7 @@ import { api } from "./axios";
 import { fetchAllPages, toListQuery, toPaged, unwrap } from "./paging";
 import type {
   AuthCardRequest,
+  CardEnrollmentDto,
   CheckoutSessionDto,
   CreateUserRequest,
   ListParams,
@@ -71,6 +72,24 @@ export const addAuthCardApi = async ({ userId, data }: { userId: string; data: A
 export const updateAuthCardApi = async ({ cardId, data }: { cardId: string; data: Pick<AuthCardRequest, "status"> }) => {
   const response = await api.put(`/auth-cards/${cardId}`, data);
   return response.data;
+};
+
+// ── Add card at the kiosk (enrollment request, kept in the API's memory) ────
+
+export const startCardEnrollmentApi = async (userId: string): Promise<CardEnrollmentDto> => {
+  const response = await api.post("/auth-cards/enrollment", { userId });
+  return unwrap(response.data);
+};
+
+export const getCardEnrollmentApi = async (id: string): Promise<CardEnrollmentDto> => {
+  const response = await api.get(`/auth-cards/enrollment/${id}`);
+  return unwrap(response.data);
+};
+
+// Safe to call twice.
+export const cancelCardEnrollmentApi = async (id: string): Promise<CardEnrollmentDto> => {
+  const response = await api.post(`/auth-cards/enrollment/${id}/cancel`);
+  return unwrap(response.data);
 };
 
 export const liftFreezeApi = async ({ id, data }: { id: string; data: ResolveRequest }) => {

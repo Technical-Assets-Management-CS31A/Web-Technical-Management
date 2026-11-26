@@ -27,6 +27,11 @@ export const isAccountRole = (role: unknown): role is UserRole => USER_ROLES.inc
 
 // Who may manage what on the People, Assets and Rooms screens.
 export const canManageAccounts = (role: UserRole | "") => role === "ADMIN";
+// Add card at the kiosk: the same roles as POST /auth-cards on the backend.
+export const canEnrollCards = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
+// Only active instructors and event coordinators can hold an authorization card.
+export const canHoldCard = (user: Pick<UserDto, "role" | "isEventCoordinator" | "status" | "deletedAt">) =>
+    (user.role === "INSTRUCTOR" || user.isEventCoordinator) && user.status === "ACTIVE" && !user.deletedAt;
 export const canManageRoster = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF";
 export const canManageAssets = (role: UserRole | "") => role === "ADMIN" || role === "TECH_STAFF" || role === "CUSTODIAN";
 // Mark missing, change room and staff return on a loan: ADMIN and TECH_STAFF only, as the backend enforces.

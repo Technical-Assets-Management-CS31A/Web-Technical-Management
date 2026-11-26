@@ -10,6 +10,7 @@ import {
   allSectionsApi,
   allStudentsApi,
   allUsersApi,
+  cancelCardEnrollmentApi,
   cancelKioskSessionApi,
   clearMarkApi,
   clearWarningApi,
@@ -18,6 +19,7 @@ import {
   createUserApi,
   deleteStudentApi,
   deleteUserApi,
+  getCardEnrollmentApi,
   getKioskSessionApi,
   getStudentApi,
   getStudentStandingApi,
@@ -30,6 +32,7 @@ import {
   restoreStudentApi,
   restoreUserApi,
   settleLiabilityApi,
+  startCardEnrollmentApi,
   startEnrollmentApi,
   updateAuthCardApi,
   updateStudentApi,
@@ -114,6 +117,22 @@ export const useUpdateAuthCard = () => {
   const onSuccess = useInvalidateUsers();
   return useMutation({ mutationFn: updateAuthCardApi, mutationKey: ["auth-card"], onSuccess });
 };
+
+// Add card at the kiosk. The dialog polls the request until it leaves WAITING.
+export const useStartCardEnrollment = () =>
+  useMutation({ mutationFn: startCardEnrollmentApi, mutationKey: ["card-enrollment"] });
+
+export const useGetCardEnrollment = (id: string) =>
+  queryOptions({
+    queryFn: () => getCardEnrollmentApi(id),
+    queryKey: ["card-enrollment", id],
+    enabled: !!id,
+    staleTime: 0,
+    retry: false,
+  });
+
+export const useCancelCardEnrollment = () =>
+  useMutation({ mutationFn: cancelCardEnrollmentApi, mutationKey: ["card-enrollment-cancel"] });
 
 export const useLiftFreeze = () => {
   const onSuccess = useInvalidateUsers();
