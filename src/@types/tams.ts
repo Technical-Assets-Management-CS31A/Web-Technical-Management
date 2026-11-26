@@ -56,6 +56,20 @@ export interface AuthCardDto {
   issuedAt: string;
 }
 
+// Add card at the kiosk: the next card tapped on an idle counter kiosk goes to this user.
+export type CardEnrollmentStatus = "WAITING" | "COMPLETED" | "CANCELLED" | "EXPIRED";
+
+export interface CardEnrollmentDto {
+  id: string;
+  userId: string;
+  userName: string;                         // "First Last"
+  email: string;
+  status: CardEnrollmentStatus;
+  expiresAt: string;                        // 90 seconds after start
+  card: AuthCardDto | null;                 // set once COMPLETED
+  lastError: { code: string; detail: string } | null; // why the last tap was refused (still WAITING)
+}
+
 export interface UserDto {                  // replaces TUsers + TTeacher
   id: string;
   employeeNo: string;
@@ -68,7 +82,9 @@ export interface UserDto {                  // replaces TUsers + TTeacher
   status: RecordStatus;
   isFrozen?: boolean;                       // derived from approval_freezes
   activeFreeze?: ApprovalFreezeDto | null;  // the freeze to lift, when isFrozen
-  authCards?: AuthCardDto[];
+  // All cards, newest first, every status. A list on GET /users and /users/{id};
+  // null on POST/PUT /users and GET /auth/me, so never cache a write response as-is.
+  authCards?: AuthCardDto[] | null;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
