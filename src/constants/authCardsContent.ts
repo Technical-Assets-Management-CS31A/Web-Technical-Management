@@ -2,7 +2,7 @@ export const AUTH_CARDS_CONTENT = {
   badge: "Access",
   title: "Authorization cards",
   description:
-    "Instructor RFID cards. An instructor taps their card at the counter kiosk to authorize a student's checkout.",
+    "RFID cards for instructors and event coordinators. They tap their card at the counter kiosk to authorize a student's checkout.",
   newCard: "Register card",
   stats: {
     active: "Active cards",
@@ -31,7 +31,9 @@ export const AUTH_CARDS_CONTENT = {
   tableHeaders: ["Card UID", "Instructor", "Status", "Issued"],
   withoutCard: {
     title: "Instructors without an active card",
-    register: "Register",
+    register: "Type UID",
+    kioskAdd: "Add card",
+    kioskHint: "Tap the new card on the counter kiosk",
   },
   actions: {
     lost: "Mark lost",
@@ -40,6 +42,7 @@ export const AUTH_CARDS_CONTENT = {
   },
   revokeModal: { title: "Revoke Card", label: "revoke", noun: "card" },
   readOnly: "Only admins can register or change cards.",
+  kioskOnly: "Use Add card to register a card at the kiosk. Only admins can type a UID or change cards.",
   toast: {
     updated: "Card Updated",
     updatedMessage: (uid: string, status: string) => `Card ${uid} is now ${status.toLowerCase()}.`,
