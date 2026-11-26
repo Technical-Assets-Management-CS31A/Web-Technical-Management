@@ -1,9 +1,10 @@
-import { Ban, CreditCard, Info, Plus, Search, SearchCheck, TriangleAlert, UserRoundX } from "lucide-react";
+import { Ban, CreditCard, Info, Nfc, Plus, Search, SearchCheck, TriangleAlert, UserRoundX } from "lucide-react";
 import SearchBar from "../../../components/SearchBar";
 import ErrorTable from "../../../components/ErrorTables";
 import PopUpModal from "../../../components/PopUpModal";
 import CardStatusPill from "../../../components/CardStatusPill";
 import AuthCardFormDialog from "../../../components/AuthCardFormDialog";
+import AddCardKioskDialog from "../../../components/AddCardKioskDialog";
 import { FormattedDateTime } from "../../../components/FormattedDateTime";
 import { UserSkeletonLoader } from "../../../components/UserSkeletonLoader";
 import { fullName, initials } from "../../../lib/utils";
@@ -13,6 +14,10 @@ import { type AuthCardsViewModel } from "../model/auth-cards-view-model";
 export default function AuthCardsView(vm: AuthCardsViewModel) {
   const {
     canManage,
+    canEnroll,
+    canKioskAdd,
+    kioskAddFor,
+    setKioskAddFor,
     isPending,
     isError,
     error,
@@ -92,11 +97,22 @@ export default function AuthCardsView(vm: AuthCardsViewModel) {
                     {initials(instructor) || "?"}
                   </span>
                   {fullName(instructor)}
+                  {canKioskAdd(instructor) && (
+                    <button
+                      type="button"
+                      onClick={() => setKioskAddFor(instructor)}
+                      title={T.withoutCard.kioskHint}
+                      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium text-blue-600 hover:bg-blue-50"
+                    >
+                      <Nfc className="h-3 w-3" />
+                      {T.withoutCard.kioskAdd}
+                    </button>
+                  )}
                   {canManage && (
                     <button
                       type="button"
                       onClick={() => setRegisterFor({ userId: instructor.id })}
-                      className="rounded-md px-1.5 py-0.5 text-xs font-medium text-blue-600 hover:bg-blue-50"
+                      className="rounded-md px-1.5 py-0.5 text-xs font-medium text-slate-500 hover:bg-slate-100"
                     >
                       {T.withoutCard.register}
                     </button>
@@ -224,7 +240,7 @@ export default function AuthCardsView(vm: AuthCardsViewModel) {
           {!canManage && (
             <p className="flex items-start gap-2 border-t border-slate-200 px-5 py-3 text-xs text-slate-500">
               <Info className="mt-px h-3.5 w-3.5 shrink-0 text-slate-400" />
-              <span>{T.readOnly}</span>
+              <span>{canEnroll ? T.kioskOnly : T.readOnly}</span>
             </p>
           )}
         </section>
@@ -234,6 +250,8 @@ export default function AuthCardsView(vm: AuthCardsViewModel) {
       {registerFor && (
         <AuthCardFormDialog instructors={instructors} userId={registerFor.userId} onClose={() => setRegisterFor(null)} />
       )}
+
+      {kioskAddFor && <AddCardKioskDialog user={kioskAddFor} onClose={() => setKioskAddFor(null)} />}
 
       {cardToRevoke && (
         <PopUpModal

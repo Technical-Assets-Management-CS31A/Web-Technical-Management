@@ -4,9 +4,9 @@ import { Ban, CreditCard, TriangleAlert, UserRoundX } from "lucide-react";
 import type { AuthCardDto, CardStatus, UserDto } from "../../../@types/types";
 import { useAllUsers, useUpdateAuthCard } from "../../../hooks/userHooks";
 import { showToast } from "../../../components/AppToast";
-import { getErrorMessage } from "../../../components/form/FormKit";
+import { cardStatusErrorMessage } from "../../../lib/cardErrors";
 import { formatEnum, fullName } from "../../../lib/utils";
-import { UserData, canManageAccounts } from "../../../utils/usersData/userData";
+import { UserData, canEnrollCards, canHoldCard, canManageAccounts } from "../../../utils/usersData/userData";
 import { AUTH_CARDS_CONTENT as T } from "../../../constants/authCardsContent";
 
 export type StatusFilter = (typeof T.statusFilters)[number]["value"];
@@ -17,6 +17,7 @@ export const STATUS_ORDER: Record<CardStatus, number> = { ACTIVE: 0, LOST: 1, RE
 export const useAuthCardsViewModel = () => {
   const viewer = UserData();
   const canManage = canManageAccounts(viewer.role);
+  const canEnroll = canEnrollCards(viewer.role);
 
   const { data: users = [], isPending, isError, error, refetch } = useQuery(useAllUsers());
   const updateCard = useUpdateAuthCard();
@@ -25,9 +26,11 @@ export const useAuthCardsViewModel = () => {
   const [status, setStatus] = useState<StatusFilter>("all");
   const [registerFor, setRegisterFor] = useState<{ userId?: string } | null>(null);
   const [cardToRevoke, setCardToRevoke] = useState<AuthCardDto | null>(null);
+  const [kioskAddFor, setKioskAddFor] = useState<UserDto | null>(null);
 
+  // Cardholders: instructors and event coordinators.
   const instructors = useMemo(
-    () => users.filter((u) => u.role === "INSTRUCTOR" && !u.deletedAt).sort((a, b) => fullName(a).localeCompare(fullName(b))),
+    () => users.filter((u) => (u.role === "INSTRUCTOR" || u.isEventCoordinator) && !u.deletedAt).sort((a, b) => fullName(a).localeCompare(fullName(b))),
     [users],
   );
 
@@ -65,7 +68,7 @@ export const useAuthCardsViewModel = () => {
       { cardId: card.id, data: { status: next } },
       {
         onSuccess: () => showToast.success(T.toast.updated, T.toast.updatedMessage(card.cardUid, formatEnum(next))),
-        onError: (err) => showToast.error(T.toast.failed, getErrorMessage(err, T.toast.failedMessage)),
+        onError: (err) => showToast.error(T.toast.failed, cardStatusErrorMessage(err, T.toast.failedMessage)),
         onSettled: onDone,
       },
     );
@@ -73,9 +76,15 @@ export const useAuthCardsViewModel = () => {
 
   const isUpdating = (card: AuthCardDto) => updateCard.isPending && updateCard.variables?.cardId === card.id;
 
+  const canKioskAdd = (user: UserDto) => canEnroll && canHoldCard(user);
+
   return {
     viewer,
     canManage,
+    canEnroll,
+    canKioskAdd,
+    kioskAddFor,
+    setKioskAddFor,
     users,
     isPending,
     isError,

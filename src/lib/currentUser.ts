@@ -28,7 +28,7 @@ export const userIdFromToken = (accessToken: string): string => {
 
 /**
  * A UserDto built from the access token alone, for when GET /users/{id} is not reachable
- * (the backend has no /auth/me, and some roles may not read the users table).
+ * (older backends have no /auth/me, and some roles may not read the users table).
  */
 export const userFromToken = (accessToken: string): UserDto => {
   const c = readClaims(accessToken);

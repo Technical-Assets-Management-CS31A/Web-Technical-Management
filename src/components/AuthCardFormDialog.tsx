@@ -4,7 +4,8 @@ import type { UserDto } from "../@types/types";
 import { useAddAuthCard } from "../hooks/userHooks";
 import { fullName, normalizeHexUid } from "../lib/utils";
 import { showToast } from "./AppToast";
-import { Field, FormAlert, FormDialog, FormSection, SelectInput, TextInput, getErrorMessage } from "./form/FormKit";
+import { Field, FormAlert, FormDialog, FormSection, SelectInput, TextInput } from "./form/FormKit";
+import { cardErrorMessage } from "../lib/cardErrors";
 
 // Registers an instructor authorization card. The UID is typed or read off a USB reader that types it.
 
@@ -44,7 +45,7 @@ export default function AuthCardFormDialog({ instructors, userId = "", onClose }
           onClose();
         },
         onError: (err) => {
-          const message = getErrorMessage(err, "Failed to register card.");
+          const message = cardErrorMessage(err, "Failed to register card.");
           setSubmitError(message);
           showToast.error("Card Not Saved", message);
         },

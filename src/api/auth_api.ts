@@ -24,22 +24,37 @@ export const logoutUserApi = async () => {
   }
 };
 
-// The backend has no /auth/me: read the id from the access token and load /users/{id}.
+// GET /auth/me returns the signed-in user from the token (authCards is null there). A 401 means the
+// token is dead or the account was deactivated or deleted; the axios interceptor refreshes once, then logs out.
+const withRole = (user: UserDto, fallback: UserDto["role"]): UserDto =>
+  ({ ...user, role: (normalizeRole(user.role) ?? fallback) as UserDto["role"] });
+
+// Older backends without /auth/me: read the id from the access token and load /users/{id}.
 // If that is refused (or missing), fall back to what the token itself says about the user.
-export const meApi = async (): Promise<UserDto> => {
-  const token = getToken();
-  if (!token) throw new Error("Not signed in");
-  const tokenUser = userFromToken(token);
+const meFromUsersApi = async (tokenUser: UserDto): Promise<UserDto> => {
   if (!tokenUser.id) return tokenUser;
   try {
     const response = await api.get(`/users/${tokenUser.id}`);
     const user: UserDto | undefined = response.data?.data ?? response.data;
-    if (!user?.id) return tokenUser;
-    return { ...user, role: (normalizeRole(user.role) ?? tokenUser.role) as UserDto["role"] };
+    return user?.id ? withRole(user, tokenUser.role) : tokenUser;
   } catch (error) {
     if (isAxiosError(error) && (error.response?.status === 403 || error.response?.status === 404)) return tokenUser;
     throw error;
   }
+};
+
+export const meApi = async (): Promise<UserDto> => {
+  const token = getToken();
+  if (!token) throw new Error("Not signed in");
+  const tokenUser = userFromToken(token);
+  try {
+    const response = await api.get("/auth/me");
+    const user: UserDto | undefined = response.data?.data ?? response.data;
+    if (user?.id) return withRole(user, tokenUser.role);
+  } catch (error) {
+    if (!isAxiosError(error) || (error.response?.status !== 404 && error.response?.status !== 405)) throw error;
+  }
+  return meFromUsersApi(tokenUser);
 };
 
 // Team call: not in PRD 6.3.

@@ -64,7 +64,10 @@ export default function UserTable({ user, onEdit, onDelete, onRestore, isRestori
     const isDeleted = !!user.deletedAt;
     const isActive = user.status === "ACTIVE";
     const roleStyle = ROLE_STYLES[user.role] ?? ROLE_STYLES.TECH_STAFF;
-    const activeCards = user.authCards?.filter((card) => card.status === "ACTIVE").length ?? 0;
+    // authCards is newest first, every status; only the active one authorizes kiosk checkouts.
+    const activeCard = user.authCards?.find((card) => card.status === "ACTIVE") ?? null;
+    const pastCards = user.authCards?.filter((card) => card.status !== "ACTIVE").length ?? 0;
+    const holdsCards = user.role === "INSTRUCTOR" || user.isEventCoordinator;
 
     return (
         <>
@@ -126,12 +129,16 @@ export default function UserTable({ user, onEdit, onDelete, onRestore, isRestori
                 </div>
             </td>
 
-            {/* Card (instructors only) */}
+            {/* Card (instructors and event coordinators) */}
             <td className="px-5 py-3 text-xs text-slate-500">
-                {user.role === "INSTRUCTOR" ? (
-                    <span className={`inline-flex items-center gap-1.5 ${activeCards ? "text-slate-700" : "text-amber-700"}`}>
+                {holdsCards ? (
+                    <span
+                        title={pastCards ? `${pastCards} lost or revoked card${pastCards === 1 ? "" : "s"}` : undefined}
+                        className={`inline-flex items-center gap-1.5 ${activeCard ? "text-slate-700" : "text-amber-700"}`}
+                    >
                         <CreditCard className="h-3.5 w-3.5" />
-                        {activeCards ? `${activeCards} active` : "No card"}
+                        {activeCard ? <span className="font-mono">{activeCard.cardUid}</span> : "No card"}
+                        {pastCards > 0 && <span className="text-slate-400">+{pastCards} past</span>}
                     </span>
                 ) : "—"}
             </td>
