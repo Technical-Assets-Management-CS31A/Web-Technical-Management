@@ -5,7 +5,6 @@ import { GiArchiveRegister } from "react-icons/gi";
 import {
   MdHistory,
   MdDashboardCustomize,
-  MdAssessment,
   MdMeetingRoom,
   MdReportProblem,
   MdGavel,
