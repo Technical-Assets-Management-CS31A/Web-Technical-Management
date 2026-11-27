@@ -233,7 +233,7 @@ export const controlClass = (hasError = false) =>
       : "border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-blue-500/10"
   }`;
 
-type InputProps = React.InputHTMLAttributes<HTMLInputElement> & { error?: boolean };
+type InputProps = React.ComponentProps<"input"> & { error?: boolean };
 
 const readOnlyClass = "cursor-not-allowed bg-slate-50! text-slate-500! shadow-none! hover:border-slate-200!";
 
