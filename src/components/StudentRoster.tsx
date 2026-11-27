@@ -268,7 +268,14 @@ export default function StudentRoster() {
                 Click a student to see warnings, marks, holds and liabilities. Fingerprint templates never leave the server.
             </p>
 
-            {viewStudent && <ViewStudentCredentials student={viewStudent} isOpen onClose={() => setViewId("")} />}
+            {viewStudent && (
+                <ViewStudentCredentials
+                    student={viewStudent}
+                    isOpen
+                    onClose={() => setViewId("")}
+                    onEnroll={canManage ? () => setEnrollId(viewStudent.id) : undefined}
+                />
+            )}
             {isAddOpen && <EditStudent onClose={() => setIsAddOpen(false)} />}
             {isImportOpen && <ImportRosterDialog onClose={() => setIsImportOpen(false)} />}
             {editStudent && <EditStudent student={editStudent} onClose={() => setEditId("")} />}
