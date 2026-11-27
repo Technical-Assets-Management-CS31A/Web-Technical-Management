@@ -1,25 +1,12 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { Activity, BadgeAlert, CalendarDays, ClipboardCheck, Gavel, MonitorSmartphone, Radio, type LucideIcon } from "lucide-react";
 import type { ReportKey } from "../../../@types/types";
 import { useReport, useReportList } from "../../../hooks/reportHooks";
-import { DEFAULT_RANGE, REPORT_KEYS, resolvePeriod, toDateInput, type ReportRange } from "../../../lib/reports";
+import { DEFAULT_RANGE, REPORT_KEYS, describePeriod, resolvePeriod, toDateInput, type ReportRange } from "../../../lib/reports";
 import { UserData } from "../../../utils/usersData/userData";
 
-export const REPORT_ICONS: Record<ReportKey, LucideIcon> = {
-  loans: ClipboardCheck,
-  anomalies: BadgeAlert,
-  violations: Gavel,
-  kiosk: MonitorSmartphone,
-  stations: Radio,
-  audits: Activity,
-  events: CalendarDays,
-};
-
 export type ReportsSearch = { report?: ReportKey; range?: ReportRange; from?: string; to?: string };
-
-const dateLabel = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" });
 
 export const useReportsViewModel = () => {
   const viewer = UserData();
@@ -52,9 +39,8 @@ export const useReportsViewModel = () => {
     });
   };
 
-  const periodText = listQuery.data
-    ? `${dateLabel.format(new Date(listQuery.data.from))} – ${dateLabel.format(new Date(listQuery.data.to))}`
-    : "";
+  // Shown from the requested period right away, not after the list answers.
+  const periodText = period ? describePeriod(period) : null;
 
   return {
     isAdmin,
