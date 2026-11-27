@@ -2,6 +2,7 @@ import { isAxiosError } from "axios";
 import { api } from "./axios";
 import { fetchAllPages, toListQuery, toPaged, unwrap } from "./paging";
 import type {
+  ApprovalDto,
   ChangeLoanRoomRequest,
   CheckoutSessionDto,
   FailSessionRequest,
@@ -29,9 +30,21 @@ export const listLoansApi = async (params: LoanFilters & ListParams): Promise<Pa
 export const allLoansApi = async (filters: LoanFilters = {}): Promise<LoanDto[]> =>
   fetchAllPages(listLoansApi, filters);
 
+/**
+ * GET /loans/{id} answers `{ loan, approval, ledger }`, not a bare loan: the summary row sits under
+ * `loan` and the single instructor approval beside it. Flatten it into the LoanDto the page reads.
+ * A bare loan (older backends) passes through unchanged.
+ */
+export const toLoanDetail = (body: unknown): LoanDto => {
+  const data = unwrap<Record<string, unknown>>(body);
+  if (!data || typeof data !== "object" || !("loan" in data) || !data.loan) return data as unknown as LoanDto;
+  const approval = data.approval as ApprovalDto | null | undefined;
+  return { ...(data.loan as LoanDto), approvals: approval ? [approval] : [] };
+};
+
 export const getLoanApi = async (id: string): Promise<LoanDto> => {
   const response = await api.get(`${loan_end_point}/${id}`);
-  return unwrap(response.data);
+  return toLoanDetail(response.data);
 };
 
 // FR-6.7: declares the loan MISSING and issues a liability (replacement cost unless an amount is given).
