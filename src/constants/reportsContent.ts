@@ -1,4 +1,3 @@
-import type { ReportKey } from "../@types/types";
 import type { ReportRange } from "../lib/reports";
 
 export const REPORTS_CONTENT = {
@@ -16,9 +15,13 @@ export const REPORTS_CONTENT = {
   toLabel: "To",
   customInvalid: "Pick a start date on or before the end date.",
 
-  stationsSnapshot: "Station health is a live snapshot; the period does not apply.",
-  emptyBreakdown: "Nothing in this period.",
-  breakdownsTitle: "Breakdowns",
+  periodDays: (days: number) => `${days} day${days === 1 ? "" : "s"}`,
+  stationsSnapshot: "Live snapshot · the period does not apply",
+  railTitle: "Reports",
+  emptyBreakdown: "None in this period",
+  emptyReport: "No activity recorded in this period.",
+  columns: { count: "Count", share: "Share" },
+  total: "Total",
   refreshing: "Updating",
 
   adminOnly: {
@@ -47,14 +50,3 @@ export const REPORTS_CONTENT = {
     unmatchedByRoom: "Unmatched items by room",
   } as Record<string, string>,
 } as const;
-
-/** Per-report accent, used for the card icon tile and the breakdown bars. */
-export const REPORT_TONES: Record<ReportKey, { tile: string; bar: string }> = {
-  loans: { tile: "bg-blue-50 text-blue-600", bar: "bg-blue-500" },
-  anomalies: { tile: "bg-rose-50 text-rose-600", bar: "bg-rose-500" },
-  violations: { tile: "bg-amber-50 text-amber-600", bar: "bg-amber-500" },
-  kiosk: { tile: "bg-violet-50 text-violet-600", bar: "bg-violet-500" },
-  stations: { tile: "bg-emerald-50 text-emerald-600", bar: "bg-emerald-500" },
-  audits: { tile: "bg-sky-50 text-sky-600", bar: "bg-sky-500" },
-  events: { tile: "bg-indigo-50 text-indigo-600", bar: "bg-indigo-500" },
-};
