@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Check, Loader2, Nfc, Package, Printer, QrCode, RotateCcw } from "lucide-react";
+import { ArrowRight, Check, Loader2, Nfc, Package, Printer, QrCode, RotateCcw, ScanLine, X } from "lucide-react";
 import type { AssetCondition, AssetDto, AssetForm, AssetType } from "../@types/types";
 import { useAddAsset, useAllAssets, useAllRooms, useGetCategories, useUpdateAsset } from "../hooks/assetHooks";
 import { showToast } from "./AppToast";
@@ -102,6 +102,13 @@ export default function AssetFormDialog({ asset, onClose }: AssetFormDialogProps
   const [tagCaptured, setTagCaptured] = useState(false);
   const [created, setCreated] = useState<AssetDto | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
+  // Scan mode: the field is cleared and focused so the desk reader's keystrokes land in it.
+  const [isScanning, setIsScanning] = useState(false);
+  const tagInputRef = useRef<HTMLInputElement>(null);
+  const tagBeforeScan = useRef("");
+  // After a rejected read the next scan replaces the UID instead of appending to it.
+  const replaceOnNextKey = useRef(false);
+  const lastReaderKeyAt = useRef(0);
 
   const qr = useQuery(assetQrQuery(created?.id));
 
@@ -208,6 +215,8 @@ export default function AssetFormDialog({ asset, onClose }: AssetFormDialogProps
     setErrors({});
     setSubmitError("");
     setTagCaptured(false);
+    setIsScanning(false);
+    replaceOnNextKey.current = false;
     setCreated(null);
     setStep("details");
   };
@@ -216,7 +225,15 @@ export default function AssetFormDialog({ asset, onClose }: AssetFormDialogProps
     e.preventDefault();
     if (!isNew) return saveEdit();
     if (step === "details") {
-      if (showErrors(validateDetails())) setStep("tag");
+      if (showErrors(validateDetails())) {
+        setStep("tag");
+        // Start listening for the reader straight away unless a tag was already captured.
+        if (!tag) {
+          tagBeforeScan.current = "";
+          replaceOnNextKey.current = false;
+          setIsScanning(true);
+        }
+      }
     } else if (step === "tag") {
       register();
     } else {
@@ -226,6 +243,58 @@ export default function AssetFormDialog({ asset, onClose }: AssetFormDialogProps
 
   // ── Field groups ─────────────────────────────────────────────────────────
 
+  const startScan = () => {
+    tagBeforeScan.current = values.rfidTagUid;
+    onChange("rfidTagUid", "");
+    setTagCaptured(false);
+    setIsScanning(true);
+    tagInputRef.current?.focus();
+  };
+
+  // A reader ends its read with Enter. Stop on a good read; on a bad one keep listening for a retry.
+  const finishRead = () => {
+    setTagCaptured(!!tag);
+    if (!tag) return;
+    if (validateTag()) {
+      replaceOnNextKey.current = true;
+      tagInputRef.current?.select();
+    } else {
+      setIsScanning(false);
+    }
+  };
+
+  // On the RFID step the reader may type while focus is elsewhere in the dialog; route those keys into the tag.
+  const autoScan = isNew && step === "tag" && isScanning;
+  useEffect(() => {
+    if (!autoScan) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target === tagInputRef.current || target?.closest("input, textarea, select, [contenteditable]")) return;
+      if (/^[0-9a-fA-F]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        lastReaderKeyAt.current = Date.now();
+        const key = e.key.toUpperCase();
+        setValues((prev) => ({ ...prev, rfidTagUid: replaceOnNextKey.current ? key : cleanTag(prev.rfidTagUid + key) }));
+        replaceOnNextKey.current = false;
+        setErrors((prev) => ({ ...prev, rfidTagUid: undefined }));
+        setTagCaptured(false);
+        tagInputRef.current?.focus();
+      } else if (e.key === "Enter" && Date.now() - lastReaderKeyAt.current < 300) {
+        // Only swallow Enter when it ends a burst of reader keystrokes, not a deliberate submit.
+        e.preventDefault();
+        finishRead();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
+
+  // Leaving scan mode without a read puts the previous UID back.
+  const cancelScan = () => {
+    if (!tag) onChange("rfidTagUid", tagBeforeScan.current);
+    setIsScanning(false);
+  };
+
   const tagField = (autoFocus = false) => (
     <Field
       label="RFID tag UID"
@@ -234,29 +303,71 @@ export default function AssetFormDialog({ asset, onClose }: AssetFormDialogProps
       optional={values.type === "FIXED"}
       // A scanned duplicate is flagged immediately; the rest waits for submit.
       error={errors.rfidTagUid ?? duplicateTagError}
-      hint={autoFocus ? "Scan the tag with a desk reader, or type the UID (uppercase hex, e.g. 04A2B91C6E5F80)" : "Uppercase hex, no separators"}
+      hint={
+        isScanning
+          ? "Waiting for the reader — tap the tag on the desk reader now"
+          : autoFocus
+            ? "Scan the tag with a desk reader, or type the UID (uppercase hex, e.g. 04A2B91C6E5F80)"
+            : "Uppercase hex, no separators"
+      }
     >
-      <TextInput
-        id="asset-tag"
-        autoFocus={autoFocus}
-        autoComplete="off"
-        spellCheck={false}
-        value={values.rfidTagUid}
-        onChange={(e) => {
-          onChange("rfidTagUid", cleanTag(e.target.value));
-          setTagCaptured(false);
-        }}
-        // Readers end a scan with Enter; capture it instead of submitting the form.
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && autoFocus) {
-            e.preventDefault();
-            setTagCaptured(!!tag);
-          }
-        }}
-        placeholder="04A2B91C6E5F80"
-        error={!!errors.rfidTagUid || !!duplicateTagError}
-        className={`font-mono uppercase ${autoFocus ? "h-12 text-base tracking-wider" : ""}`}
-      />
+      <div className="flex gap-2">
+        <div className="relative min-w-0 flex-1">
+          <TextInput
+            id="asset-tag"
+            ref={tagInputRef}
+            autoFocus={autoFocus}
+            autoComplete="off"
+            spellCheck={false}
+            value={values.rfidTagUid}
+            onChange={(e) => {
+              onChange("rfidTagUid", cleanTag(e.target.value));
+              replaceOnNextKey.current = false;
+              setTagCaptured(false);
+            }}
+            // Readers end a scan with Enter; capture it instead of submitting the form.
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (autoFocus || isScanning)) {
+                e.preventDefault();
+                finishRead();
+              } else if (e.key === "Escape" && isScanning) {
+                e.preventDefault();
+                e.stopPropagation();
+                cancelScan();
+              }
+            }}
+            onBlur={() => isScanning && !(isNew && step === "tag") && cancelScan()}
+            placeholder={isScanning ? "Tap tag on reader…" : "04A2B91C6E5F80"}
+            error={!!errors.rfidTagUid || !!duplicateTagError}
+            className={`font-mono uppercase ${autoFocus ? "h-12 text-base tracking-wider" : ""} ${
+              isScanning ? "border-blue-500! ring-4 ring-blue-500/10" : ""
+            }`}
+          />
+          {isScanning && (
+            <span className="pointer-events-none absolute right-3 top-1/2 flex h-2.5 w-2.5 -translate-y-1/2" aria-hidden>
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-blue-500" />
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          // Keep focus in the input so the reader's keystrokes are not lost.
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={isScanning ? cancelScan : startScan}
+          aria-pressed={isScanning}
+          className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-3 text-sm font-medium shadow-sm transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/10 ${
+            autoFocus ? "h-12" : "h-10"
+          } ${
+            isScanning
+              ? "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+              : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+          }`}
+        >
+          {isScanning ? <X className="h-4 w-4" /> : <ScanLine className="h-4 w-4" />}
+          {isScanning ? "Cancel" : "Scan on kiosk"}
+        </button>
+      </div>
     </Field>
   );
 
@@ -451,7 +562,7 @@ export default function AssetFormDialog({ asset, onClose }: AssetFormDialogProps
       onSubmit={handleSubmit}
       isSubmitting={isPending}
       headerExtra={<StepIndicator current={step} />}
-      onBack={step === "tag" ? () => { setSubmitError(""); setStep("details"); } : undefined}
+      onBack={step === "tag" ? () => { setSubmitError(""); setIsScanning(false); setStep("details"); } : undefined}
       cancelLabel={step === "label" ? "Done" : "Cancel"}
       submitDisabled={step === "label" && (!qr.data || isPrinting)}
       {...footer}
