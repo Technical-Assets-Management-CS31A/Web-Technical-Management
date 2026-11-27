@@ -14,17 +14,22 @@ Each item and borrow is logged, so missing or misused equipment can be traced to
 
 ### ✨ Key Features
 - 📊 **Dashboard** – Live status board with summary badges, room occupancy and station health.
-- 📦 **Assets** – Add, edit, view and delete assets (RFID tag UID and QR label), set their status, and bulk-import from Excel.
-- 📡 **Counter** – Watch active kiosk checkout sessions and attach the checkout photo from the counter webcam.
+- 📦 **Assets** – Add, edit, view and delete assets, set their status, and bulk-import from Excel. Registering an asset is one flow: details → RFID tag → QR label.
+- 🏷️ **RFID Tag Scanning** – The RFID tag step listens for the reader as soon as it opens, so staff only tap the tag. Edit asset has a **Scan on kiosk** button. Duplicate or invalid tags are flagged at once.
+- 📡 **Counter Station** – Follow the active kiosk checkout at the counter. The **Counter webcam** page takes and uploads the borrower's photo automatically at the photo step.
+- 🖥️ **Kiosk Display** – Confirmation screen shown at the kiosk during a borrow.
 - ✅ **Loans** – Track items currently out, mark a loan missing or change its room. Loans are created only by a kiosk session, never from the web.
 - 🧑‍🎓 **People** – Staff accounts and instructor RFID cards, plus the student roster (no student logins) with standing, warnings, marks, holds and liabilities.
 - 🏫 **Rooms & Stations** – Classrooms and storage rooms with live occupancy, and the RFID stations in each room with their health and heartbeat.
 - 🪪 **Authorization Cards** – Register instructor RFID cards, and mark them lost, found or revoked.
+- ⚠️ **Anomalies** – Wrong-room scans, unknown cards and late arrivals raised by room stations. Acknowledge, then resolve with a note.
+- 🚩 **Violations** – Late arrival warnings, non-compliance marks, profile holds and approval freezes. Penalties are issued automatically and resolved here with a reason for the audit log.
 - 🔔 **Real-time Notifications** – Staff get live updates through SignalR (anomalies, late arrivals, overdue loans, station health).
 - 🗂️ **Deleted records** – Restore soft-deleted assets, accounts and students.
 - 📜 **Logs & History** – Activity logs and loan history with detail views and filters.
 - 🔍 **Search, Filter & Pagination** – On all major tables.
 - 🎨 **Appearance Settings** – Light and dark themes, profile editing and password changes.
+- 📈 **Reports** – Usage and borrowing reports (coming soon).
 
 ### 👥 Users & Roles
 - 🛡️ **Admin** – Full access, including staff and instructor accounts.
@@ -52,7 +57,7 @@ Each item and borrow is logged, so missing or misused equipment can be traced to
 | **Testing** | Vitest, React Testing Library |
 | **Backend** | C# (ASP.NET), in a separate repository |
 | **Database** | SQL |
-| **Hosting** | Cloudflare (Wrangler) |
+| **Hosting** | Cloudflare (Wrangler) or Docker + nginx |
 | **Version Control** | Git & GitHub |
 
 ---
@@ -87,6 +92,7 @@ cp .env.example .env
 | `VITE_REFRESH_TOKEN_KEY` | Storage key for the refresh token |
 | `VITE_IMAGE_BASE_URL` | Base URL where item images are served |
 | `VITE_FORGOT_PASSWORD_API` | Endpoint used by the forgot-password flow |
+| `VITE_SITE_URL` | Public address of this web app (no trailing slash), used for link-preview thumbnails |
 
 ### Scripts
 
@@ -102,6 +108,25 @@ cp .env.example .env
 
 `make install`, `make run`, `make test`, `make build` and `make deploy` are available as shortcuts in the `Makefile`.
 
+### RFID Readers
+
+The app works with USB desk readers that act as a keyboard (they type the tag UID and press Enter). No driver or browser permission is needed. Plug the reader in, open **Assets → New asset**, and tap the tag on the RFID tag step.
+
+### Docker
+
+The `Dockerfile` builds the app and serves it with nginx on port 80. Vite inlines `VITE_*` variables at build time, so pass them as build args:
+
+```bash
+docker build \
+  --build-arg VITE_API_BASE_URL=https://api.example.com \
+  --build-arg VITE_ACCESS_TOKEN_KEY=access_token \
+  --build-arg VITE_REFRESH_TOKEN_KEY=refresh_token \
+  --build-arg VITE_IMAGE_BASE_URL=https://images.example.com \
+  --build-arg VITE_SITE_URL=https://tams.example.com \
+  -t tams-web .
+docker run -p 8080:80 tams-web
+```
+
 ---
 
 ## 📁 Project Structure
@@ -112,9 +137,10 @@ src/
 ├── components/   # Reusable UI: tables, modals, forms, sidebar
 ├── constants/    # Page text and toast messages
 ├── context/      # React context (sidebar)
+├── data/         # Static data for tables
 ├── hooks/        # TanStack Query hooks and custom hooks (SignalR, counts)
-├── loader/       # Skeleton loaders for each page
-├── routes/       # Pages (Dashboard, Assets, Loans, Counter, People, Settings, ...)
+├── lib/          # Domain logic: filters, status board, anomalies, violations, kiosk display
+├── routes/       # Pages (Dashboard, Assets, Loans, Counter, Anomalies, Violations, People, Settings, ...)
 ├── services/     # SignalR connection service
 ├── states/       # Zustand stores
 ├── theme/        # Theme configuration
@@ -125,11 +151,6 @@ src/
 More docs:
 - [SIGNALR_SETUP.md](SIGNALR_SETUP.md) – Real-time notification setup
 - [DATA_MODELS.md](DATA_MODELS.md) – PRD data model and what it replaced
+- [FRONTEND_EVALUATION.md](FRONTEND_EVALUATION.md) – Frontend evaluation notes
 
 ---
-
-## 🤝 Contributing
-
-1. Branch off `develop`.
-2. Commit using conventional prefixes (`feat:`, `fix:`, `chore:`).
-3. Open a pull request into `develop`.
