@@ -8,6 +8,7 @@ import {
   MdMeetingRoom,
   MdReportProblem,
   MdGavel,
+  MdAssessment,
 } from "react-icons/md";
 import { BsPersonCircle, BsClipboardCheck, BsPersonBadge } from "react-icons/bs";
 import { FaWifi } from "react-icons/fa";
@@ -54,7 +55,7 @@ export default function Sidebar() {
     { label: "People", link: "/home/user-management", icon: CiUser },
     { label: "Auth cards", link: "/home/auth-cards", icon: BsPersonBadge },
     { label: "Rooms & stations", link: "/home/rooms", icon: MdMeetingRoom },
-    // { label: "Reports", link: "/home/reports", icon: MdAssessment },
+    { label: "Reports", link: "/home/reports", icon: MdAssessment },
     { label: "Activity logs", link: "/home/activity-logs", icon: MdHistory },
   ];
 
