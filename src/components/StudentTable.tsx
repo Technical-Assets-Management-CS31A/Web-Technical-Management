@@ -67,6 +67,7 @@ export const StudentTable = ({ student, onEdit, onEnroll, onDelete, onRestore, i
             </td>
             <td className="px-6 py-4">
                 {/* Templates never reach the web; only the enrolled-finger count does. */}
+                <div className="flex items-center gap-2">
                 {student.enrolledFingerCount ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200">
                         <Fingerprint className="h-3 w-3" />
@@ -78,6 +79,18 @@ export const StudentTable = ({ student, onEdit, onEnroll, onDelete, onRestore, i
                         Not enrolled
                     </span>
                 )}
+                {canManage && !isDeleted && (
+                    <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onEnroll(student.id); }}
+                        title={student.enrolledFingerCount ? "Enroll another finger" : "Enroll fingerprint"}
+                        className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs font-medium text-blue-700 transition-colors hover:border-blue-200 hover:bg-blue-50"
+                    >
+                        <Fingerprint className="h-3 w-3" />
+                        {student.enrolledFingerCount ? "Add" : "Enroll"}
+                    </button>
+                )}
+                </div>
             </td>
             <td className="px-6 py-4">
                 <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${student.status === "ACTIVE" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
