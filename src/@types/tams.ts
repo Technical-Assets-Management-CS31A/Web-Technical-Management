@@ -291,6 +291,60 @@ export interface CheckoutSessionDto {       // replaces TBorrowSession, TReturnS
   completedAt: string | null;
 }
 
+/** Staff view of a fingerprint ENROLLMENT session (GET /enrollment/sessions/{id}). */
+export interface EnrollmentSessionDto {
+  id: string;
+  status: SessionStatus;
+  studentId: string;
+  stationId: string;
+  fingerIndex: number;                      // 0–9
+  failureCode: string | null;
+  createdAt: string;
+  expiresAt: string;
+  completedAt: string | null;
+}
+
+/** GET /students/{id}/fingerprints; templates are never returned. */
+export interface EnrolledFingerDto {
+  fingerIndex: number;
+  sensorModel: string | null;
+  qualityScore: number | null;
+  enrolledAt: string;
+}
+
+// ── Admin reports (GET /reports, GET /reports/{key}; ADMIN only) ──────────────
+
+export type ReportKey = "loans" | "anomalies" | "violations" | "kiosk" | "stations" | "audits" | "events";
+
+/** Minutes and money are plain decimals; which stat is which is known from the report key and position. */
+export interface ReportStat { label: string; value: number }
+/** Enum labels are UPPER_SNAKE API values; room names are plain text. Rows come largest first. */
+export interface ReportCount { label: string; count: number }
+
+export interface ReportCardDto {
+  key: ReportKey;
+  title: string;
+  description: string;
+  headline: ReportStat;
+}
+
+export interface ReportListDto {
+  from: string;
+  to: string;
+  reports: ReportCardDto[];
+}
+
+export interface ReportDetailDto {
+  key: ReportKey;
+  title: string;
+  description: string;
+  from: string;
+  to: string;
+  /** stats[0] is always the headline the list shows. */
+  stats: ReportStat[];
+  breakdowns: Record<string, ReportCount[]>;
+}
+
 // ── Events, anomalies, audits ────────────────────────────────────────────────
 
 export interface EventDto {

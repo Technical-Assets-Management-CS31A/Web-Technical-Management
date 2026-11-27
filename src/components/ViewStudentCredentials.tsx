@@ -14,6 +14,8 @@ type ViewStudentCredentialsProps = {
   student: StudentDto;
   isOpen: boolean;
   onClose: () => void;
+  /** Opens the kiosk enrollment flow; omitted when the viewer cannot manage the roster. */
+  onEnroll?: () => void;
 };
 
 // Which penalty the staff member is resolving.
@@ -43,7 +45,7 @@ function PenaltyRow({ title, detail, active, onResolve, actionLabel }: {
   );
 }
 
-const ViewStudentCredentials = ({ student, isOpen, onClose }: ViewStudentCredentialsProps) => {
+const ViewStudentCredentials = ({ student, isOpen, onClose, onEnroll }: ViewStudentCredentialsProps) => {
   const viewer = UserData();
   const { data: standing, isLoading } = useQuery(useStudentStanding(student.id));
   const [pending, setPending] = useState<Pending | null>(null);
@@ -83,6 +85,17 @@ const ViewStudentCredentials = ({ student, isOpen, onClose }: ViewStudentCredent
         <InfoRow icon={CalendarPlus} label="School year" value={student.section?.schoolYear} />
         <InfoRow icon={Fingerprint} label="Fingerprints" value={student.enrolledFingerCount ? `${student.enrolledFingerCount} enrolled` : "Not enrolled"} />
       </DetailSection>
+
+      {onEnroll && !student.deletedAt && (
+        <button
+          type="button"
+          onClick={onEnroll}
+          className="inline-flex items-center justify-center gap-2 self-start rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          <Fingerprint className="h-4 w-4" />
+          {student.enrolledFingerCount ? "Enroll another finger" : "Enroll fingerprint"}
+        </button>
+      )}
 
       {/* Standing — penalties are issued by the system; staff clear them with a reason */}
       <DetailSection title={`Late arrival warnings (${student.activeWarningCount} this term)`}>

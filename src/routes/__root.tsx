@@ -24,7 +24,8 @@ import Anomalies from "./anomalies/ui/anomalies-screen";
 import { isAnomalyTypeFilter, isAnomalyView, type AnomalyView } from "../lib/anomalies";
 import Violations from "./violations/ui/violations-screen";
 import { isStudentViolationFilter, isViolationsTab, type StudentViolationFilter, type ViolationsTab } from "../lib/violations";
-import type { AnomalyType } from "../@types/types";
+import type { AnomalyType, ReportKey } from "../@types/types";
+import { isDateInput, isReportKey, isReportRange, type ReportRange } from "../lib/reports";
 
 
 export const Route = createRootRoute({
@@ -159,6 +160,12 @@ const RfidControllerRoute = createRoute({
 const ReportsRoute = createRoute({
     getParentRoute: () => homeRoute,
     path: "/reports",
+    validateSearch: (search: Record<string, unknown>): { report?: ReportKey; range?: ReportRange; from?: string; to?: string } => ({
+        ...(isReportKey(search.report) ? { report: search.report } : {}),
+        ...(isReportRange(search.range) ? { range: search.range } : {}),
+        ...(search.range === "custom" && isDateInput(search.from) ? { from: search.from } : {}),
+        ...(search.range === "custom" && isDateInput(search.to) ? { to: search.to } : {}),
+    }),
     component: Reports
 })
 

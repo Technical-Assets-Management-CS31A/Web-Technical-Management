@@ -3,7 +3,8 @@ import { fetchAllPages, toListQuery, toPaged, unwrap } from "./paging";
 import type {
   AuthCardRequest,
   CardEnrollmentDto,
-  CheckoutSessionDto,
+  EnrolledFingerDto,
+  EnrollmentSessionDto,
   CreateUserRequest,
   ListParams,
   Paged,
@@ -214,20 +215,26 @@ export const resetTermWarningsApi = async (data: ResolveRequest) => {
 
 // ── Fingerprint enrollment (kiosk ENROLLMENT session started by an admin) ────
 
-// PRD 6.3: POST /kiosk/{stationCode}/sessions with session_type ENROLLMENT, on the counter kiosk.
+// Staff routes under /enrollment/sessions. The /kiosk/... routes are for the kiosk device itself
+// (they need its X-Station-Code header) and refuse a browser with STATION_NOT_AUTHENTICATED.
 export const startEnrollmentApi = async (
-  { studentId, stationCode }: { studentId: string; stationCode: string },
-): Promise<CheckoutSessionDto> => {
-  const response = await api.post(`/kiosk/${encodeURIComponent(stationCode)}/sessions`, { type: "ENROLLMENT", studentId });
+  data: { studentId: string; stationId: string; fingerIndex: number },
+): Promise<EnrollmentSessionDto> => {
+  const response = await api.post("/enrollment/sessions", data);
   return unwrap(response.data);
 };
 
-export const getKioskSessionApi = async (sessionId: string): Promise<CheckoutSessionDto> => {
-  const response = await api.get(`/kiosk/sessions/${sessionId}`);
+export const getEnrollmentSessionApi = async (sessionId: string): Promise<EnrollmentSessionDto> => {
+  const response = await api.get(`/enrollment/sessions/${sessionId}`);
   return unwrap(response.data);
 };
 
-export const cancelKioskSessionApi = async (sessionId: string) => {
-  const response = await api.post(`/kiosk/sessions/${sessionId}/cancel`);
-  return response.data;
+export const cancelEnrollmentSessionApi = async (sessionId: string): Promise<EnrollmentSessionDto> => {
+  const response = await api.post(`/enrollment/sessions/${sessionId}/cancel`);
+  return unwrap(response.data);
+};
+
+export const getStudentFingerprintsApi = async (studentId: string): Promise<EnrolledFingerDto[]> => {
+  const response = await api.get(`/students/${studentId}/fingerprints`);
+  return unwrap<{ items: EnrolledFingerDto[] }>(response.data).items ?? [];
 };

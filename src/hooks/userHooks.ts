@@ -11,7 +11,7 @@ import {
   allStudentsApi,
   allUsersApi,
   cancelCardEnrollmentApi,
-  cancelKioskSessionApi,
+  cancelEnrollmentSessionApi,
   clearMarkApi,
   clearWarningApi,
   createSectionApi,
@@ -20,7 +20,8 @@ import {
   deleteStudentApi,
   deleteUserApi,
   getCardEnrollmentApi,
-  getKioskSessionApi,
+  getEnrollmentSessionApi,
+  getStudentFingerprintsApi,
   getStudentApi,
   getStudentStandingApi,
   getUserApi,
@@ -282,19 +283,25 @@ export const useStartEnrollment = () => {
   });
 };
 
-export const useGetKioskSession = (sessionId: string) => {
+export const useGetEnrollmentSession = (sessionId: string) => {
   return queryOptions({
-    queryFn: () => getKioskSessionApi(sessionId),
-    queryKey: ["kioskSession", sessionId],
+    queryFn: () => getEnrollmentSessionApi(sessionId),
+    queryKey: ["enrollmentSession", sessionId],
     enabled: !!sessionId,
     staleTime: 0,
-    refetchInterval: 2000,
   });
 };
 
-export const useCancelKioskSession = () => {
+export const useCancelEnrollmentSession = () => {
   return useMutation({
-    mutationFn: cancelKioskSessionApi,
-    mutationKey: ["kioskSession"],
+    mutationFn: cancelEnrollmentSessionApi,
+    mutationKey: ["enrollmentSession"],
   });
 };
+
+export const useStudentFingerprints = (studentId: string) =>
+  queryOptions({
+    queryFn: () => getStudentFingerprintsApi(studentId),
+    queryKey: [...STUDENTS_KEY, studentId, "fingerprints"],
+    enabled: !!studentId,
+  });

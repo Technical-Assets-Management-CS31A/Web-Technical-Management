@@ -1,15 +1,20 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, Fingerprint, Loader2, X, XCircle } from "lucide-react";
-import { STUDENTS_KEY, useCancelKioskSession, useGetKioskSession, useStartEnrollment } from "../hooks/userHooks";
+import { STUDENTS_KEY, useCancelEnrollmentSession, useGetEnrollmentSession, useStartEnrollment, useStudentFingerprints } from "../hooks/userHooks";
 import { useAllStations } from "../hooks/roomHooks";
 import { getErrorMessage } from "./form/FormKit";
-import type { CheckoutSessionDto } from "../@types/types";
+import type { EnrollmentSessionDto } from "../@types/types";
 
-// Starts an ENROLLMENT session on a counter kiosk (FR-9.4, US-16); the student scans
-// the same finger twice there. Templates stay on the backend; the web only sees the session.
+// Starts an ENROLLMENT session on a counter kiosk (FR-9.4, US-16) through the staff route
+// POST /enrollment/sessions; the student then scans the finger there. Templates stay on the
+// backend; the web only sees the session and which finger slots are taken.
 
-const MAX_ATTEMPTS = 3;
+// Backend finger slots 0–9, in the order staff usually enroll them.
+const FINGERS = [
+  "Right thumb", "Right index", "Right middle", "Right ring", "Right little",
+  "Left thumb", "Left index", "Left middle", "Left ring", "Left little",
+];
 
 type EnrollFingerprintModalProps = {
   studentId: string;
@@ -18,7 +23,7 @@ type EnrollFingerprintModalProps = {
   onClose: () => void;
 };
 
-const DONE: CheckoutSessionDto["status"][] = ["COMPLETED", "FAILED", "CANCELLED", "EXPIRED"];
+const DONE: EnrollmentSessionDto["status"][] = ["COMPLETED", "FAILED", "CANCELLED", "EXPIRED"];
 
 export default function EnrollFingerprintModal({ studentId, studentName, enrolledFingerCount, onClose }: EnrollFingerprintModalProps) {
   const queryClient = useQueryClient();
@@ -34,9 +39,15 @@ export default function EnrollFingerprintModal({ studentId, studentName, enrolle
   const [chosenCode, setChosenCode] = useState("");
   const stationCode = chosenCode || kiosks[0]?.stationCode || "";
   const chosenKiosk = kiosks.find((k) => k.stationCode === stationCode);
-  const cancel = useCancelKioskSession();
+  const { data: enrolled = [], isPending: fingersLoading } = useQuery(useStudentFingerprints(studentId));
+  const taken = new Set(enrolled.map((f) => f.fingerIndex));
+  const freeFingers = FINGERS.map((_, i) => i).filter((i) => !taken.has(i));
+  const [chosenFinger, setChosenFinger] = useState<number | null>(null);
+  const fingerIndex = chosenFinger !== null && !taken.has(chosenFinger) ? chosenFinger : freeFingers[0];
+
+  const cancel = useCancelEnrollmentSession();
   const { data: session } = useQuery({
-    ...useGetKioskSession(sessionId),
+    ...useGetEnrollmentSession(sessionId),
     refetchInterval: (query) => (query.state.data && DONE.includes(query.state.data.status) ? false : 2000),
   });
 
@@ -49,9 +60,9 @@ export default function EnrollFingerprintModal({ studentId, studentName, enrolle
   }, [status, queryClient]);
 
   const handleStart = () => {
-    if (!stationCode) return;
+    if (!chosenKiosk || fingerIndex === undefined) return;
     setStartError("");
-    start.mutate({ studentId, stationCode }, {
+    start.mutate({ studentId, stationId: chosenKiosk.id, fingerIndex }, {
       onSuccess: (s) => setSessionId(s.id),
       onError: (err) => setStartError(getErrorMessage(err, "Could not start enrollment.")),
     });
@@ -99,14 +110,13 @@ export default function EnrollFingerprintModal({ studentId, studentName, enrolle
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-200 opacity-60" />
                 <Fingerprint className="relative h-10 w-10 text-blue-600" />
               </span>
-              <p className="text-sm font-medium text-slate-900">Ask the student to place the same finger on the kiosk scanner twice.</p>
-              <p className="text-xs text-slate-500">
-                Kiosk {session?.station?.stationCode ?? stationCode}
-                {session && session.fingerprintAttempts > 0 && ` · attempt ${session.fingerprintAttempts} of ${MAX_ATTEMPTS}`}
+              <p className="text-sm font-medium text-slate-900">
+                Ask the student to place their {FINGERS[session?.fingerIndex ?? fingerIndex ?? 0]?.toLowerCase()} on the kiosk scanner.
               </p>
-              {session?.lcdLines?.filter(Boolean).length ? (
-                <pre className="mt-2 w-full rounded-lg bg-slate-900 px-3 py-2 text-left font-mono text-xs leading-5 text-emerald-300">{session.lcdLines.join("\n")}</pre>
-              ) : null}
+              <p className="text-xs text-slate-500">
+                Kiosk {stationCode}
+                {session?.status === "AWAITING_CONFIRM" && " · captured, press OK on the kiosk to save"}
+              </p>
             </>
           ) : (
             <>
@@ -137,6 +147,28 @@ export default function EnrollFingerprintModal({ studentId, studentName, enrolle
                   )}
                 </label>
               )}
+              {kiosks.length > 0 && (
+                <label className="flex w-full flex-col gap-1 text-left text-sm">
+                  <span className="font-medium text-slate-700">Finger</span>
+                  {fingersLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-slate-400" aria-label="Loading fingers" />
+                  ) : freeFingers.length === 0 ? (
+                    <span className="text-sm text-rose-600">All ten fingers are already enrolled.</span>
+                  ) : (
+                    <select
+                      value={fingerIndex}
+                      onChange={(e) => setChosenFinger(Number(e.target.value))}
+                      className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+                    >
+                      {FINGERS.map((name, i) => (
+                        <option key={i} value={i} disabled={taken.has(i)}>
+                          {name}{taken.has(i) ? " · enrolled" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </label>
+              )}
             </>
           )}
           {startError && <p className="text-sm text-rose-600">{startError}</p>}
@@ -150,7 +182,7 @@ export default function EnrollFingerprintModal({ studentId, studentName, enrolle
             <button
               type="button"
               onClick={handleStart}
-              disabled={start.isPending || !stationCode}
+              disabled={start.isPending || !chosenKiosk || fingerIndex === undefined}
               className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
             >
               {start.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Fingerprint className="h-4 w-4" />}
