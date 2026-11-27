@@ -72,3 +72,23 @@ export const formatStat = (value: number, format: StatFormat) => {
 
 /** Room names come as plain text; everything else is an UPPER_SNAKE enum or a failure code. */
 export const isEnumLabel = (label: string) => /^[A-Z0-9_]+$/.test(label);
+
+const dayMonth = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
+const dayMonthYear = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+/** "Nov 1 – Nov 28, 2026" plus the inclusive day count; the year shows once when both ends share it. */
+export const describePeriod = (period: ReportPeriod) => {
+  const from = new Date(period.from!);
+  const to = new Date(period.to!);
+  const sameYear = from.getFullYear() === to.getFullYear();
+  const range = `${(sameYear ? dayMonth : dayMonthYear).format(from)} – ${dayMonthYear.format(to)}`;
+  const days = Math.round((to.getTime() - from.getTime()) / 86_400_000);
+  return { range, days: Math.max(1, days) };
+};
+
+/** Share of a breakdown total as a whole percent; "<1%" keeps a real but tiny row from reading as zero. */
+export const formatShare = (count: number, total: number) => {
+  if (total <= 0 || count <= 0) return "0%";
+  const pct = (count / total) * 100;
+  return pct < 1 ? "<1%" : `${Math.round(pct)}%`;
+};

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatStat, isEnumLabel, isReportKey, isReportRange, resolvePeriod, statFormat, toDateInput } from "../reports";
+import { describePeriod, formatShare, formatStat, isEnumLabel, isReportKey, isReportRange, resolvePeriod, statFormat, toDateInput } from "../reports";
 
 const today = new Date(2026, 10, 28, 15, 30); // Nov 28 2026, local time
 
@@ -56,5 +56,23 @@ describe("guards", () => {
 
   it("formats local dates for date inputs", () => {
     expect(toDateInput(today)).toBe("2026-11-28");
+  });
+});
+
+describe("describePeriod and formatShare", () => {
+  it("counts inclusive days and prints the year once", () => {
+    const p = describePeriod(resolvePeriod("7d", {}, today)!);
+    expect(p.days).toBe(7);
+    expect(p.range).toBe("Nov 22 – Nov 28, 2026");
+  });
+
+  it("prints both years across a new year", () => {
+    expect(describePeriod(resolvePeriod("custom", { from: "2025-12-30", to: "2026-01-02" })!).range).toBe("Dec 30, 2025 – Jan 2, 2026");
+  });
+
+  it("keeps tiny shares visible", () => {
+    expect(formatShare(1, 400)).toBe("<1%");
+    expect(formatShare(1, 4)).toBe("25%");
+    expect(formatShare(0, 0)).toBe("0%");
   });
 });
